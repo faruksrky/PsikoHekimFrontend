@@ -73,7 +73,7 @@ export function CountrySelect({
         InputProps={{
           ...params.InputProps,
           startAdornment: (
-            <InputAdornment position="start" sx={{ ...(!country.code && { display: 'Turkey' }) }}>
+            <InputAdornment position="start" sx={{ ...(!country.code && { display: 'none' }) }}>
               <FlagIcon
                 key={country.label}
                 code={country.code}

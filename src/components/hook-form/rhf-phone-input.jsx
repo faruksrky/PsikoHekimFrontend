@@ -1,10 +1,11 @@
+import { forwardRef } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import { PhoneInput } from '../phone-input';
 
 // ----------------------------------------------------------------------
 
-export function RHFPhoneInput({ name, helperText, ...other }) {
+export const RHFPhoneInput = forwardRef(({ name, helperText, ...other }, ref) => {
   const { control, setValue } = useFormContext();
 
   return (
@@ -14,6 +15,7 @@ export function RHFPhoneInput({ name, helperText, ...other }) {
       render={({ field, fieldState: { error } }) => (
         <PhoneInput
           {...field}
+          ref={ref}
           fullWidth
           value={field.value}
           onChange={(newValue) => setValue(name, newValue, { shouldValidate: true })}
@@ -24,4 +26,4 @@ export function RHFPhoneInput({ name, helperText, ...other }) {
       )}
     />
   );
-}
+});

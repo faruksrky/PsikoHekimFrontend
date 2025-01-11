@@ -36,7 +36,8 @@ const ICONS = {
   dashboard: icon('ic-dashboard'),
   parameter: icon('ic-parameter'),
   technicalService: icon('ic-technicalservice'),
-  patient: icon('ic-patient'),
+  patient: icon('ic-user'),
+  therapist: icon('ic-job'),
 };
 
 // ----------------------------------------------------------------------
@@ -65,19 +66,19 @@ export const navData = [
         ],
       },
       {
-        title: 'Piskolog',
-        path: paths.dashboard.psychologist.root,
-        icon: ICONS.patient,
+        title: 'Danışman',
+        path: paths.dashboard.therapist.root,
+        icon: ICONS.therapist,
         children: [
-          { title: 'Liste', path: paths.dashboard.psychologist.list },
-          { title: 'Yeni Piskolog', path: paths.dashboard.psychologist.new },
-          { title: 'Bilgi Güncelle', path: paths.dashboard.psychologist.demo.edit },
+          { title: 'Liste', path: paths.dashboard.therapist.list },
+          { title: 'Yeni Danışman', path: paths.dashboard.therapist.new },
+          { title: 'Bilgi Güncelle', path: paths.dashboard.therapist.demo.edit },
         ],
       },
       {
         title: 'Kullanıcı',
         path: paths.dashboard.user.root,
-        icon: ICONS.user,
+        icon: ICONS.technicalService,
         children: [
           { title: 'Liste', path: paths.dashboard.user.list },
           { title: 'Yeni Kullanıcı', path: paths.dashboard.user.new },

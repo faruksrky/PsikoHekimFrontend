@@ -1,7 +1,8 @@
 import 'dayjs/locale/tr';
 import dayjs from 'dayjs';
 import { z as zod } from 'zod';
-import { useMemo, useState } from 'react';
+import { useMemo, useState} from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
@@ -11,15 +12,15 @@ import MuiAlert from '@mui/lab/Alert';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import { Snackbar } from '@mui/material';
-import Switch from '@mui/material/Switch';
-import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Unstable_Grid2';
-import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
 import LoadingButton from '@mui/lab/LoadingButton';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+
+import { GENDER_TYPE_OPTIONS } from 'src/_mock/_patient';
+
 
 // ...
 
@@ -27,53 +28,53 @@ import { useRouter } from 'src/routes/hooks';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { fData } from 'src/utils/format-number';
+import axios from 'src/utils/axios';
 
-import { Label } from 'src/components/label';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
-import { signUp } from 'src/auth/context/jwt';
+import { CONFIG } from '../../config-global';
 
 // Day.js'i Türkçe olarak ayarla
 dayjs.locale('tr');
 
 // Schema tanımı (validation için)
 export const NewPatientSchema = zod.object({
-  firstName: zod.string().min(1, { message: 'Ad bilgisi gereklidir!' }),
-  lastName: zod.string().min(1, { message: 'Soyad bilgisi gereklidir!' }),
-  email: zod
-    .string()
-    .min(1, { message: 'Email bilgisi gereklidir!' })
-    .email({ message: 'Geçerli bir mail adresi girilmelidir!' }),
-  phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
-  country: schemaHelper.objectOrNull({
+  patientFirstName: zod.string().min(1, { message: 'Ad bilgisi gereklidir!' }),
+  patientLastName: zod.string().min(1, { message: 'Soyad bilgisi gereklidir!' }),
+  patientEmail: zod.string().email({ message: 'Geçerli bir mail adresi girilmelidir!' }).optional(),
+  patientPhoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
+  patientAddress:zod.string().optional(),
+  patientCountry: schemaHelper.objectOrNull({
     message: { required_error: 'Ülke bilgisi gereklidir!' },
   }),
-  sessionStartDate: zod
-    .date()
-    .refine((date) => date instanceof Date, { message: 'Geçerli bir tarih seçilmelidir!' }),
+  patientCity: zod.string().optional(),
+  patientGender: zod.string(),
   paymentMethod: zod.string().min(1, { message: 'Ödeme yöntemi bilgisi gereklidir!' }),
 });
 
-export function PatientNewEditForm({ currentUser }) {
+
+export function PatientNewEditForm({ currentPatient }) {
   const router = useRouter();
+  const navigate = useNavigate(); 
 
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [severity, setSeverity] = useState('success');
 
-  // Varsayılan değerler
   const defaultValues = useMemo(
     () => ({
-      firstName: currentUser?.firstName || '',
-      lastName: currentUser?.lastName || '',
-      email: currentUser?.email || '',
-      phoneNumber: currentUser?.phoneNumber || '',
-      country: currentUser?.country || '',
-      sessionStartDate: currentUser?.sessionStartDate || null,
-      paymentMethod: currentUser?.paymentMethod || '',
+      patientFirstName: currentPatient?.patientFirstName || '',
+      patientLastName: currentPatient?.patientLastName || '',
+      patientEmail: currentPatient?.patientEmail || '',
+      patientGender: currentPatient?.patientGender || '',
+      patientPhoneNumber: currentPatient?.patientPhoneNumber || '',
+      patientCountry: currentPatient?.patientCountry || '',
+      patientCity: currentPatient?.patientCity || '',
+      patientAddress: currentPatient?.patientAddress || '',
+      patientAge: currentPatient?.patientAge || '',
+      paymentMethod: currentPatient?.paymentMethod || '',
     }),
-    [currentUser]
+    [currentPatient]
   );
 
   // Form kontrolü
@@ -103,170 +104,175 @@ export function PatientNewEditForm({ currentUser }) {
     setOpen(false);
   };
 
-  // Form submit işlemi
-  const onSubmit = handleSubmit(async (data) => {
-    try {
-      await signUp({
-        userName: data.email,
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        country: data.country,
-        sessionStartDate: data.sessionStartDate,
-        paymentMethod: data.paymentMethod,
-      });
+  const {
+    formState: { errors },
+  } = methods;
 
-      setMessage('Hasta başarıyla kaydedildi.');
-      setSeverity('success');
+
+  const onSubmit = async (data) => {
+    try {
+      // API isteği yap ve form verilerini gönder
+      const response = await axios.post("http://localhost:8082/api/bpmn/patient/start-process",data);
+      const availableTherapists = response.data;
+  
+      // Başarı mesajı göster
+      setMessage("Hasta kaydı ve süreç başarıyla başlatıldı.");
+      setSeverity("success");
       setOpen(true);
+  
+      // Doktor seçim ekranına yönlendir
+
+  
+      // Formu sıfırla
       reset();
     } catch (error) {
-      console.log('error', error);
-      if (error.response && error.response.status === 409) {
-        setMessage('Bu e-posta adresi veya kullanıcı adı zaten kullanımda.');
-      } else {
-        setMessage('Hasta kaydedilemedi, lütfen tekrar deneyin.');
-      }
-      setSeverity('error');
+      // Hata detaylarını logla
+      console.error("Hata Detayları:", error.response?.data || error.message || error);
+  
+      // Kullanıcıya hata mesajı göster
+      setMessage("Bir hata oluştu. Lütfen tekrar deneyin.");
+      setSeverity("error");
       setOpen(true);
     }
-  });
-
+  };
+  
+  
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="tr">
-      <Form methods={methods} onSubmit={onSubmit}>
+      <Form methods={methods} onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={3}>
-          <Grid xs={12} md={4}>
-            <Card sx={{ pt: 10, pb: 5, px: 3 }}>
-              {currentUser && (
-                <Label
-                  color={
-                    (values.status === 'active' && 'success') ||
-                    (values.status === 'banned' && 'error') ||
-                    'warning'
-                  }
-                  sx={{ position: 'absolute', top: 24, right: 24 }}
-                >
-                  {values.status}
-                </Label>
-              )}
-
-              <Box sx={{ mb: 5 }}>
-                <Field.UploadAvatar
-                  name="avatarUrl"
-                  maxSize={3145728}
-                  helperText={
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        mt: 3,
-                        mx: 'auto',
-                        display: 'block',
-                        textAlign: 'center',
-                        color: 'text.disabled',
-                      }}
-                    >
-                      izin verilen formatlar *.jpeg, *.jpg, *.png, *.gif
-                      <br /> max yüklenecek kapasite {fData(3145728)}
-                    </Typography>
-                  }
-                />
-              </Box>
-
-              {currentUser && (
-                <FormControlLabel
-                  labelPlacement="start"
-                  control={
-                    <Controller
-                      name="status"
-                      control={control}
-                      render={({ field }) => (
-                        <Switch
-                          {...field}
-                          checked={field.value !== 'active'}
-                          onChange={(event) =>
-                            field.onChange(event.target.checked ? 'banned' : 'active')
-                          }
-                        />
-                      )}
-                    />
-                  }
-                  label={
-                    <>
-                      <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                        Banned
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        Apply disable account
-                      </Typography>
-                    </>
-                  }
-                  sx={{
-                    mx: 0,
-                    mb: 3,
-                    width: 1,
-                    justifyContent: 'space-between',
-                  }}
-                />
-              )}
-
-              {currentUser && (
-                <Stack justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
-                  <Button variant="soft" color="error">
-                    Delete user
-                  </Button>
-                </Stack>
-              )}
-            </Card>
-          </Grid>
-          <Grid xs={12} md={8}>
-            <Card sx={{ p: 3 }}>
+          <Grid xs={12} md={12}>
+            <Card sx={{ p: 2 }}>
               <Box
-                rowGap={3}
+                rowGap={2}
                 columnGap={2}
                 display="grid"
                 gridTemplateColumns={{
                   xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(1, 1fr)',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(2, 2fr)',
                 }}
               >
-                <Field.Text name="firstName" label="Ad" />
-                <Field.Text name="lastName" label="Soyad" />
-                <Field.Select name="gender" label="Cinsiyet" defaultValue="">
-                  <MenuItem value="male">Erkek</MenuItem>
-                  <MenuItem value="female">Kadın</MenuItem>
-                </Field.Select>
-                <Field.DatePicker name="dateofBirth" label="Doğum Tarihi" defaultValue={dayjs()} />
-                <Field.Text name="email" label="E-Posta" />
-                <Field.Phone name="phoneNumber" label="Telefon" />
+                <Controller
+                  name="patientFirstName"
+                  control={control}
+                  defaultValue={defaultValues.firstName}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Ad"
+                      variant="outlined"
+                      fullWidth
+                      margin="normal"
+                      inputProps={{ tabIndex: 1 }}
+                    />
+                  )}
+                />
+
+                <Controller
+                  name="patientLastName"
+                  control={control}
+                  defaultValue={defaultValues.surName}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Soyad"
+                      variant="outlined"
+                      fullWidth
+                      margin="normal"
+                      inputProps={{ tabIndex: 2 }}
+                    />
+                  )}
+                />
+
+
+
+                <Controller
+                  name="patientGender"
+                  control={control}
+                  defaultValue={defaultValues.gender}
+                  render={({ field }) => (
+                    <Field.Select {...field} label="Cinsiyet" inputProps={{ tabIndex: 3 }}>
+                      {GENDER_TYPE_OPTIONS.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </Field.Select>
+                  )}
+                />
+
+
+
+                <Controller
+                  name="patientAge"
+                  defaultValue={dayjs()}
+                  control={control}
+                  editable
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Yaş"
+                      ref={field.ref}
+                      fullWidth
+                      inputProps={{ tabIndex: 4 }}
+                    />
+                  )}
+                />
+
+
+                <Controller
+                  name="patientPhoneNumber"
+                  control={control}
+                  defaultValue={defaultValues.phoneNumber}
+                  render={({ field }) => (
+                    <Field.Phone
+                      {...field}
+                      label="Telefon"
+                      ref={field.ref}
+                      fullWidth
+                      inputProps={{ tabIndex: 5 }}
+                    />
+                  )}
+                />
+
+                <Controller
+                  name="patientEmail"
+                  control={control}
+                  defaultValue={defaultValues.email}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="E-Posta"
+                      variant="outlined"
+                      fullWidth
+                      inputProps={{ tabIndex: 6 }}
+                    />
+                  )}
+                />
+
                 <Field.CountrySelect
                   fullWidth
-                  name="country"
+                  name="patientCountry"
                   label="Ülke"
-                  placeholder="Ülke Seç ..."
+                  placeholder="Ülke Seçiniz"
+                  margin="normal"
+                  variant="outlined"
                 />
-                <Field.Text name="" label="Adres" />
-                <Field.Select
-                  fullWidth
-                  name="psychologist"
-                  label="Piskolog"
-                >
-                  <MenuItem value="psychologist1">Piskolog 1</MenuItem>
-                  <MenuItem value="psychologist2">Piskolog 2</MenuItem>
-                </Field.Select>
-
-                <Field.DatePicker
-                  name="sessionStartDate"
-                  label="Seans Başlangıç Tarihi"
-                  defaultValue={dayjs()}
+                <Field.Text name="patientCity" label="Şehir" />
+                <Field.Text
+                  name="patientAddress"
+                  label="Adres"
+                  multiline
+                  rows={1}
+                  sx={{ gridColumn: 'span 2' }}
                 />
                 <Field.Text name="paymentMethod" label="Ödeme Yöntemi" />
               </Box>
 
               <Stack alignItems="flex-end" sx={{ mt: 1 }}>
                 <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                  {!currentUser ? 'Hasta Oluştur' : 'Değişiklikleri Kaydet'}
+                  {!currentPatient ? 'Hasta Oluştur' : 'Değişiklikleri Kaydet'}
                 </LoadingButton>
               </Stack>
             </Card>

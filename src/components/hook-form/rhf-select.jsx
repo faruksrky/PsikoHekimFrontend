@@ -1,3 +1,4 @@
+import React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import Box from '@mui/material/Box';
@@ -12,7 +13,7 @@ import FormHelperText from '@mui/material/FormHelperText';
 
 // ----------------------------------------------------------------------
 
-export function RHFSelect({
+export const RHFSelect = React.forwardRef(({
   name,
   native,
   children,
@@ -20,8 +21,9 @@ export function RHFSelect({
   helperText,
   inputProps,
   InputLabelProps,
+  tabIndex, // Add tabIndex prop
   ...other
-}) {
+}, ref) => {
   const { control } = useFormContext();
 
   const labelId = `${name}-select-label`;
@@ -41,21 +43,22 @@ export function RHFSelect({
             sx: { textTransform: 'capitalize' },
           }}
           InputLabelProps={{ htmlFor: labelId, ...InputLabelProps }}
-          inputProps={{ id: labelId, ...inputProps }}
+          inputProps={{ id: labelId, tabIndex, ...inputProps }} // Add tabIndex here
           error={!!error}
           helperText={error ? error?.message : helperText}
           {...other}
+          ref={ref}
         >
           {children}
         </TextField>
       )}
     />
   );
-}
+});
 
 // ----------------------------------------------------------------------
 
-export function RHFMultiSelect({
+export const RHFMultiSelect = React.forwardRef(({
   name,
   chip,
   label,
@@ -64,8 +67,9 @@ export function RHFMultiSelect({
   placeholder,
   slotProps,
   helperText,
+  tabIndex, // Add tabIndex prop
   ...other
-}) {
+}, ref) => {
   const { control } = useFormContext();
 
   const labelId = `${name}-select-label`;
@@ -74,70 +78,86 @@ export function RHFMultiSelect({
     <Controller
       name={name}
       control={control}
-      render={({ field, fieldState: { error } }) => (
-        <FormControl error={!!error} {...other}>
-          {label && (
-            <InputLabel htmlFor={labelId} {...slotProps?.inputLabel}>
-              {label}
-            </InputLabel>
-          )}
+      render={({ field, fieldState: { error } }) => {
+        // `field.value`'ı array olarak dönüştür (string ise)
+        const currentValue = Array.isArray(field.value)
+          ? field.value
+          : field.value?.split(",") || [];
 
-          <Select
-            {...field}
-            multiple
-            displayEmpty={!!placeholder}
-            label={label}
-            renderValue={(selected) => {
-              const selectedItems = options.filter((item) => selected.includes(item.value));
+        return (
+          <FormControl error={!!error} {...other}>
+            {label && (
+              <InputLabel htmlFor={labelId} {...slotProps?.inputLabel}>
+                {label}
+              </InputLabel>
+            )}
 
-              if (!selectedItems.length && placeholder) {
-                return <Box sx={{ color: 'text.disabled' }}>{placeholder}</Box>;
-              }
+            <Select
+              {...field}
+              value={currentValue} // UI'da array olarak göster
+              multiple
+              displayEmpty={!!placeholder}
+              label={label}
+              renderValue={(selected) => {
+                const selectedItems = options.filter((item) => selected.includes(item.value));
 
-              if (chip) {
-                return (
-                  <Box sx={{ gap: 0.5, display: 'flex', flexWrap: 'wrap' }}>
-                    {selectedItems.map((item) => (
-                      <Chip
-                        key={item.value}
-                        size="small"
-                        variant="soft"
-                        label={item.label}
-                        {...slotProps?.chip}
-                      />
-                    ))}
-                  </Box>
-                );
-              }
+                if (!selectedItems.length && placeholder) {
+                  return <Box sx={{ color: 'text.disabled' }}>{placeholder}</Box>;
+                }
 
-              return selectedItems.map((item) => item.label).join(', ');
-            }}
-            {...slotProps?.select}
-            inputProps={{ id: labelId, ...slotProps?.select?.inputProps }}
-          >
-            {options.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {checkbox && (
-                  <Checkbox
-                    size="small"
-                    disableRipple
-                    checked={field.value.includes(option.value)}
-                    {...slotProps?.checkbox}
-                  />
-                )}
+                if (chip) {
+                  return (
+                    <Box sx={{ gap: 0.5, display: 'flex', flexWrap: 'wrap' }}>
+                      {selectedItems.map((item) => (
+                        <Chip
+                          key={item.value}
+                          size="small"
+                          variant="soft"
+                          label={item.label}
+                          {...slotProps?.chip}
+                        />
+                      ))}
+                    </Box>
+                  );
+                }
 
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
+                return selectedItems.map((item) => item.label).join(', ');
+              }}
+              onChange={(e) => {
+                const selectedValues = e.target.value;
 
-          {(!!error || helperText) && (
-            <FormHelperText error={!!error} {...slotProps?.formHelperText}>
-              {error ? error?.message : helperText}
-            </FormHelperText>
-          )}
-        </FormControl>
-      )}
+                // Array'i string'e dönüştürerek `field.onChange` ile kaydet
+                const transformedValue = selectedValues.join(",");
+                field.onChange(transformedValue); // Backend için string kaydet
+              }}
+              {...slotProps?.select}
+              inputProps={{ id: labelId, tabIndex, ...slotProps?.select?.inputProps }} // Add tabIndex here
+              ref={ref}
+            >
+              {options.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {checkbox && (
+                    <Checkbox
+                      size="small"
+                      disableRipple
+                      checked={currentValue.includes(option.value)} // Seçim kontrolü
+                      {...slotProps?.checkbox}
+                    />
+                  )}
+
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+
+            {(!!error || helperText) && (
+              <FormHelperText error={!!error} {...slotProps?.formHelperText}>
+                {error ? error?.message : helperText}
+              </FormHelperText>
+            )}
+          </FormControl>
+        );
+      }}
     />
   );
-}
+});

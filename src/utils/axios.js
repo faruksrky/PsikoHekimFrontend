@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 import { CONFIG } from 'src/config-global';
@@ -6,9 +7,23 @@ import { CONFIG } from 'src/config-global';
 
 const axiosInstance = axios.create({ baseURL: CONFIG.serverUrl });
 
+const axiosInstanceTherapist = axios.create({ baseURL: CONFIG.therapistList });
+
+const axiosInstancePatient = axios.create({ baseURL: CONFIG.patientList });
+
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject((error.response && error.response.data) || 'Something went wrong!')
+  (error) => Promise.reject((error.response && error.response.data) || 'Server işlemlerinde hata var!')
+);
+
+axiosInstanceTherapist.interceptors.response.use(
+  (response) => response,
+  (error) => Promise.reject((error.response && error.response.data) || 'Server işlemlerinde hata var!')
+);
+
+axiosInstancePatient.interceptors.response.use(
+  (response) => response,
+  (error) => Promise.reject((error.response && error.response.data) || 'Server işlemlerinde hata var!')
 );
 
 export default axiosInstance;
@@ -27,6 +42,28 @@ export const fetcher = async (args) => {
     throw error;
   }
 };
+
+export const fetcherTherapist = async () => {
+  try {
+    const res = await axiosInstanceTherapist();
+    return res.data;
+  } catch (error) {
+    console.error('Error in Fetcher:', error);
+    throw error;
+  }
+};
+
+export const fetcherPatient = async () => {
+  try {
+    const res = await axiosInstancePatient();
+    return res.data;
+  } catch (error) {
+    console.error('Error in Fetcher:', error);
+    throw error;
+  }
+};
+
+
 
 // ----------------------------------------------------------------------
 
@@ -51,9 +88,14 @@ export const endpoints = {
     latest: '/api/post/latest',
     search: '/api/post/search',
   },
-  product: {
-    list: '/api/product/list',
-    details: '/api/product/details',
-    search: '/api/product/search',
+  therapist: {
+    list: '/therapist/all',
+    details: '/therapist/details',
+    search: '/therapist/search',
+  },
+  patient: {
+    list: '/patient/all',
+    details: '/patient/details',
+    search: '/patient/search',
   },
 };

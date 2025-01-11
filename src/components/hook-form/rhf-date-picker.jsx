@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { forwardRef } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -8,7 +9,7 @@ import { formatStr } from 'src/utils/format-time';
 
 // ----------------------------------------------------------------------
 
-export function RHFDatePicker({ name, slotProps, ...other }) {
+const RHFDatePicker = forwardRef(({ name, slotProps, ...other }, ref) => {
   const { control } = useFormContext();
 
   return (
@@ -18,6 +19,7 @@ export function RHFDatePicker({ name, slotProps, ...other }) {
       render={({ field, fieldState: { error } }) => (
         <DatePicker
           {...field}
+          ref={ref}
           value={dayjs(field.value)}
           onChange={(newValue) => field.onChange(dayjs(newValue).format())}
           format={formatStr.split.date}
@@ -35,11 +37,11 @@ export function RHFDatePicker({ name, slotProps, ...other }) {
       )}
     />
   );
-}
+});
 
 // ----------------------------------------------------------------------
 
-export function RHFMobileDateTimePicker({ name, slotProps, ...other }) {
+const RHFMobileDateTimePicker = forwardRef(({ name, slotProps, ...other }, ref) => {
   const { control } = useFormContext();
 
   return (
@@ -49,6 +51,7 @@ export function RHFMobileDateTimePicker({ name, slotProps, ...other }) {
       render={({ field, fieldState: { error } }) => (
         <MobileDateTimePicker
           {...field}
+          ref={ref}
           value={dayjs(field.value)}
           onChange={(newValue) => field.onChange(dayjs(newValue).format())}
           format={formatStr.split.dateTime}
@@ -66,4 +69,6 @@ export function RHFMobileDateTimePicker({ name, slotProps, ...other }) {
       )}
     />
   );
-}
+});
+
+export { RHFDatePicker, RHFMobileDateTimePicker };

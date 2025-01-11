@@ -69,13 +69,13 @@ export const paths = {
       },
     },
 
-     psychologist: {
-      root: `${ROOTS.DASHBOARD}/psychologist`,
-      new: `${ROOTS.DASHBOARD}/psychologist/new`,
-      list: `${ROOTS.DASHBOARD}/psychologist/list`,
-      edit: (id) => `${ROOTS.DASHBOARD}/psychologist/${id}/edit`,
+    therapist: {
+      root: `${ROOTS.DASHBOARD}/therapist`,
+      new: `${ROOTS.DASHBOARD}/therapist/new`,
+      list: `${ROOTS.DASHBOARD}/therapist/list`,
+      edit: (id) => `${ROOTS.DASHBOARD}/therapist/${id}/edit`,
       demo: {
-        edit: `${ROOTS.DASHBOARD}/psychologist/${MOCK_ID}/edit`,
+        edit: `${ROOTS.DASHBOARD}/therapist/${MOCK_ID}/edit`,
       },
     },
     group: {

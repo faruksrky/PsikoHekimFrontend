@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import TextField from '@mui/material/TextField';
@@ -5,7 +6,11 @@ import Autocomplete from '@mui/material/Autocomplete';
 
 // ----------------------------------------------------------------------
 
-export function RHFAutocomplete({ name, label, variant, helperText, placeholder, ...other }) {
+
+export const RHFAutocomplete = forwardRef((
+  { name, label, variant, helperText, placeholder, ...other },
+  ref
+) => {
   const { control, setValue } = useFormContext();
 
   return (
@@ -15,8 +20,11 @@ export function RHFAutocomplete({ name, label, variant, helperText, placeholder,
       render={({ field, fieldState: { error } }) => (
         <Autocomplete
           {...field}
+          ref={ref} // `ref`'i buraya ekledik
           id={`rhf-autocomplete-${name}`}
-          onChange={(event, newValue) => setValue(name, newValue, { shouldValidate: true })}
+          onChange={(event, newValue) => {
+            setValue(name, newValue, { shouldValidate: true }); // Yeni değeri form state'ine kaydet
+          }}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -27,7 +35,7 @@ export function RHFAutocomplete({ name, label, variant, helperText, placeholder,
               helperText={error ? error?.message : helperText}
               inputProps={{
                 ...params.inputProps,
-                autoComplete: 'new-password',
+                autoComplete: 'new-password', // Tarayıcı otomatik tamamlama kapalı
               }}
             />
           )}
@@ -36,4 +44,4 @@ export function RHFAutocomplete({ name, label, variant, helperText, placeholder,
       )}
     />
   );
-}
+});

@@ -2,47 +2,34 @@ import { useCallback } from 'react';
 
 import Chip from '@mui/material/Chip';
 
+import { sentenceCase } from 'src/utils/change-case';
+
 import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-result';
 
-export function PatientTableFiltersResult({ filters, onResetPage, totalResults, sx }) {
-  const handleRemoveFirstName = useCallback(() => {
-    onResetPage();
-    filters.setState({ firstName: '' });
-  }, [filters, onResetPage]);
+// ----------------------------------------------------------------------
 
-  const handleRemoveLastName = useCallback(() => {
-    onResetPage();
-    filters.setState({ lastName: '' });
-  }, [filters, onResetPage]);
-
-  const handleRemoveStatus = useCallback(() => {
-    onResetPage();
-    filters.setState({ status: 'all' });
-  }, [filters, onResetPage]);
-
-  const handleReset = useCallback(() => {
-    onResetPage();
-    filters.onResetState();
-  }, [filters, onResetPage]);
+export function PatientTableFiltersResult({ filters, totalResults, sx }) {
+  const handleRemovePatientGender = useCallback(
+    (inputValue) => {
+      const newValue = filters.state.patientGender.filter((item) => item !== inputValue);
+      filters.setState({ patientGender: newValue });
+    },
+    [filters]
+  );
 
   return (
-    <FiltersResult totalResults={totalResults} onReset={handleReset} sx={sx}>
-      <FiltersBlock label="Servis Tamamlanma Durumu:" isShow={filters.state.status !== 'all'}>
-        <Chip
-          {...chipProps}
-          label={filters.state.status}
-          onDelete={handleRemoveStatus}
-          sx={{ textTransform: 'capitalize' }}
-        />
+    <FiltersResult totalResults={totalResults} onReset={filters.onResetState} sx={sx}>
+      <FiltersBlock label="Cinsiyet:" isShow={!!filters.state.patientGender.length}>
+        {filters.state.patientGender.map((item) => (
+          <Chip
+            {...chipProps}
+            key={item}
+            label={sentenceCase(item)}
+            onDelete={() => handleRemovePatientGender(item)}
+          />
+        ))}
       </FiltersBlock>
 
-      <FiltersBlock label="Adı:" isShow={!!filters.state.firstName}>
-        <Chip {...chipProps} label={filters.state.firstName} onDelete={handleRemoveFirstName} />
-      </FiltersBlock>
-
-      <FiltersBlock label="Soyadı:" isShow={!!filters.state.lastName}>
-        <Chip {...chipProps} label={filters.state.lastName} onDelete={handleRemoveLastName} />
-      </FiltersBlock>
     </FiltersResult>
   );
 }

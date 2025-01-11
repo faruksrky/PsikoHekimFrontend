@@ -9,12 +9,14 @@ export const CONFIG = {
   appVersion: packageJson.version,
   serverUrl: import.meta.env.VITE_SERVER_URL ?? '',
   loginUrl: import.meta.env.VITE_LOGIN_URL ?? '',
-  usersListUrl: import.meta.env.VITE_USERS_LIST_URL ?? '',
-  usersListUserName: import.meta.env.VITE_USERS_LISTUSERNAME_URL ?? '',
-  customerListUrl: import.meta.env.VITE_CUSTOMER_LIST_URL ?? '',
-  customerUpdateUrl: import.meta.env.VITE_CUSTOMER_UPDATE_URL ?? '',
   signUpUrl: import.meta.env.VITE_SIGNUP_URL ?? '',
   assetsDir: import.meta.env.VITE_ASSETS_DIR ?? '',
+  addTherapist: import.meta.env.VITE_ADD_THERAPIST_URL ?? '',
+  addPatient: import.meta.env.VITE_ADD_PATIENT_URL ?? '',
+  therapistList: import.meta.env.VITE_THERAPIST_LIST_URL ?? '',
+  patientList: import.meta.env.VITE_PATIENT_LIST_URL ?? '',
+
+
   /**
    * Auth
    * @method jwt | amplify | firebase | supabase | auth0
