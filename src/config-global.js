@@ -5,7 +5,7 @@ import packageJson from '../package.json';
 // ----------------------------------------------------------------------
 
 export const CONFIG = {
-  appName: 'Minimal UI',
+  appName: 'PsikoHekim UI',
   appVersion: packageJson.version,
   serverUrl: import.meta.env.VITE_SERVER_URL ?? '',
   loginUrl: import.meta.env.VITE_LOGIN_URL ?? '',
@@ -15,7 +15,11 @@ export const CONFIG = {
   addPatient: import.meta.env.VITE_ADD_PATIENT_URL ?? '',
   therapistList: import.meta.env.VITE_THERAPIST_LIST_URL ?? '',
   patientList: import.meta.env.VITE_PATIENT_LIST_URL ?? '',
-
+  googleAuthUrl: import.meta.env.VITE_GET_GOOGLE_AUTH_URL ?? '',
+  googleCallback: import.meta.env.VITE_GET_GOOGLE_CALLBACK_URL ?? '',
+  googleCalendarEvents: import.meta.env.VITE_GET_GOOGLE_CALENDAR_EVENTS_URL ?? '',
+  bpmnBaseUrl: import.meta.env.VITE_GET_BPMN_BASE_URL ?? '',
+  psikoHekimBaseUrl: import.meta.env.VITE_GET_PsikoHekim_BASE_URL ?? '',
 
   /**
    * Auth
@@ -65,4 +69,41 @@ export const CONFIG = {
     url: import.meta.env.VITE_SUPABASE_URL ?? '',
     key: import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
   },
+
+  // Google Calendar endpoints
+  googleCalendar: {
+    auth: '/api/google-calendar/redirect-to-google-oauth',
+    callback: '/api/google-calendar/callback',
+    events: '/api/google-calendar/events',
+    sync: '/api/google-calendar/sync',
+    status: '/api/google-calendar/status',
+  },
+
+  // Outlook Calendar endpoints
+  outlookCalendar: {
+    auth: '/api/outlook-calendar/redirect',
+    callback: '/api/outlook-calendar/callback',
+  },
+
+  calendar: {
+    // Genel takvim endpointleri
+    events: '/api/calendar/events',
+    sync: '/api/calendar/sync',
+    status: '/api/calendar/status',
+    add: '/api/calendar/events/add',
+    update: '/api/calendar/events/update',
+    delete: '/api/calendar/events/delete',
+    
+    // Takvim entegrasyonları
+    integrations: {
+      google: {
+        auth: '/api/calendar/integrations/google/auth',
+        callback: '/api/calendar/integrations/google/callback',
+      },
+      outlook: {
+        auth: '/api/calendar/integrations/outlook/auth',
+        callback: '/api/calendar/integrations/outlook/callback',
+      }
+    }
+  }
 };

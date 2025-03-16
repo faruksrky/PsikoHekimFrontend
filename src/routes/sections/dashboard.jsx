@@ -17,11 +17,12 @@ const UserCreatePage = lazy(() => import('src/pages/dashboard/user/new'));
 const UserEditPage = lazy(() => import('src/pages/dashboard/user/edit')); 
 const PatientListPage = lazy(() => import('src/pages/dashboard/patient/list'));
 const PatientCreatePage = lazy(() => import('src/pages/dashboard/patient/new'));
+const AssignTherapistView = lazy(() => import('src/pages/dashboard/patient/assignTherapist'));
 const PatientEditPage = lazy(() => import('src/pages/dashboard/patient/edit'));
 const TherapistListPage = lazy(() => import('src/pages/dashboard/therapist/list'));
 const TherapistCreatePage = lazy(() => import('src/pages/dashboard/therapist/new'));
 const TherapistEditPage = lazy(() => import('src/pages/dashboard/therapist/edit'));
-
+const OverviewAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics'));
 const CalendarView = lazy(() => import('src/pages/dashboard/calendar/calendar'));
 
 // ----------------------------------------------------------------------
@@ -48,6 +49,7 @@ export const dashboardRoutes = [
         children: [
           { path: 'list', element: <PatientListPage /> },
           { path: 'new', element: <PatientCreatePage /> },
+          { path: 'assignTherapist', element: < AssignTherapistView/> },
           { path: ':id/edit', element: <PatientEditPage /> },
         ],
       },
@@ -68,6 +70,7 @@ export const dashboardRoutes = [
           { path: ':id/edit', element: <TherapistEditPage /> },
         ],
       },
+      { path: 'analytics', element: <OverviewAnalyticsPage /> },
     ],
   },
 ];

@@ -15,7 +15,7 @@ import { TherapistCardList } from '../therapist-card-list';
 
 export function TherapistCardsView() {
   return (
-    <DashboardContent>
+    <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
         heading="Therapist cards"
         links={[

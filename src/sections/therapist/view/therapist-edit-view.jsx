@@ -10,7 +10,7 @@ import { TherapistNewEditForm } from '../therapist-new-edit-form';
 
 export function TherapistEditView({ user: currentUser }) {
   return (
-    <DashboardContent>
+    <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
         heading="Güncelle"
         links={[

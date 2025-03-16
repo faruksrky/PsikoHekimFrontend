@@ -15,7 +15,7 @@ import { PatientCardList } from '../patient-card-list';
 
 export function PatientCardsView() {
   return (
-    <DashboardContent>
+    <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
         heading="User cards"
         links={[

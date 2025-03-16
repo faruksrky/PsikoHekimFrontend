@@ -15,6 +15,8 @@ export function useCalendar() {
 
   const [openForm, setOpenForm] = useState(false);
 
+  const [openCalendarEdit, setOpenCalendarEdit] = useState(false);
+
   const [selectEventId, setSelectEventId] = useState('');
 
   const [selectedRange, setSelectedRange] = useState(null);
@@ -25,8 +27,20 @@ export function useCalendar() {
     setOpenForm(true);
   }, []);
 
+
   const onCloseForm = useCallback(() => {
     setOpenForm(false);
+    setSelectedRange(null);
+    setSelectEventId('');
+  }, []);
+
+  const onOpenCalendarEdit= useCallback(() => {
+    setOpenCalendarEdit(true);
+  }, []);
+
+
+  const onCloseCalendarEdit = useCallback(() => {
+    setOpenCalendarEdit(false);
     setSelectedRange(null);
     setSelectEventId('');
   }, []);
@@ -104,6 +118,16 @@ export function useCalendar() {
     [onOpenForm]
   );
 
+  const onClickCalendarEvent = useCallback(
+    (arg) => {
+      const { event } = arg;
+
+      onOpenCalendarEdit();
+      setSelectEventId(event.id);
+    },
+    [onOpenCalendarEdit]
+  );
+
   const onResizeEvent = useCallback((arg, updateEvent) => {
     const { event } = arg;
 
@@ -136,6 +160,17 @@ export function useCalendar() {
     [onOpenForm]
   );
 
+  const onClickOpenCalendarEdit = useCallback(
+    (eventId) => {
+      if (eventId) {
+        onOpenCalendarEdit(); // Formu aç
+        setSelectEventId(eventId); // Seçilen eventin ID'sini ata
+      }
+    },
+    [onOpenCalendarEdit]
+  );
+  
+
   return {
     calendarRef,
     //
@@ -155,6 +190,10 @@ export function useCalendar() {
     openForm,
     onOpenForm,
     onCloseForm,
+    //
+    openCalendarEdit,
+    onOpenCalendarEdit,
+    onCloseCalendarEdit,
     //
     selectEventId,
     selectedRange,

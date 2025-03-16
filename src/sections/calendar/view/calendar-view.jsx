@@ -1,16 +1,18 @@
-import { useEffect } from 'react';
 import Calendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
+import { useNavigate } from 'react-router-dom';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
 import trLocale from '@fullcalendar/core/locales/tr';
 import interactionPlugin from '@fullcalendar/interaction';
+import React, { useEffect, useState, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import { IconButton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -25,23 +27,29 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { CALENDAR_COLOR_OPTIONS } from 'src/_mock/_calendar';
 import { updateEvent, useGetEvents } from 'src/actions/calendar';
 
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 
 import { StyledCalendar } from '../styles';
 import { useEvent } from '../hooks/use-event';
+import { CalendarEdit } from '../calendar-edit';
 import { CalendarForm } from '../calendar-form';
+import { CONFIG } from '../../../config-global';
 import { useCalendar } from '../hooks/use-calendar';
 import { CalendarToolbar } from '../calendar-toolbar';
 import { CalendarFilters } from '../calendar-filters';
-import { CalendarFiltersResult } from '../calendar-filters-result'; // Örneğin Almanca yerelleştirme için
+import { CalendarFiltersResult } from '../calendar-filters-result';
 
 // ----------------------------------------------------------------------
 
 export function CalendarView() {
   const theme = useTheme();
+  const navigate = useNavigate();
 
   const openFilters = useBoolean();
-  const { events, eventsLoading } = useGetEvents();
+  // useGetEvents();
+  const [loading, setLoading] = useState(false);
+  const [events, setEvents] = useState([]);
 
   const filters = useSetState({
     colors: [],
@@ -62,26 +70,65 @@ export function CalendarView() {
     onChangeView,
     onSelectRange,
     onClickEvent,
+    onClickCalendarEvent,
     onResizeEvent,
     onInitialView,
     openForm,
     onOpenForm,
     onCloseForm,
+    openCalendarEdit,
+    onOpenCalendarEdit,
+    onCloseCalendarEdit,
     selectEventId,
     selectedRange,
     onClickEventInFilters,
   } = useCalendar();
 
-  const currentEvent = useEvent(events, selectEventId, selectedRange, openForm);
+  const currentEvent = useEvent(events, selectEventId, selectedRange, openForm, openCalendarEdit);
 
+  /*
   useEffect(() => {
     onInitialView();
   }, [onInitialView]);
+  */
 
   const canReset =
     filters.state.colors.length > 0 || (!!filters.state.startDate && !!filters.state.endDate);
 
   const dataFiltered = applyFilter({ inputData: events, filters: filters.state, dateError });
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.calendar.events}`, {
+          credentials: 'include',
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          const formattedEvents = data.events.map((event) => ({
+            id: event.id,
+            title: event.title,
+            description: event.description,
+            start: event.startTime,
+            end: event.endTime,
+            source: event.source,
+            location: event.location,
+            status: event.status,
+          }));
+          setEvents(formattedEvents);
+        }
+      } catch (error) {
+        toast.error('Takvim verileri alınamadı');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   const renderResults = (
     <CalendarFiltersResult
@@ -101,16 +148,34 @@ export function CalendarView() {
           direction="row"
           alignItems="center"
           justifyContent="space-between"
+          spacing={2} // Butonlar arasındaki mesafeyi ayarlar
           sx={{ mb: { xs: 3, md: 5 } }}
         >
-          <Typography variant="h4">Calendar</Typography>
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mingcute:add-line" />}
-            onClick={onOpenForm}
-          >
-            Yeni Etkinlik
-          </Button>
+          <Typography variant="h4">Takvim</Typography>
+          <Stack direction="row" spacing={2}>
+            {' '}
+            {/* Butonları yan yana koymak için nested Stack */}
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+              onClick={onOpenForm}
+            >
+              Yeni Etkinlik
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+              onClick={onOpenCalendarEdit}
+              sx={{
+                backgroundColor: 'red', // Varsayılan kırmızı rengi
+                '&:hover': {
+                  backgroundColor: 'darkred', // Hover rengi (daha koyu kırmızı)
+                },
+              }}
+            >
+              Kişisel Takvim Ekle
+            </Button>
+          </Stack>
         </Stack>
 
         {canReset && renderResults}
@@ -121,7 +186,7 @@ export function CalendarView() {
               date={fDate(date)}
               view={view}
               canReset={canReset}
-              loading={eventsLoading}
+              loading={loading}
               onNextDate={onDateNext}
               onPrevDate={onDatePrev}
               onToday={onDateToday}
@@ -143,7 +208,7 @@ export function CalendarView() {
               initialView={view}
               dayMaxEventRows={3}
               eventDisplay="block"
-              events={dataFiltered}
+              events={events}
               headerToolbar={false}
               select={onSelectRange}
               eventClick={onClickEvent}
@@ -169,31 +234,54 @@ export function CalendarView() {
       <Dialog
         fullWidth
         maxWidth="xs"
-        open={openForm}
+        open={openForm} // Bu ilk Dialog için doğru
         onClose={onCloseForm}
-        transitionDuration={{
-          enter: theme.transitions.duration.shortest,
-          exit: theme.transitions.duration.shortest - 80,
-        }}
-        PaperProps={{
-          sx: {
-            display: 'flex',
-            overflow: 'hidden',
-            flexDirection: 'column',
-            '& form': { minHeight: 0, display: 'flex', flex: '1 1 auto', flexDirection: 'column' },
-          },
-        }}
       >
         <DialogTitle sx={{ minHeight: 76 }}>
           {openForm && <> {currentEvent?.id ? 'Edit' : 'Add'} event</>}
         </DialogTitle>
-
         <CalendarForm
           currentEvent={currentEvent}
           colorOptions={CALENDAR_COLOR_OPTIONS}
           onClose={onCloseForm}
         />
       </Dialog>
+
+      <Dialog
+        fullWidth
+        maxWidth="xs"
+        open={openCalendarEdit} // İkinci Dialog için `openCalendarEdit` kullanın
+        onClose={onCloseCalendarEdit}
+      >
+        <DialogTitle
+          sx={{
+            minHeight: 76,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span>{openCalendarEdit && (currentEvent?.id ? 'Güncelle' : 'Takvim Ekle')}</span>
+
+          {/* Sağ üst köşeye çarpı (X) ikonu */}
+          <IconButton
+            onClick={onCloseCalendarEdit} // Modalı kapatmak için
+            sx={{
+              color: '#757575', // Gri renk
+              '&:hover': { color: '#333' }, // Hover olunca daha koyu gri
+            }}
+          >
+            <Iconify icon="eva:close-fill" width={24} />
+          </IconButton>
+        </DialogTitle>
+
+        <CalendarEdit
+          currentEvent={currentEvent}
+          colorOptions={CALENDAR_COLOR_OPTIONS}
+          onClose={onCloseCalendarEdit}
+        />
+      </Dialog>
+
       <CalendarFilters
         events={events}
         filters={filters}

@@ -10,7 +10,7 @@ import { PatientNewEditForm } from '../patient-new-edit-form';
 
 export function PatientCreateView() {
   return (
-    <DashboardContent>
+    <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
         heading="Yeni Hasta Oluştur"
         links={[

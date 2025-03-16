@@ -21,6 +21,7 @@ import { RouterLink } from 'src/routes/components';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
 
+import { PRODUCT_STOCK_OPTIONS } from 'src/_mock';
 import { useGetTherapists } from 'src/actions/therapist';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { THERAPIST_TYPE_OPTIONS, THERAPIST_RATING_OPTIONS } from 'src/_mock/_therapist';
@@ -47,6 +48,7 @@ import {
   RenderCellTherapistRating,
   RenderCellYearsOfExperience,
   RenderCellSpecializationAreas,
+  RenderCellTherapistAvailability
 } from '../therapist-table-row';
 
 // ----------------------------------------------------------------------
@@ -263,6 +265,14 @@ export function TherapistListView() {
       renderCell: (params) => <RenderCellTherapistRating params={params} />,
     },
     {
+      field: 'therapistAvailability',
+      headerName: 'Takvim',
+      width: 160,
+      type: 'singleSelect',
+      valueOptions: PRODUCT_STOCK_OPTIONS,
+      renderCell: (params) => <RenderCellTherapistAvailability params={params} />,
+    },
+    {
       type: 'actions',
       field: 'actions',
       headerName: ' ',
@@ -300,7 +310,7 @@ export function TherapistListView() {
 
   return (
     <>
-      <DashboardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <DashboardContent maxWidth="xl" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <CustomBreadcrumbs
           heading="Danışman Listesi"
           links={[

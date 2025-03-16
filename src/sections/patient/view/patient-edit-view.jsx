@@ -10,7 +10,7 @@ import { PatientNewEditForm } from '../patient-new-edit-form';
 
 export function PatientEditView({ user: currentUser }) {
   return (
-    <DashboardContent>
+    <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
         heading="Güncelle"
         links={[

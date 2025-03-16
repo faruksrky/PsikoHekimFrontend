@@ -77,4 +77,9 @@ export function RenderCellTherapistRating({ params }) {
   return params.row.therapistRating;
 }
 
+export function RenderCellTherapistAvailability({ params }) {
+  return params.row.therapistAvailability;
+}
+
+
 

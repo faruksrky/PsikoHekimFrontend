@@ -10,7 +10,7 @@ import { TherapistNewEditForm } from '../therapist-new-edit-form';
 
 export function TherapistCreateView() {
   return (
-    <DashboardContent>
+    <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
         heading="Yeni Danışman Oluştur"
         links={[

@@ -63,8 +63,10 @@ export const navData = [
           { title: 'Liste', path: paths.dashboard.patient.list },
           { title: 'Yeni Hasta', path: paths.dashboard.patient.new },
           { title: 'Bilgi Güncelle', path: paths.dashboard.patient.demo.edit },
+          { title: 'Danışman Ata', path: paths.dashboard.patient.assignTherapist},
         ],
       },
+
       {
         title: 'Danışman',
         path: paths.dashboard.therapist.root,
@@ -85,6 +87,8 @@ export const navData = [
           { title: 'Bilgi Güncelle', path: paths.dashboard.user.demo.edit },
         ],
       },
+
+      { title: 'Analytics', path: paths.dashboard.analytics, icon: ICONS.analytics },
       
     ],
     
