@@ -27,14 +27,14 @@ import { ColorPicker } from 'src/components/color-utils';
 // ----------------------------------------------------------------------
 
 export const EventSchema = zod.object({
-  title: zod.string().min(1, { message: 'Title is required!' }),
-  description: zod.string().min(1, { message: 'Description is required!' }),
-  location: zod.string(),
-  status: zod.enum(['CONFIRMED', 'TENTATIVE', 'CANCELLED']),
+  title: zod.string().min(1, { message: 'Başlık gereklidir!' }),
+  description: zod.string().min(1, { message: 'Açıklama gereklidir!' }),
+  location: zod.string().optional().default(''),
+  status: zod.enum(['CONFIRMED', 'TENTATIVE', 'CANCELLED']).default('CONFIRMED'),
   color: zod.string(),
-  start: zod.union([zod.string(), zod.number()]),
-  end: zod.union([zod.string(), zod.number()]),
-  reminderMinutes: zod.number().min(0).max(1440),
+  start: zod.any(),
+  end: zod.any(),
+  reminderMinutes: zod.number().min(0).max(1440).default(30),
 });
 
 // ----------------------------------------------------------------------
@@ -85,37 +85,60 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const onSubmit = handleSubmit(async (data) => {
     const eventData = {
       id: currentEvent?.id ? currentEvent?.id : uuidv4(),
-      color: data?.color,
-      title: data?.title,
-      description: data?.description,
-      end: data?.end,
-      start: data?.start,
+      title: data.title || '',
+      description: data.description || '',
+      location: data.location || '',
+      status: data.status || 'CONFIRMED',
+      color: data.color || colorOptions[0],
+      reminderMinutes: Number(data.reminderMinutes || 30),
+      start: data.start,
+      end: data.end,
     };
 
     try {
       if (!dateError) {
+        let result;
         if (currentEvent?.id) {
-          await updateEvent(eventData);
-          toast.success('Update success!');
+          result = await updateEvent(eventData);
+          if (result) {
+            toast.success('Etkinlik başarıyla güncellendi!');
+            onClose();
+            reset();
+            if (typeof window.refreshCalendarEvents === 'function') {
+              window.refreshCalendarEvents();
+            }
+          }
         } else {
-          await createEvent(eventData);
-          toast.success('Create success!');
+          result = await createEvent(eventData);
+          if (result) {
+            toast.success('Etkinlik başarıyla eklendi!');
+            onClose();
+            reset();
+            if (typeof window.refreshCalendarEvents === 'function') {
+              window.refreshCalendarEvents();
+            }
+          }
         }
-        onClose();
-        reset();
       }
     } catch (error) {
       console.error(error);
+      toast.error('İşlem sırasında bir hata oluştu');
     }
   });
 
   const onDelete = useCallback(async () => {
     try {
-      await deleteEvent(`${currentEvent?.id}`);
-      toast.success('Delete success!');
-      onClose();
+      const result = await deleteEvent(currentEvent?.id);
+      if (result) {
+        toast.success('Etkinlik başarıyla silindi!');
+        onClose();
+        if (typeof window.refreshCalendarEvents === 'function') {
+          window.refreshCalendarEvents();
+        }
+      }
     } catch (error) {
       console.error(error);
+      toast.error('Etkinlik silinirken bir hata oluştu');
     }
   }, [currentEvent?.id, onClose]);
 

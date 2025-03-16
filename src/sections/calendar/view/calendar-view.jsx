@@ -103,67 +103,79 @@ export function CalendarView() {
   const dataFiltered = applyFilter({ inputData: events, filters: filters.state, dateError });
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        const token = sessionStorage.getItem('jwt_access_token');
-        const userInfo = getEmailFromToken();
-        
-        if (!userInfo?.email) {
-          console.error('Email bulunamadı');
-          return;
-        }
-
-        if (userInfo.isAdmin) {
-          setEvents([]);
-          return;
-        }
-
-        const therapistId = await getTherapistId(userInfo.email);
-        if (therapistId) {
-          const response = await fetch(
-            `${CONFIG.psikoHekimBaseUrl}/api/calendar/events?therapistId=${therapistId}`,
-            {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            }
-          );
-
-          const data = await response.json();
-
-          if (data.events) {
-            const formattedEvents = data.events.map((event) => ({
-              id: String(event.id),
-              title: event.title.length > 20 ? `${event.title.substring(0, 20)}...` : event.title,
-              extendedProps: {
-                description: event.description,
-                location: event.location || 'Online Görüşme',
-                status: event.status,
-                reminderMinutes: event.reminderMinutes,
-                therapistId: event.therapistId,
-                color: event.color
-              },
-              start: event.startTime,
-              end: event.endTime,
-              backgroundColor: event.color || '#1890FF',
-              borderColor: event.color || '#1890FF',
-              textColor: '#FFFFFF',
-              display: 'block'
-            }));
-            
-            setEvents(formattedEvents);
-          }
-        }
-        
-      } catch (error) {
-        console.error('Etkinlikler yüklenirken hata:', error);
-        toast.error('Takvim bilgileri alınamadı');
-      } finally {
-        setLoading(false);
-      }
+    // Takvimi yenilemek için global bir fonksiyon tanımlayalım
+    window.refreshCalendarEvents = () => {
+      fetchEvents();
     };
 
+    // Component unmount olduğunda temizleyelim
+    return () => {
+      delete window.refreshCalendarEvents;
+    };
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const token = sessionStorage.getItem('jwt_access_token');
+      const userInfo = getEmailFromToken();
+      
+      if (!userInfo?.email) {
+        console.error('Email bulunamadı');
+        return;
+      }
+
+      if (userInfo.isAdmin) {
+        setEvents([]);
+        return;
+      }
+
+      const therapistId = await getTherapistId(userInfo.email);
+      if (therapistId) {
+        const response = await fetch(
+          `${CONFIG.psikoHekimBaseUrl}/api/calendar/events?therapistId=${therapistId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.events) {
+          const formattedEvents = data.events.map((event) => ({
+            id: String(event.id),
+            title: event.title.length > 20 ? `${event.title.substring(0, 20)}...` : event.title,
+            extendedProps: {
+              description: event.description || '',
+              location: event.location || 'Online Görüşme',
+              status: event.status || 'CONFIRMED',
+              reminderMinutes: event.reminderMinutes || 30,
+              therapistId: event.therapistId,
+              color: event.color
+            },
+            start: event.startTime,
+            end: event.endTime,
+            backgroundColor: event.color || '#1890FF',
+            borderColor: event.color || '#1890FF',
+            textColor: '#FFFFFF',
+            display: 'block'
+          }));
+          
+          setEvents(formattedEvents);
+        }
+      }
+      
+    } catch (error) {
+      console.error('Etkinlikler yüklenirken hata:', error);
+      toast.error('Takvim bilgileri alınamadı');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchEvents();
   }, [navigate]);
 
@@ -180,16 +192,21 @@ export function CalendarView() {
   const handleEventClick = (info) => {
     if (!info?.event) return;
 
+    // Status değerini büyük harfe çevirelim
+    const status = info.event.extendedProps?.status 
+      ? info.event.extendedProps.status.toUpperCase() 
+      : 'CONFIRMED';
+
     const clickedEvent = {
       id: String(info.event.id),
       title: info.event.title,
-      description: info.event.extendedProps?.description,
+      description: info.event.extendedProps?.description || '',
       location: info.event.extendedProps?.location || 'Online Görüşme',
       start: dayjs(info.event.start),
       end: dayjs(info.event.end),
-      color: info.event.backgroundColor || info.event.color,
-      status: info.event.extendedProps?.status,
-      reminderMinutes: info.event.extendedProps?.reminderMinutes,
+      color: info.event.backgroundColor || info.event.extendedProps?.color || '#1890FF',
+      status,
+      reminderMinutes: info.event.extendedProps?.reminderMinutes || 30,
       therapistId: info.event.extendedProps?.therapistId
     };
     
