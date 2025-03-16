@@ -7,6 +7,7 @@ import timelinePlugin from '@fullcalendar/timeline';
 import trLocale from '@fullcalendar/core/locales/tr';
 import interactionPlugin from '@fullcalendar/interaction';
 import React, { useEffect, useState, useCallback } from 'react';
+import dayjs from 'dayjs';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -30,6 +31,9 @@ import { updateEvent, useGetEvents } from 'src/actions/calendar';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 
+// eslint-disable-next-line import/order
+import { getEmailFromToken, getTherapistId } from 'src/auth/context/jwt/action';
+
 import { StyledCalendar } from '../styles';
 import { useEvent } from '../hooks/use-event';
 import { CalendarEdit } from '../calendar-edit';
@@ -39,6 +43,7 @@ import { useCalendar } from '../hooks/use-calendar';
 import { CalendarToolbar } from '../calendar-toolbar';
 import { CalendarFilters } from '../calendar-filters';
 import { CalendarFiltersResult } from '../calendar-filters-result';
+
 
 // ----------------------------------------------------------------------
 
@@ -102,47 +107,68 @@ export function CalendarView() {
       try {
         setLoading(true);
         const token = sessionStorage.getItem('jwt_access_token');
-
-        const response = await fetch(
-          `${CONFIG.psikoHekimBaseUrl}/api/calendar/events?therapistId=${1}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        );
-
-        const data = await response.json();
-        if (data.events) {
-          // FullCalendar formatına dönüştür
-          const formattedEvents = data.events.map((event) => ({
-            id: event.id,
-            title: event.title,
-            description: event.description,
-            start: event.startTime,  // ISO string format
-            end: event.endTime,      // ISO string format
-            color: event.color,
-            location: event.location,
-            status: event.status,
-            source: event.source,
-            extendedProps: {
-              reminderMinutes: event.reminderMinutes,
-              therapistId: event.therapistId
-            }
-          }));
-          
-          setEvents(formattedEvents);
-          console.log('Formatted events:', formattedEvents); // Debug için
+        const userInfo = getEmailFromToken();
+        
+        if (!userInfo?.email) {
+          console.error('Email bulunamadı');
+          return;
         }
+
+        if (userInfo.isAdmin) {
+          setEvents([]);
+          return;
+        }
+
+        const therapistId = await getTherapistId(userInfo.email);
+        if (therapistId) {
+          const response = await fetch(
+            `${CONFIG.psikoHekimBaseUrl}/api/calendar/events?therapistId=${therapistId}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+
+          const data = await response.json();
+          console.log('Raw Backend Data:', data);
+
+          if (data.events) {
+            const formattedEvents = data.events.map((event) => ({
+              id: String(event.id),
+              title: event.title.length > 20 ? `${event.title.substring(0, 20)}...` : event.title,
+              extendedProps: {
+                description: event.description,
+                location: event.location || 'Online Görüşme',
+                status: event.status,
+                reminderMinutes: event.reminderMinutes,
+                therapistId: event.therapistId,
+                color: event.color
+              },
+              start: event.startTime,
+              end: event.endTime,
+              backgroundColor: event.color || '#1890FF',
+              borderColor: event.color || '#1890FF',
+              textColor: '#FFFFFF',
+              display: 'block'
+            }));
+            
+            console.log('Raw Event Color:', data.events[0]?.color);
+            console.log('Formatted Event:', formattedEvents[0]);
+            setEvents(formattedEvents);
+          }
+        }
+        
       } catch (error) {
         console.error('Etkinlikler yüklenirken hata:', error);
+        toast.error('Takvim bilgileri alınamadı');
       } finally {
         setLoading(false);
       }
     };
 
     fetchEvents();
-  }, []);
+  }, [navigate]);
 
   const renderResults = (
     <CalendarFiltersResult
@@ -153,6 +179,28 @@ export function CalendarView() {
   );
 
   const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
+
+  const handleEventClick = (info) => {
+    if (!info?.event) return;
+
+    const clickedEvent = {
+      id: String(info.event.id),
+      title: info.event.title,
+      description: info.event.extendedProps?.description,
+      location: info.event.extendedProps?.location || 'Online Görüşme',
+      start: dayjs(info.event.start),
+      end: dayjs(info.event.end),
+      color: info.event.backgroundColor || info.event.color,
+      status: info.event.extendedProps?.status,
+      reminderMinutes: info.event.extendedProps?.reminderMinutes,
+      therapistId: info.event.extendedProps?.therapistId
+    };
+    
+    console.log('Events Array:', events);
+    console.log('Clicked Event:', clickedEvent);
+    console.log('Event ID being set:', clickedEvent.id);
+    onClickEvent(clickedEvent);
+  };
 
   return (
     <>
@@ -225,14 +273,38 @@ export function CalendarView() {
               events={events}
               headerToolbar={false}
               select={onSelectRange}
-              eventClick={onClickEvent}
+              eventClick={handleEventClick}
               aspectRatio={3}
+              eventTimeFormat={{
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+              }}
               eventDrop={(arg) => {
                 onDropEvent(arg, updateEvent);
               }}
               eventResize={(arg) => {
                 onResizeEvent(arg, updateEvent);
               }}
+              eventContent={(arg) => (
+                <div style={{ 
+                  backgroundColor: arg.event.backgroundColor,
+                  color: '#FFFFFF',
+                  padding: '2px 5px',
+                  borderRadius: '3px',
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <div style={{ fontWeight: 'bold' }}>{arg.timeText}</div>
+                  <div style={{ 
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>{arg.event.title}</div>
+                </div>
+              )}
               plugins={[
                 listPlugin,
                 dayGridPlugin,
@@ -248,11 +320,11 @@ export function CalendarView() {
       <Dialog
         fullWidth
         maxWidth="xs"
-        open={openForm} // Bu ilk Dialog için doğru
+        open={openForm}
         onClose={onCloseForm}
       >
         <DialogTitle sx={{ minHeight: 76 }}>
-          {openForm && <> {currentEvent?.id ? 'Edit' : 'Add'} event</>}
+          {selectedRange ? 'Yeni Etkinlik' : currentEvent?.id ? 'Etkinliği Düzenle' : 'Yeni Etkinlik'}
         </DialogTitle>
         <CalendarForm
           currentEvent={currentEvent}

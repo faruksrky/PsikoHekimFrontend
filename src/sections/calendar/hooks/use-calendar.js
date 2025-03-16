@@ -108,15 +108,12 @@ export function useCalendar() {
     [calendarEl, onOpenForm]
   );
 
-  const onClickEvent = useCallback(
-    (arg) => {
-      const { event } = arg;
-
-      onOpenForm();
-      setSelectEventId(event.id);
-    },
-    [onOpenForm]
-  );
+  const onClickEvent = useCallback((event) => {
+    if (!event?.id) return; // Event ID'si yoksa return
+    
+    setSelectEventId(event.id);
+    setOpenForm(true);
+  }, []);
 
   const onClickCalendarEvent = useCallback(
     (arg) => {

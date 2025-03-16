@@ -6,28 +6,27 @@ import { CALENDAR_COLOR_OPTIONS } from 'src/_mock/_calendar';
 // ----------------------------------------------------------------------
 
 export function useEvent(events, selectEventId, selectedRange, openForm) {
-  const currentEvent = events.find((event) => event.id === selectEventId);
+  return useMemo(() => {
+    if (selectEventId) {
+      // Event ID'ye göre event'i bul
+      const event = events.find((item) => item.id === selectEventId);
+      
+      // Debug için
+      console.log('Selected Event ID:', selectEventId);
+      console.log('Found Event:', event);
+      console.log('All Events:', events);
 
-  const defaultValues = useMemo(
-    () => ({
-      id: '',
-      title: '',
-      description: '',
-      color: CALENDAR_COLOR_OPTIONS[1],
-      allDay: false,
-      start: selectedRange ? selectedRange.start : dayjs(new Date()).format(),
-      end: selectedRange ? selectedRange.end : dayjs(new Date()).format(),
-    }),
-    [selectedRange]
-  );
+      return event;
+    }
 
-  if (!openForm) {
-    return undefined;
-  }
+    if (selectedRange && openForm) {
+      // Yeni event için seçilen zaman aralığı
+      return {
+        start: selectedRange.start,
+        end: selectedRange.end,
+      };
+    }
 
-  if (currentEvent || selectedRange) {
-    return { ...defaultValues, ...currentEvent };
-  }
-
-  return defaultValues;
+    return null;
+  }, [events, selectEventId, selectedRange, openForm]);
 }

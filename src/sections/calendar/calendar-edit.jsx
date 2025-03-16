@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { jwtDecode } from 'jwt-decode';
+import { toast } from 'src/components/snackbar';
 
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
@@ -15,29 +16,68 @@ import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import { GoogleIcon, OutlookIcon } from 'src/assets/icons';
 import { CONFIG } from '../../config-global';
+import { getEmailFromToken } from '../../auth/context/jwt/action';
 
 
 export function CalendarEdit() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const getTherapistId = async (email) => {
+    try {
+      const token = sessionStorage.getItem('jwt_access_token');
+      const response = await fetch(
+        `${CONFIG.psikoHekimBaseUrl}/api/therapist/by-email?email=${email}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        const error = await response.json();
+        toast.error(error.message || 'Lütfen önce bir terapist seçiniz');
+        navigate('/dashboard/therapist-select'); // Terapist seçim sayfasına yönlendir
+        return null;
+      }
+      
+      const therapistId = await response.json();
+      return therapistId;
+    } catch (error) {
+      console.error('Therapist ID alınamadı:', error);
+      toast.error('Lütfen önce bir terapist seçiniz');
+      navigate('/dashboard/therapist-select'); // Terapist seçim sayfasına yönlendir
+      return null;
+    }
+  };
+
   const handleGoogleCalendarAuth = async () => {
     try {
       setLoading(true);
       const token = sessionStorage.getItem('jwt_access_token');
-      const therapistId = sessionStorage.getItem('therapistId');
-
-      if (!token || !therapistId) {
-        console.error('Token veya Therapist ID bulunamadı');
+      const email = getEmailFromToken();
+      
+      if (!token || !email) {
+        console.error('Token veya email bulunamadı');
         navigate('/auth/login');
         return;
       }
 
-      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.googleCalendar.auth}?therapistId=${therapistId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const therapistId = await getTherapistId(email);
+      if (!therapistId) {
+        console.error('Therapist ID bulunamadı');
+        return;
+      }
+
+      const response = await fetch(
+        `${CONFIG.psikoHekimBaseUrl}${CONFIG.googleCalendar.auth}?therapistId=${therapistId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         }
-      });
+      );
       
       const data = await response.json();
       if (data.authUrl) {

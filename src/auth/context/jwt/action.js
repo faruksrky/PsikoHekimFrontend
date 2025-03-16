@@ -1,4 +1,5 @@
 import qs from 'qs';
+import { jwtDecode } from 'jwt-decode';
 
 import axios, { endpoints } from 'src/utils/axios';
 
@@ -122,4 +123,46 @@ export const resetPassword = async ({ username }) => {
     console.error('Error during password reset:', error);
     throw error;
   }
+};
+
+// Önce getTherapistId'yi export edelim
+export const getTherapistId = async (email) => {
+  try {
+    const token = sessionStorage.getItem('jwt_access_token');
+    const response = await fetch(
+      `${CONFIG.psikoHekimBaseUrl}/therapist/by-email?email=${email}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error('Terapist bilgisi alınamadı');
+    }
+
+    const therapistId = await response.json();
+    return therapistId;
+  } catch (error) {
+    console.error('Therapist ID alınamadı:', error);
+    return null;
+  }
+};
+
+// Sonra getEmailFromToken'ı export edelim
+export const getEmailFromToken = () => {
+  const token = sessionStorage.getItem('jwt_access_token');
+  if (!token) return null;
+  
+  const decoded = jwtDecode(token);
+  const isAdmin = decoded.resource_access?.DN?.roles?.includes('Admin');
+  
+  return {
+    email: decoded.email,
+    isAdmin
+  };
 };

@@ -1,7 +1,8 @@
 import { z as zod } from 'zod';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
+import dayjs from 'dayjs';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -10,6 +11,7 @@ import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
+import MenuItem from '@mui/material/MenuItem';
 
 import { uuidv4 } from 'src/utils/uuidv4';
 import { fIsAfter } from 'src/utils/format-time';
@@ -25,19 +27,14 @@ import { ColorPicker } from 'src/components/color-utils';
 // ----------------------------------------------------------------------
 
 export const EventSchema = zod.object({
-  title: zod
-    .string()
-    .min(1, { message: 'Title is required!' })
-    .max(100, { message: 'Title must be less than 100 characters' }),
-  description: zod
-    .string()
-    .min(1, { message: 'Description is required!' })
-    .min(50, { message: 'Description must be at least 50 characters' }),
-  // Not required
+  title: zod.string().min(1, { message: 'Title is required!' }),
+  description: zod.string().min(1, { message: 'Description is required!' }),
+  location: zod.string(),
+  status: zod.enum(['CONFIRMED', 'TENTATIVE', 'CANCELLED']),
   color: zod.string(),
-  allDay: zod.boolean(),
   start: zod.union([zod.string(), zod.number()]),
   end: zod.union([zod.string(), zod.number()]),
+  reminderMinutes: zod.number().min(0).max(1440),
 });
 
 // ----------------------------------------------------------------------
@@ -46,7 +43,16 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(EventSchema),
-    defaultValues: currentEvent,
+    defaultValues: {
+      title: currentEvent?.title || '',
+      description: currentEvent?.description || '',
+      location: currentEvent?.location || '',
+      status: currentEvent?.status || 'CONFIRMED',
+      color: currentEvent?.color || colorOptions[0],
+      start: currentEvent?.start ? dayjs(currentEvent.start) : dayjs(),
+      end: currentEvent?.end ? dayjs(currentEvent.end) : dayjs().add(1, 'hour'),
+      reminderMinutes: currentEvent?.reminderMinutes || 30,
+    },
   });
 
   const {
@@ -61,12 +67,26 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
   const dateError = fIsAfter(values.start, values.end);
 
+  useEffect(() => {
+    if (currentEvent) {
+      methods.reset({
+        title: currentEvent.title || '',
+        description: currentEvent.description || '',
+        location: currentEvent.location || '',
+        status: currentEvent.status || 'CONFIRMED',
+        color: currentEvent.color || colorOptions[0],
+        start: currentEvent.start ? dayjs(currentEvent.start) : dayjs(),
+        end: currentEvent.end ? dayjs(currentEvent.end) : dayjs().add(1, 'hour'),
+        reminderMinutes: currentEvent.reminderMinutes || 30,
+      });
+    }
+  }, [currentEvent, colorOptions, methods]);
+
   const onSubmit = handleSubmit(async (data) => {
     const eventData = {
       id: currentEvent?.id ? currentEvent?.id : uuidv4(),
       color: data?.color,
       title: data?.title,
-      allDay: data?.allDay,
       description: data?.description,
       end: data?.end,
       start: data?.start,
@@ -103,21 +123,32 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     <Form methods={methods} onSubmit={onSubmit}>
       <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>
         <Stack spacing={3}>
-          <Field.Text name="title" label="Title" />
+          <Field.Text name="title" label="Başlık" />
 
-          <Field.Text name="description" label="Description" multiline rows={3} />
+          <Field.Text name="description" label="Açıklama" multiline rows={3} />
 
-          <Field.Switch name="allDay" label="All day" />
+          <Field.Text name="location" label="Konum" />
 
-          <Field.MobileDateTimePicker name="start" label="Start date" />
+          <Field.Select name="status" label="Durum">
+            <MenuItem value="CONFIRMED">Onaylandı</MenuItem>
+            <MenuItem value="TENTATIVE">Geçici</MenuItem>
+            <MenuItem value="CANCELLED">İptal Edildi</MenuItem>
+          </Field.Select>
+
+          <Field.MobileDateTimePicker 
+            name="start" 
+            label="Başlangıç Tarihi"
+            format="DD/MM/YYYY HH:mm"
+          />
 
           <Field.MobileDateTimePicker
             name="end"
-            label="End date"
+            label="Bitiş Tarihi"
+            format="DD/MM/YYYY HH:mm"
             slotProps={{
               textField: {
                 error: dateError,
-                helperText: dateError ? 'End date must be later than start date' : null,
+                helperText: dateError ? 'Bitiş tarihi başlangıç tarihinden sonra olmalıdır' : null,
               },
             }}
           />
@@ -138,7 +169,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
       <DialogActions sx={{ flexShrink: 0 }}>
         {!!currentEvent?.id && (
-          <Tooltip title="Delete event">
+          <Tooltip title="Etkinliği Sil">
             <IconButton onClick={onDelete}>
               <Iconify icon="solar:trash-bin-trash-bold" />
             </IconButton>
@@ -148,7 +179,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
         <Box sx={{ flexGrow: 1 }} />
 
         <Button variant="outlined" color="inherit" onClick={onClose}>
-          Cancel
+          İptal
         </Button>
 
         <LoadingButton
@@ -157,7 +188,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
           loading={isSubmitting}
           disabled={dateError}
         >
-          Save changes
+          {currentEvent?.id ? 'Güncelle' : 'Ekle'}
         </LoadingButton>
       </DialogActions>
     </Form>
