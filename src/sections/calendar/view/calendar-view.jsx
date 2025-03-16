@@ -101,27 +101,41 @@ export function CalendarView() {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.calendar.events}`, {
-          credentials: 'include',
-        });
+        const token = sessionStorage.getItem('jwt_access_token');
+
+        const response = await fetch(
+          `${CONFIG.psikoHekimBaseUrl}/api/calendar/events?therapistId=${1}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
 
         const data = await response.json();
-        
-        if (data.success) {
+        if (data.events) {
+          // FullCalendar formatına dönüştür
           const formattedEvents = data.events.map((event) => ({
             id: event.id,
             title: event.title,
             description: event.description,
-            start: event.startTime,
-            end: event.endTime,
-            source: event.source,
+            start: event.startTime,  // ISO string format
+            end: event.endTime,      // ISO string format
+            color: event.color,
             location: event.location,
             status: event.status,
+            source: event.source,
+            extendedProps: {
+              reminderMinutes: event.reminderMinutes,
+              therapistId: event.therapistId
+            }
           }));
+          
           setEvents(formattedEvents);
+          console.log('Formatted events:', formattedEvents); // Debug için
         }
       } catch (error) {
-        toast.error('Takvim verileri alınamadı');
+        console.error('Etkinlikler yüklenirken hata:', error);
       } finally {
         setLoading(false);
       }

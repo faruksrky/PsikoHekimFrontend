@@ -2,6 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
+import { jwtDecode } from 'jwt-decode';
 
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
@@ -20,9 +21,33 @@ export function CalendarEdit() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleGoogleCalendarAuth = () => {
-    setLoading(true);
-    window.location.href = `${CONFIG.psikoHekimBaseUrl}${CONFIG.calendar.integrations.google.auth}`;
+  const handleGoogleCalendarAuth = async () => {
+    try {
+      setLoading(true);
+      const token = sessionStorage.getItem('jwt_access_token');
+      const therapistId = sessionStorage.getItem('therapistId');
+
+      if (!token || !therapistId) {
+        console.error('Token veya Therapist ID bulunamadı');
+        navigate('/auth/login');
+        return;
+      }
+
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.googleCalendar.auth}?therapistId=${therapistId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      }
+    } catch (error) {
+      console.error('Google Calendar yetkilendirme hatası:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOutlookCalendarAuth = () => {
