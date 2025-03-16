@@ -11,11 +11,6 @@ export function useEvent(events, selectEventId, selectedRange, openForm) {
       // Event ID'ye göre event'i bul
       const event = events.find((item) => item.id === selectEventId);
       
-      // Debug için
-      console.log('Selected Event ID:', selectEventId);
-      console.log('Found Event:', event);
-      console.log('All Events:', events);
-
       return event;
     }
 

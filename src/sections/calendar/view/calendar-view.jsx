@@ -131,7 +131,6 @@ export function CalendarView() {
           );
 
           const data = await response.json();
-          console.log('Raw Backend Data:', data);
 
           if (data.events) {
             const formattedEvents = data.events.map((event) => ({
@@ -153,8 +152,6 @@ export function CalendarView() {
               display: 'block'
             }));
             
-            console.log('Raw Event Color:', data.events[0]?.color);
-            console.log('Formatted Event:', formattedEvents[0]);
             setEvents(formattedEvents);
           }
         }
@@ -196,9 +193,6 @@ export function CalendarView() {
       therapistId: info.event.extendedProps?.therapistId
     };
     
-    console.log('Events Array:', events);
-    console.log('Clicked Event:', clickedEvent);
-    console.log('Event ID being set:', clickedEvent.id);
     onClickEvent(clickedEvent);
   };
 
