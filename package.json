@@ -14,14 +14,15 @@
     "fm:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
     "fm:fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "rm:all": "rm -rf node_modules .next out dist build",
-    "re:start": "npm run rm:all && npm install && npm run dev",
-    "re:build": "npm run rm:all && npm install && npm run build",
+    "re:start": "yarn rm:all && yarn install && yarn dev",
+    "re:build": "yarn rm:all && yarn install && yarn build",
     "re:build-npm": "npm run rm:all && npm install && npm run build",
     "dev:host": "vite --host"
   },
   "engines": {
     "node": "20.x"
   },
+  "packageManager": "yarn@1.22.22",
   "dependencies": {
     "@date-io/date-fns": "^3.0.0",
     "@emotion/cache": "^11.13.1",
