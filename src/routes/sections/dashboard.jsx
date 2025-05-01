@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 
 import { CONFIG } from 'src/config-global';
 import { DashboardLayout } from 'src/layouts/dashboard';
@@ -17,7 +17,8 @@ const UserCreatePage = lazy(() => import('src/pages/dashboard/user/new'));
 const UserEditPage = lazy(() => import('src/pages/dashboard/user/edit')); 
 const PatientListPage = lazy(() => import('src/pages/dashboard/patient/list'));
 const PatientCreatePage = lazy(() => import('src/pages/dashboard/patient/new'));
-const AssignTherapistView = lazy(() => import('src/pages/dashboard/patient/assignTherapist'));
+const PatientDetailsPage = lazy(() => import('src/sections/patient/view/patient-details-view').then(module => ({ default: module.PatientDetailsView })));
+const AssignTherapistView = lazy(() => import('src/sections/patient/view/patient-assign-therapist').then(module => ({ default: module.PatientAssignTherapistView })));
 const PatientEditPage = lazy(() => import('src/pages/dashboard/patient/edit'));
 const TherapistListPage = lazy(() => import('src/pages/dashboard/therapist/list'));
 const TherapistCreatePage = lazy(() => import('src/pages/dashboard/therapist/new'));
@@ -47,10 +48,12 @@ export const dashboardRoutes = [
       {
         path: 'patient',
         children: [
+          { element: <Navigate to="/dashboard/patient/list" replace />, index: true },
           { path: 'list', element: <PatientListPage /> },
           { path: 'new', element: <PatientCreatePage /> },
-          { path: 'assignTherapist', element: < AssignTherapistView/> },
+          { path: ':id/details', element: <PatientDetailsPage /> },
           { path: ':id/edit', element: <PatientEditPage /> },
+          { path: ':id/assign-therapist', element: <AssignTherapistView /> },
         ],
       },
     
