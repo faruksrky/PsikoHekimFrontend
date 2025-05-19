@@ -21,21 +21,27 @@ export function AuthProvider({ children }) {
       const accessToken = sessionStorage.getItem(STORAGE_KEY);
   
       if (accessToken && isValidToken(accessToken)) {
-        setSession(accessToken);
-
         const jwtDecodeModule = jwtDecode;
         const decodedToken = jwtDecodeModule.default
           ? jwtDecodeModule.default(accessToken)
-          : jwtDecodeModule(accessToken); // default varsa kullan, yoksa modülü direkt kullan
+          : jwtDecodeModule(accessToken);
 
-       const { given_name: user, email } = decodedToken;
-          
-       setState({ user: {user, email, accessToken }, loading: false });
+        // Token'dan kullanıcı bilgilerini al
+        const user = {
+          email: decodedToken.email,
+          name: decodedToken.name
+        };
+
+        // Session'ı güncelle
+        await setSession(accessToken, user);
+        sessionStorage.setItem('username', user.name);
+        sessionStorage.setItem('email', user.email);
+        setState({ user: { ...user, accessToken }, loading: false });
       } else {
         setState({ user: null, email: null, loading: false });
       }
     } catch (error) {
-      console.error(error);
+      console.error('Session check error:', error);
       setState({ user: null, loading: false });
     }
   }, [setState]);

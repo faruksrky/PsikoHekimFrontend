@@ -23,7 +23,21 @@ export const signInWithPassword = async ({ username, password }) => {
       if (!accessToken) {
         throw new Error('Access Token bulunamadı');
       }
-      setSession(accessToken, username);
+
+      // Kullanıcı bilgilerini al
+      const userInfoRes = await axiosInstanceKeycloak.get('/keycloak/userInfo', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+
+      const userInfo = userInfoRes.data;
+      const user = {
+        email: userInfo.email,
+        name: userInfo.name
+      };
+
+      setSession(accessToken, user);
 
     } catch (error) {
       if (error.response) {

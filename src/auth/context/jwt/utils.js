@@ -69,7 +69,7 @@ export function tokenExpired(exp) {
 
 // ----------------------------------------------------------------------
 
-export async function setSession(accessToken,user) {
+export async function setSession(accessToken, user) {
   try {
     if (accessToken) {
       sessionStorage.setItem(STORAGE_KEY, accessToken);
@@ -77,7 +77,7 @@ export async function setSession(accessToken,user) {
 
       axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
-      const decodedToken = jwtDecode(accessToken); // ~3 days by minimals server
+      const decodedToken = jwtDecode(accessToken);
 
       if (decodedToken && 'exp' in decodedToken) {
         tokenExpired(decodedToken.exp);

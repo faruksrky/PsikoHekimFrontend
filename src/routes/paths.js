@@ -49,6 +49,7 @@ export const paths = {
   dashboard: {
     root: ROOTS.DASHBOARD,
     calendar: `${ROOTS.DASHBOARD}/calendar`,
+    inbox: `${ROOTS.DASHBOARD}/inbox`,
     user: {
       root: `${ROOTS.DASHBOARD}/user`,
       new: `${ROOTS.DASHBOARD}/user/new`,

@@ -27,10 +27,17 @@ export function TableHeadCustom({
   onSort,
   orderBy,
   headLabel,
+  headCells,
   rowCount = 0,
   numSelected = 0,
   onSelectAllRows,
 }) {
+  const cells = headCells || headLabel;
+
+  if (!cells) {
+    return null;
+  }
+
   return (
     <TableHead sx={sx}>
       <TableRow>
@@ -48,7 +55,7 @@ export function TableHeadCustom({
           </TableCell>
         )}
 
-        {headLabel.map((headCell) => (
+        {cells.map((headCell) => (
           <TableCell
             key={headCell.id}
             align={headCell.align || 'left'}
