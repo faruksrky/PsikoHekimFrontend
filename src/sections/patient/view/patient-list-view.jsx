@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -43,7 +43,8 @@ import {
   RenderCellGender,
   RenderCellAddress,
   RenderCellCountry,
-  RenderCellFullName
+  RenderCellFullName,
+  RenderCellReference
 } from '../patient-table-row';
 
 // ----------------------------------------------------------------------
@@ -65,16 +66,21 @@ export function PatientListView() {
 
   const [filterButtonEl, setFilterButtonEl] = useState(null);
 
+  const gridRef = useRef();
+
   useEffect(() => {
-    if (!patients.length) {
+    if (!patients || !patients.length) {
+      setTableData([]);
       return;
     }
+
     // Filtreleme yapılmadıysa tüm verileri göster
     if (!filters.state.patientGender.length && !filters.state.patientCountry.length) {
       const transformedPatients = patients.map((patient) => ({
         ...patient,
         id: patient.patientId,
       }));
+      
       setTableData(transformedPatients);
       return;
     }
@@ -105,7 +111,6 @@ export function PatientListView() {
       ...patient,
       id: patient.patientId,
     }));
-
 
     setTableData(transformedPatients);
   }, [patients, filters.state.patientGender, filters.state.patientCountry]);
@@ -228,6 +233,15 @@ export function PatientListView() {
     },
 
     {
+      field: 'patientReference',
+      headerName: 'Referans',
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => <RenderCellReference params={params} />,
+    },
+    
+
+    {
       type: 'actions',
       field: 'actions',
       headerName: ' ',
@@ -263,15 +277,38 @@ export function PatientListView() {
     },
   ];
 
+  // Modal açıkken DataGrid'den focus'u alın
+  useEffect(() => {
+    const handleModalOpen = () => {
+      if (document.activeElement && gridRef.current && gridRef.current.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
+    };
+
+    // cleanup
+    return () => {};
+  }, []);
+
+  useEffect(() => {
+    // Her render'da aktif elementin aria-hidden olup olmadığını kontrol et
+    const active = document.activeElement;
+    if (
+      active &&
+      active.getAttribute('aria-hidden') === 'true'
+    ) {
+      active.blur();
+    }
+  });
+
   return (
     <>
       <DashboardContent maxWidth="xl" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <CustomBreadcrumbs
-          heading="Hasta Listesi"
+          heading="Danışan Listesi"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Hasta', href: paths.dashboard.patient.root },
-            { name: 'Hasta Listesi' },
+            { name: 'Danışan', href: paths.dashboard.patient.root },
+            { name: 'Danışan Listesi' },
           ]}
           action={
             <Button
@@ -280,7 +317,7 @@ export function PatientListView() {
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
-              Yeni Hasta
+              Yeni Danışan
             </Button>
           }
           sx={{ mb: { xs: 3, md: 5 } }}
@@ -319,6 +356,7 @@ export function PatientListView() {
                 overflow: 'auto',
               },
             }}
+            ref={gridRef}
           />
         </Card>
       </DashboardContent>

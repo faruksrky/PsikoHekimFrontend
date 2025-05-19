@@ -37,3 +37,7 @@ export function RenderCellCity({ params }) {
 export function RenderCellGender({ params }) {
   return params.row.patientGender;
 }
+
+export function RenderCellReference({ params }) {
+  return params.row.patientReference;
+}

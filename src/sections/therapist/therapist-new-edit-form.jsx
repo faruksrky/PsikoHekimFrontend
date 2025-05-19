@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { useMemo, useState, useCallback } from 'react';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
+import { toast } from 'src/components/snackbar';
 
 import Box from '@mui/material/Box';
 import MuiAlert from '@mui/lab/Alert';
@@ -22,11 +23,11 @@ import { useRouter } from 'src/routes/hooks';
 
 import axios from 'src/utils/axios';
 
-import { EXPERIENCE_THERAPIST_OPTIONS } from 'src/_mock/_experience';
 import {
   THERAPIST_TYPE_OPTIONS,
   PSIKOLOG_SPECIALISTIES_OPTIONS,
-  PSIKIYATR_SPECIALISTIES_OPTIONS
+  PSIKIYATR_SPECIALISTIES_OPTIONS,
+  EXPERIENCE_YEARS_OPTIONS
 } from 'src/_mock/_therapist';
 
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
@@ -39,24 +40,24 @@ dayjs.locale('tr');
 
 // Schema tanımı (validation için)
 export const NewTherapistSchema = zod.object({
-  firstName: zod.string().min(1, { message: 'Ad bilgisi gereklidir!' }),
-  lastName: zod.string().min(1, { message: 'Soyad bilgisi gereklidir!' }),
-  email: zod
+  therapistFirstName: zod.string().min(1, { message: 'Ad bilgisi gereklidir!' }),
+  therapistLastName: zod.string().min(1, { message: 'Soyad bilgisi gereklidir!' }),
+  therapistEmail: zod
     .string()
     .min(1, { message: 'Email bilgisi gereklidir!' })
     .email({ message: 'Geçerli bir mail adresi girilmelidir!' }),
-  phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
+  therapistPhoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
   therapistType: zod.string().min(1, { message: 'Danışman türü bilgisi gereklidir!' }),
-  specializationAreas: zod
+  therapistSpecializationAreas: zod
     .string()
     .array()
     .nonempty({ message: 'En az bir adet Uzmanlık alanı seçilmelidir!' }),
-  yearsOfExperience: zod.string().min(1, { message: 'Deneyim bilgisi gereklidir!' }),
-  education: zod.string().min(1, { message: 'Eğitim bilgisi gereklidir!' }),
-  address: zod.string().optional(),
-  university: zod.string().optional(),
-  certifications: zod.string().optional(),
-  appointmentFee: zod.number().min(1, { message: 'Randevu ücret bilgisi gereklidir!' }),
+  therapistYearsOfExperience: zod.string().min(1, { message: 'Deneyim bilgisi gereklidir!' }),
+  therapistEducation: zod.string().min(1, { message: 'Eğitim bilgisi gereklidir!' }),
+  therapistAddress: zod.string().optional(),
+  therapistUniversity: zod.string().optional(),
+  therapistCertifications: zod.string().optional(),
+  therapistAppointmentFee: zod.number().min(1, { message: 'Randevu ücret bilgisi gereklidir!' }),
 });
 
 export function TherapistNewEditForm({ currentTherapist }) {
@@ -71,23 +72,22 @@ export function TherapistNewEditForm({ currentTherapist }) {
   // Varsayılan değerler
   const defaultValues = useMemo(
     () => ({
-      firstName: currentTherapist?.firstName || '',
-      lastName: currentTherapist?.lastName || '',
-      email: currentTherapist?.email || '',
-      phoneNumber: currentTherapist?.phoneNumber || '',
+      therapistFirstName: currentTherapist?.therapistFirstName || '',
+      therapistLastName: currentTherapist?.therapistLastName || '',
+      therapistEmail: currentTherapist?.therapistEmail || '',
+      therapistPhoneNumber: currentTherapist?.therapistPhoneNumber || '',
       therapistType: currentTherapist?.therapistType || '',
-      specializationAreas: currentTherapist?.specializationAreas || [],
-      yearsOfExperience: currentTherapist?.yearsOfExperience || '',
-      education: String(currentTherapist?.education || ''),
-      address: currentTherapist?.address || '',
-      university: currentTherapist?.university || '',
-      certifications: currentTherapist?.certifications || '',
-      appointmentFee: currentTherapist?.appointmentFee || '',
+      therapistSpecializationAreas: currentTherapist?.therapistSpecializationAreas || [],
+      therapistYearsOfExperience: currentTherapist?.therapistYearsOfExperience || 'ZERO_TO_ONE',
+      therapistEducation: String(currentTherapist?.therapistEducation || ''),
+      therapistAddress: currentTherapist?.therapistAddress || '',
+      therapistUniversity: currentTherapist?.therapistUniversity || '',
+      therapistCertifications: currentTherapist?.therapistCertifications || '',
+      therapistAppointmentFee: currentTherapist?.therapistAppointmentFee || '',
     }),
     [currentTherapist]
   );
 
-  // Form kontrolü
   // Form kontrolü
   const methods = useForm({
     mode: 'onSubmit',
@@ -102,9 +102,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
     setValue,
     handleSubmit,
     formState: { isSubmitting },
-  } = useForm({
-    resolver: zodResolver(NewTherapistSchema),
-  });
+  } = methods;
 
   const values = watch();
 
@@ -119,17 +117,50 @@ export function TherapistNewEditForm({ currentTherapist }) {
   };
 
   // Form submit işlemi
-
   const onSubmit = async (data) => {
     try {
-      await axios.post(CONFIG.addTherapist, data);
-      setMessage('Danışman başarıyla kaydedildi.');
-      setSeverity('success');
-      setOpen(true);
-      reset();
+      console.log('Form submit başladı');
+      console.log('Form verileri:', data);
+      
+      // Form verilerini kontrol et
+      if (!data.therapistFirstName || !data.therapistLastName) {
+        toast.error('Ad ve soyad alanları zorunludur!');
+        return;
+      }
+
+      // Telefon numarası kontrolü
+      if (!data.therapistPhoneNumber || data.therapistPhoneNumber.trim() === '') {
+        toast.error('Telefon numarası zorunludur!');
+        return;
+      }
+
+      // Deneyim yılı kontrolü
+      if (!data.therapistYearsOfExperience) {
+        toast.error('Deneyim yılı zorunludur!');
+        return;
+      }
+
+      console.log('API isteği gönderiliyor...');
+      // Danışmanı kaydet
+      const response = await axios.post(CONFIG.addTherapistUrl, {
+        ...data,
+        therapistPhoneNumber: data.therapistPhoneNumber.trim(),
+        therapistYearsOfExperience: data.therapistYearsOfExperience.toUpperCase()
+      });
+
+      console.log('API yanıtı:', response.data);
+      
+      if (response.status === 200 || response.status === 201) {
+        setMessage('Danışman başarıyla kaydedildi.');
+        setSeverity('success');
+        setOpen(true);
+        reset();
+      } else {
+        throw new Error('Beklenmeyen yanıt durumu');
+      }
     } catch (error) {
-      console.error('Backend Hatası:', error);
-      setMessage('Bir hata oluştu. Lütfen tekrar deneyin.');
+      console.error('Backend Hatası:', error.response?.data || error);
+      setMessage(error.response?.data?.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
       setSeverity('error');
       setOpen(true);
     }
@@ -153,7 +184,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
 
   const handleChangePrice = useCallback(
     (event) => {
-      setValue(`appointmentFee`, Number(event.target.value));
+      setValue(`therapistAppointmentFee`, Number(event.target.value));
     },
     [setValue]
   );
@@ -175,9 +206,9 @@ export function TherapistNewEditForm({ currentTherapist }) {
                 }}
               >
                 <Controller
-                  name="firstName"
+                  name="therapistFirstName"
                   control={control}
-                  defaultValue={defaultValues.firstName}
+                  defaultValue={defaultValues.therapistFirstName}
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -190,9 +221,9 @@ export function TherapistNewEditForm({ currentTherapist }) {
                   )}
                 />
                 <Controller
-                  name="lastName"
+                  name="therapistLastName"
                   control={control}
-                  defaultValue={defaultValues.lastName}
+                  defaultValue={defaultValues.therapistLastName}
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -205,9 +236,9 @@ export function TherapistNewEditForm({ currentTherapist }) {
                   )}
                 />
                 <Controller
-                  name="email"
+                  name="therapistEmail"
                   control={control}
-                  defaultValue={defaultValues.email}
+                  defaultValue={defaultValues.therapistEmail}
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -219,9 +250,9 @@ export function TherapistNewEditForm({ currentTherapist }) {
                   )}
                 />
                 <Controller
-                  name="phoneNumber"
+                  name="therapistPhoneNumber"
                   control={control}
-                  defaultValue={defaultValues.phoneNumber}
+                  defaultValue={defaultValues.therapistPhoneNumber}
                   render={({ field }) => (
                     <Field.Phone
                       {...field}
@@ -233,9 +264,9 @@ export function TherapistNewEditForm({ currentTherapist }) {
                   )}
                 />
                 <Controller
-                  name="address"
+                  name="therapistAddress"
                   control={control}
-                  defaultValue={defaultValues.address}
+                  defaultValue={defaultValues.therapistAddress}
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -249,8 +280,8 @@ export function TherapistNewEditForm({ currentTherapist }) {
                 />
 
                 <Controller
-                  name="education"
-                  defaultValue={defaultValues.education}
+                  name="therapistEducation"
+                  defaultValue={defaultValues.therapistEducation}
                   control={control}
                   render={({ field, fieldState: { error } }) => (
                     <Field.EducationSelect
@@ -280,9 +311,9 @@ export function TherapistNewEditForm({ currentTherapist }) {
                 />
 
                 <Controller
-                  name="university"
+                  name="therapistUniversity"
                   control={control}
-                  defaultValue={defaultValues.university}
+                  defaultValue={defaultValues.therapistUniversity}
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -318,10 +349,10 @@ export function TherapistNewEditForm({ currentTherapist }) {
                 />
 
                 <Controller
-                  name="specializationAreas"
+                  name="therapistSpecializationAreas"
                   label="Uzmanlık Alanları"
                   control={control}
-                  defaultValue={defaultValues.specializationAreas}
+                  defaultValue={defaultValues.therapistSpecializationAreas}
                   render={({ field }) => (
                     <Field.Autocomplete
                       {...field}
@@ -355,24 +386,33 @@ export function TherapistNewEditForm({ currentTherapist }) {
                 />
 
                 <Controller
-                  name="yearsOfExperience"
+                  name="therapistYearsOfExperience"
                   control={control}
-                  defaultValue={defaultValues.yearsOfExperience}
+                  defaultValue={defaultValues.therapistYearsOfExperience}
                   render={({ field }) => (
-                    <Field.Select {...field} label="Deneyim" inputProps={{ tabIndex: 10 }}>
-                      {EXPERIENCE_THERAPIST_OPTIONS.map((experience) => (
-                        <MenuItem key={experience.value} value={experience.label}>
-                          {experience.label}
+                    <TextField
+                      name="therapistYearsOfExperience"
+                      label="Deneyim Süresi"
+                      select
+                      fullWidth
+                      value={values.therapistYearsOfExperience}
+                      onChange={field.onChange}
+                      error={!!field.error}
+                      helperText={field.error?.message}
+                    >
+                      {EXPERIENCE_YEARS_OPTIONS.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
                         </MenuItem>
                       ))}
-                    </Field.Select>
+                    </TextField>
                   )}
                 />
 
                 <Controller
-                  name="certifications"
+                  name="therapistCertifications"
                   control={control}
-                  defaultValue={defaultValues.certifications}
+                  defaultValue={defaultValues.therapistCertifications}
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -384,9 +424,9 @@ export function TherapistNewEditForm({ currentTherapist }) {
                 />
 
                 <Controller
-                  name="appointmentFee"
+                  name="therapistAppointmentFee"
                   control={control}
-                  defaultValue={defaultValues.appointmentFee}
+                  defaultValue={defaultValues.therapistAppointmentFee}
                   render={({ field }) => (
                     <TextField
                       {...field}

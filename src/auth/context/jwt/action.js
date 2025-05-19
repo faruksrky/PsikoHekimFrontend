@@ -1,7 +1,7 @@
 import qs from 'qs';
 import { jwtDecode } from 'jwt-decode';
 
-import axios, { endpoints } from 'src/utils/axios';
+import { axiosInstanceKeycloak } from 'src/utils/axios';
 
 import { setSession } from './utils';
 import { STORAGE_KEY } from './constant';
@@ -11,39 +11,30 @@ import {CONFIG} from '../../../config-global';
  * Sign in
  *************************************** */
 export const signInWithPassword = async ({ username, password }) => {
-
-    const params = qs.stringify(
-      { username, password },
-      { arrayFormat: 'brackets' }
-    );
-
     try {
-      const res = await axios.post(CONFIG.loginUrl, params, 
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+      const res = await axiosInstanceKeycloak.post('/keycloak/getToken', {
+        username,
+        password
+      });
+
+      // istek başarılı olursa, gelen verileri accessToken değişkenine atıyoruz
+      const accessToken = res.data.access_token;
+
+      if (!accessToken) {
+        throw new Error('Access Token bulunamadı');
       }
-    );
+      setSession(accessToken, username);
 
-    // istek başarılı olursa, gelen verileri accessToken değişkenine atıyoruz
-    const accessToken = res.data.access_token;
-
-    if (!accessToken) {
-      throw new Error('Access Token bulunamadı');
+    } catch (error) {
+      if (error.response) {
+        console.error(error.response.data);
+      }
+      else if(error.request){
+        console.error(error.request);
+      }
+      console.error('Sunucu yanıt veremedi', error);
+      throw error;
     }
-    setSession(accessToken,username);
-
-  } catch (error) {
-    if (error.response) {
-      console.error(error.response.data);
-    }
-    else if(error.request){
-      console.error (error.request);
-    }
-    console.error('Sunucu yanıt veremedi', error);
-    throw error;
-  }
 }
 
 /** **************************************
@@ -59,7 +50,7 @@ export const signUp = async ({ userName, email, password, firstName, lastName })
   };
 
   try {
-    const res = await axios.post(CONFIG.signUpUrl, params);
+    const res = await axiosInstanceKeycloak.post('/keycloak/register', params);
     const accessToken = sessionStorage.getItem('jwt_access_token');
 
     sessionStorage.setItem(STORAGE_KEY, accessToken);
@@ -84,7 +75,6 @@ export const signOut = async () => {
   }
 };
 
-
 /** **************************************
  * Update password
  *************************************** */
@@ -96,7 +86,7 @@ export const updatePassword = async ({ username, confirmationCode, newPassword }
       newPassword,
     };
 
-    const res = await axios.post(endpoints.auth.updatePassword, params);
+    const res = await axiosInstanceKeycloak.post('/keycloak/update-password', params);
 
     const { accessToken } = res.data;
 
@@ -118,7 +108,7 @@ export const resetPassword = async ({ username }) => {
   try {
     const params = { username };
 
-    await axios.post(endpoints.auth.resetPassword, params);
+    await axiosInstanceKeycloak.post('/keycloak/reset-password', params);
   } catch (error) {
     console.error('Error during password reset:', error);
     throw error;

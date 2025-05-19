@@ -56,14 +56,13 @@ export const navData = [
   {
     items: [
       {
-        title: 'Hasta',
+        title: 'Danışan',
         path: paths.dashboard.patient.root,
         icon: ICONS.patient,
         children: [
           { title: 'Liste', path: paths.dashboard.patient.list },
-          { title: 'Yeni Hasta', path: paths.dashboard.patient.new },
-          { title: 'Bilgi Güncelle', path: paths.dashboard.patient.demo.edit },
-          { title: 'Danışman Ata', path: paths.dashboard.patient.assignTherapist},
+          { title: 'Yeni Danışan', path: paths.dashboard.patient.new },
+          { title: 'Bilgi Güncelle', path: paths.dashboard.patient.demo.edit }
         ],
       },
 

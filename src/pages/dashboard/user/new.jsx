@@ -6,7 +6,7 @@ import { PatientCreateView } from 'src/sections/patient/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Yeni Hasta Oluştur | Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Yeni Danışan Oluştur | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
   return (

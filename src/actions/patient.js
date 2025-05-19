@@ -15,7 +15,7 @@ const swrOptions = {
 export function useGetPatients() {
 
     const { data, isLoading, error, isValidating } = useSWR(
-      CONFIG.patientList,
+      CONFIG.patientListUrl,
       fetcherPatient,
       swrOptions
     );

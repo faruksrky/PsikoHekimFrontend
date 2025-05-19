@@ -18,7 +18,7 @@ const swrOptions = {
 export function useGetTherapists() {
 
   const { data, isLoading, error, isValidating } = useSWR(
-    CONFIG.therapistList,
+    CONFIG.therapistListUrl,
     fetcherTherapist,
     swrOptions
   );

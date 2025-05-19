@@ -29,7 +29,6 @@ export function CountrySelect({
 
   const renderOption = (props, option) => {
     const country = getCountry(option);
-
     if (!country.label) {
       return null;
     }
@@ -41,7 +40,7 @@ export function CountrySelect({
           code={country.code}
           sx={{ mr: 1, width: 22, height: 22, borderRadius: '50%' }}
         />
-        {country.label} ({country.code}) +{country.phone}
+        {country.label} ({country.code})
       </li>
     );
   };

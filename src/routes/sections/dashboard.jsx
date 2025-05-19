@@ -10,6 +10,7 @@ import { AuthGuard } from 'src/auth/guard';
 
 // ----------------------------------------------------------------------
 
+
 const IndexPage = lazy(() => import('src/pages/dashboard/calendar/calendar'));
 
 const UserListPage = lazy(() => import('src/pages/dashboard/user/list'));
@@ -18,7 +19,7 @@ const UserEditPage = lazy(() => import('src/pages/dashboard/user/edit'));
 const PatientListPage = lazy(() => import('src/pages/dashboard/patient/list'));
 const PatientCreatePage = lazy(() => import('src/pages/dashboard/patient/new'));
 const PatientDetailsPage = lazy(() => import('src/sections/patient/view/patient-details-view').then(module => ({ default: module.PatientDetailsView })));
-const AssignTherapistView = lazy(() => import('src/sections/patient/view/patient-assign-therapist').then(module => ({ default: module.PatientAssignTherapistView })));
+const AssignTherapistView = lazy(() => import('src/pages/dashboard/patient/assignTherapist'));
 const PatientEditPage = lazy(() => import('src/pages/dashboard/patient/edit'));
 const TherapistListPage = lazy(() => import('src/pages/dashboard/therapist/list'));
 const TherapistCreatePage = lazy(() => import('src/pages/dashboard/therapist/new'));

@@ -12,11 +12,11 @@ export function PatientCreateView() {
   return (
     <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
-        heading="Yeni Hasta Oluştur"
+        heading="Yeni Danışan Oluştur"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Hasta', href: paths.dashboard.patient.root },
-          { name: 'Yeni Hasta' },
+          { name: 'Danışan', href: paths.dashboard.patient.root },
+          { name: 'Yeni Danışan' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />

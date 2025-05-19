@@ -1,12 +1,13 @@
-
 import { Chip } from '@mui/material';
+import Typography from '@mui/material/Typography';
 
 import { fCurrency } from 'src/utils/format-number';
+import { EXPERIENCE_YEARS_MAPPING } from 'src/_mock/_therapist';
 
 // ----------------------------------------------------------------------
 
 export function RenderCellFullName({ params }) {
-  return `${params.row.therapistFirstName  } ${  params.row.therapistSurname}`;
+  return `${params.row.therapistFirstName} ${params.row.therapistLastName}`;
 }
 
 export function RenderCellPhone({ params }) {
@@ -26,7 +27,7 @@ export function RenderCellEducation({ params }) {
 }
 
 export function RenderCellUniversity({ params }) {
-  return params.row.university;
+  return params.row.therapistUniversity;
 }
 
 export function RenderCellTherapistType({ params }) {
@@ -35,15 +36,15 @@ export function RenderCellTherapistType({ params }) {
 
 
 export function RenderCellSpecializationAreas({ params }) {
-  const { specializationAreas } = params.row;
+  const { therapistSpecializationAreas } = params.row;
 
-  if (!Array.isArray(specializationAreas) || specializationAreas.length === 0) {
+  if (!Array.isArray(therapistSpecializationAreas) || therapistSpecializationAreas.length === 0) {
     return <span>Belirtilmedi</span>; // Veri yoksa gösterilecek mesaj
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-      {specializationAreas.map((area, index) => (
+      {therapistSpecializationAreas.map((area, index) => (
         <Chip
           key={index}
           label={area}
@@ -58,7 +59,11 @@ export function RenderCellSpecializationAreas({ params }) {
 
 
 export function RenderCellYearsOfExperience({ params }) {
-  return params.row.yearsOfExperience;
+  const experience = params.row.therapistYearsOfExperience;
+  
+  if (!experience) return '-';
+  
+  return EXPERIENCE_YEARS_MAPPING[experience] || experience;
 }
 
 export function RenderCellCertifications({ params }) {
@@ -66,7 +71,11 @@ export function RenderCellCertifications({ params }) {
 }
 
 export function RenderCellAppointmentFee({ params }) {
-  return fCurrency(params.row.appointmentFee);
+  const fee = params.row.therapistAppointmentFee;
+  
+  if (!fee) return '-';
+  
+  return `${fee.toLocaleString('tr-TR')} ₺`;
 }
 
 export function RenderCellID({ params }) {

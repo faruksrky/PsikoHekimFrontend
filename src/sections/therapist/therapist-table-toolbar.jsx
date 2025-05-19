@@ -9,9 +9,9 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 
 import { useSetState } from 'src/hooks/use-set-state';
 
-import { varAlpha } from 'src/theme/styles';
+import { varAlpha } from 'minimal-shared/utils';
 
-import { usePopover } from 'src/components/custom-popover';
+import { usePopover } from 'minimal-shared/hooks';
 
 // ----------------------------------------------------------------------
 export function TherapistTableToolbar({ filters, options }) {

@@ -30,7 +30,7 @@ export function PatientCardsView() {
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            Yeni Hasta
+            Yeni Danışan
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}

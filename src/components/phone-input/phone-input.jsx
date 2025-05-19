@@ -22,26 +22,27 @@ export const PhoneInput = forwardRef(
       label,
       onChange,
       placeholder, 
-      disableSelect,
+      disableSelect = false,
       variant = 'outlined',
-      country: inputCountryCode,
       ...other
     },
     ref
   ) => {
-    const defaultCountryCode = getCountryCode(value, inputCountryCode);
-
     const [searchCountry, setSearchCountry] = useState('');
-
-    const [selectedCountry, setSelectedCountry] = useState(defaultCountryCode);
+    const [selectedCountry, setSelectedCountry] = useState('TR');
+    const [isOpen, setIsOpen] = useState(false);
 
     const hasLabel = !!label;
-
-    const cleanValue = value.replace(/[\s-]+/g, '');
+    const cleanValue = value?.replace(/[\s-]+/g, '') || '';
 
     const handleClear = useCallback(() => {
       onChange('');
     }, [onChange]);
+
+    const handleCountryChange = useCallback((newCountry) => {
+      setSelectedCountry(newCountry);
+      setIsOpen(false);
+    }, []);
 
     return (
       <Box
@@ -56,28 +57,28 @@ export const PhoneInput = forwardRef(
           ...sx,
         }}
       >
-        {!disableSelect && (
-          <CountryListPopover
-            searchCountry={searchCountry}
-            countryCode={selectedCountry}
-            onClickCountry={(inputValue) => setSelectedCountry(inputValue)}
-            onSearchCountry={(inputValue) => setSearchCountry(inputValue)}
-            sx={{
-              pl: variant === 'standard' ? 0 : 1.5,
-              ...(variant === 'standard' &&
-                hasLabel && {
-                  mt: size === 'small' ? '16px' : '20px',
-                }),
-              ...((variant === 'filled' || variant === 'outlined') && {
-                mt: size === 'small' ? '8px' : '16px',
+        <CountryListPopover
+          open={isOpen}
+          onClose={() => setIsOpen(false)}
+          searchCountry={searchCountry}
+          countryCode={selectedCountry}
+          onClickCountry={handleCountryChange}
+          onSearchCountry={(inputValue) => setSearchCountry(inputValue)}
+          sx={{
+            pl: variant === 'standard' ? 0 : 1.5,
+            ...(variant === 'standard' &&
+              hasLabel && {
+                mt: size === 'small' ? '16px' : '20px',
               }),
-              ...(variant === 'filled' &&
-                hasLabel && {
-                  mt: size === 'small' ? '21px' : '25px',
-                }),
-            }}
-          />
-        )}
+            ...((variant === 'filled' || variant === 'outlined') && {
+              mt: size === 'small' ? '8px' : '16px',
+            }),
+            ...(variant === 'filled' &&
+              hasLabel && {
+                mt: size === 'small' ? '21px' : '25px',
+              }),
+          }}
+        />
 
         <PhoneNumberInput
           ref={ref}
@@ -87,11 +88,43 @@ export const PhoneInput = forwardRef(
           variant={variant}
           onChange={onChange}
           hiddenLabel={!label}
-          country={selectedCountry}
+          defaultCountry="TR"
           inputComponent={CustomInput}
           InputLabelProps={{ shrink: true }}
           placeholder={placeholder ?? 'Telefon Numarası'}
           InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <IconButton
+                  size="small"
+                  edge="start"
+                  onClick={() => setIsOpen(true)}
+                  aria-haspopup="listbox"
+                  aria-expanded={isOpen}
+                  aria-controls="country-select-popover"
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      mr: 0.5,
+                      fontSize: '0.875rem',
+                      fontWeight: 'fontWeightMedium',
+                    }}
+                  >
+                    {getCountryCode(selectedCountry)}
+                  </Box>
+                  <Iconify
+                    width={16}
+                    icon="eva:arrow-ios-downward-fill"
+                    sx={{
+                      ml: 0.5,
+                      flexShrink: 0,
+                      opacity: 0.48,
+                    }}
+                  />
+                </IconButton>
+              </InputAdornment>
+            ),
             endAdornment: cleanValue && (
               <InputAdornment position="end">
                 <IconButton size="small" edge="end" onClick={handleClear}>

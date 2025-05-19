@@ -7,19 +7,31 @@ import packageJson from '../package.json';
 export const CONFIG = {
   appName: 'PsikoHekim UI',
   appVersion: packageJson.version,
-  serverUrl: import.meta.env.VITE_SERVER_URL ?? '',
   loginUrl: import.meta.env.VITE_LOGIN_URL ?? '',
   signUpUrl: import.meta.env.VITE_SIGNUP_URL ?? '',
   assetsDir: import.meta.env.VITE_ASSETS_DIR ?? '',
-  addTherapist: import.meta.env.VITE_ADD_THERAPIST_URL ?? '',
-  addPatient: import.meta.env.VITE_ADD_PATIENT_URL ?? '',
-  therapistList: import.meta.env.VITE_THERAPIST_LIST_URL ?? '',
-  patientList: import.meta.env.VITE_PATIENT_LIST_URL ?? '',
+  psikoHekimBaseUrl: import.meta.env.VITE_PSIKOHEKIM_BASE_URL ?? '',
+  addTherapistUrl: import.meta.env.VITE_THERAPIST_ADD_URL ?? '',
+  addPatientUrl: import.meta.env.VITE_PATIENT_ADD_URL ?? '',
+  therapistListUrl: import.meta.env.VITE_THERAPIST_LIST_URL ?? '',
+  patientListUrl: import.meta.env.VITE_PATIENT_LIST_URL ?? '',
+  therapistAssignUrl: import.meta.env.VITE_THERAPIST_ASSIGN_URL ?? '',
+  usersListUrl: import.meta.env.VITE_USERS_LIST_URL ?? '',
   googleAuthUrl: import.meta.env.VITE_GET_GOOGLE_AUTH_URL ?? '',
-  googleCallback: import.meta.env.VITE_GET_GOOGLE_CALLBACK_URL ?? '',
-  googleCalendarEvents: import.meta.env.VITE_GET_GOOGLE_CALENDAR_EVENTS_URL ?? '',
-  bpmnBaseUrl: import.meta.env.VITE_GET_BPMN_BASE_URL ?? '',
-  psikoHekimBaseUrl: import.meta.env.VITE_GET_PsikoHekim_BASE_URL ?? '',
+  googleCallbackUrl: import.meta.env.VITE_GET_GOOGLE_CALLBACK_URL ?? '',
+  googleCalendarEventsUrl: import.meta.env.VITE_GET_GOOGLE_CALENDAR_EVENTS_URL ?? '',
+  keycloakBaseUrl: import.meta.env.VITE_KEYCLOAK_BASE_URL ?? '',
+  bpmn: {
+    baseUrl: import.meta.env.VITE_BPMN_BASE_URL ?? '',
+    endpoints: {
+      assignTherapist: '/api/bpmn/patient/start-process',
+    },
+  },
+
+  therapistDetailsUrl: import.meta.env.VITE_THERAPIST_DETAILS_URL ?? '',
+  therapistSearchUrl: import.meta.env.VITE_THERAPIST_SEARCH_URL ?? '',
+  patientDetailsUrl: import.meta.env.VITE_PATIENT_DETAILS_URL ?? '',
+  patientSearchUrl: import.meta.env.VITE_PATIENT_SEARCH_URL ?? '',
 
   /**
    * Auth
@@ -107,3 +119,4 @@ export const CONFIG = {
     }
   }
 };
+ 

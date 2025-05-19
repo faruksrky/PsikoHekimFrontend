@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 
 import { CONFIG } from 'src/config-global';
 
-import { AssignTherapistView } from 'src/sections/patient/view';
+import { PatientAssignTherapistView } from 'src/sections/patient/view/patient-assign-therapist';
 
 // ----------------------------------------------------------------------
 
@@ -15,7 +15,7 @@ export default function Page() {
         <title> {metadata.title}</title>
       </Helmet>
 
-      <AssignTherapistView />
+      <PatientAssignTherapistView />
     </>
   );
 }

@@ -6,7 +6,7 @@ import { PatientListView } from 'src/sections/patient/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Hasta Listesi | Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Danışan Listesi | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
   return (

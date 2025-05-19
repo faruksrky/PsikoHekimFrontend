@@ -63,7 +63,9 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/patient`,
       new: `${ROOTS.DASHBOARD}/patient/new`,
       list: `${ROOTS.DASHBOARD}/patient/list`,
-      assignTherapist:`${ROOTS.DASHBOARD}/patient/assignTherapist`,
+      details: (id) => `${ROOTS.DASHBOARD}/patient/${id}/details`,
+      assignTherapist: (patientId) => 
+        `${ROOTS.DASHBOARD}/patient/${patientId}/assign-therapist`,
       edit: (id) => `${ROOTS.DASHBOARD}/patient/${id}/edit`,
       demo: {
         edit: `${ROOTS.DASHBOARD}/patient/${MOCK_ID}/edit`,

@@ -9,7 +9,7 @@ import { PatientEditView } from 'src/sections/patient/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Hasta Bilgi Güncelle | Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Danışan Bilgi Güncelle | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
   const { id = '' } = useParams();

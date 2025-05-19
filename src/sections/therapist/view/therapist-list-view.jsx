@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -32,6 +33,8 @@ import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { axiosInstanceBpmn } from 'src/utils/axios';
+
 import { TherapistTableToolbar } from '../therapist-table-toolbar';
 import { TherapistTableFiltersResult } from '../therapist-table-filters-result';
 import {
@@ -57,7 +60,6 @@ import {
 
 export function TherapistListView() {
   const confirmRows = useBoolean();
-
   const router = useRouter();
 
   const { therapists, therapistsLoading } = useGetTherapists();
@@ -65,10 +67,161 @@ export function TherapistListView() {
   const filters = useSetState({ therapistType: [], therapistRating: [] });
 
   const [tableData, setTableData] = useState([]);
-
   const [selectedRowIds, setSelectedRowIds] = useState([]);
-
   const [filterButtonEl, setFilterButtonEl] = useState(null);
+
+  const [searchParams] = useSearchParams();
+  const patientId = searchParams.get('patientId');
+
+  const handleViewRow = useCallback(
+    (id) => {
+      router.push(paths.dashboard.therapist.details(id));
+    },
+    [router]
+  );
+
+  const handleEditRow = useCallback(
+    (id) => {
+      router.push(paths.dashboard.therapist.edit(id));
+    },
+    [router]
+  );
+
+  const handleDeleteRow = useCallback(
+    (id) => {
+      const deleteRow = tableData.filter((row) => row.id !== id);
+      setTableData(deleteRow);
+    },
+    [tableData]
+  );
+
+  const columns = [
+    {
+      field: 'therapistId',
+      headerName: 'ID',
+      width: 40,
+      renderCell: (params) => <RenderCellID params={params} />,
+    },
+    {
+      field: 'therapistFirstName',
+      headerName: 'Ad Soyad',
+      flex: 1,
+      minWidth: 140,
+      renderCell: (params) => <RenderCellFullName params={params} />,
+    },
+    {
+      field: 'therapistPhoneNumber',
+      headerName: 'Telefon',
+      flex: 1.5,
+      minWidth: 130,
+      renderCell: (params) => <RenderCellPhone params={params} />,
+    },
+    {
+      field: 'therapistEmail',
+      headerName: 'Email',
+      flex: 1.2,
+      minWidth: 170,
+      renderCell: (params) => <RenderCellEmail params={params} />,
+    },
+    {
+      field: 'therapistAddress',
+      headerName: 'Adres',
+      flex: 2,
+      minWidth: 300,
+      renderCell: (params) => <RenderCellAddress params={params} />,
+    },
+    {
+      field: 'therapistEducation',
+      headerName: 'Eğitim',
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => <RenderCellEducation params={params} />,
+    },
+    {
+      field: 'therapistUniversity',
+      headerName: 'Üniversite',
+      flex: 1.2,
+      minWidth: 150,
+      renderCell: (params) => <RenderCellUniversity params={params} />,
+    },
+    {
+      field: 'therapistType',
+      headerName: 'Danışman Türü',
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => <RenderCellTherapistType params={params} />,
+    },
+    {
+      field: 'therapistSpecializationAreas',
+      headerName: 'Uzmanlık Alanı',
+      flex: 2,
+      minWidth: 200,
+      renderCell: (params) => <RenderCellSpecializationAreas params={params} />,
+    },
+    {
+      field: 'therapistYearsOfExperience',
+      headerName: 'Deneyim',
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => <RenderCellYearsOfExperience params={params} />,
+    },
+    {
+      field: 'therapistCertifications',
+      headerName: 'Sertifikalar',
+      flex: 1.5,
+      minWidth: 150,
+      renderCell: (params) => <RenderCellCertifications params={params} />,
+    },
+    {
+      field: 'therapistAppointmentFee',
+      headerName: 'Randevu Ücreti',
+      flex: 1,
+      minWidth: 100,
+      renderCell: (params) => <RenderCellAppointmentFee params={params} />,
+    },
+    {
+      field: 'therapistRating',
+      headerName: 'Danışman Puanı',
+      width: 110,
+      type: 'singleSelect',
+      editable: true,
+      renderCell: (params) => <RenderCellTherapistRating params={params} />,
+    },
+    {
+      field: 'therapistAvailability',
+      headerName: 'Takvim',
+      width: 160,
+      type: 'singleSelect',
+      valueOptions: PRODUCT_STOCK_OPTIONS,
+      renderCell: (params) => <RenderCellTherapistAvailability params={params} />,
+    },
+    {
+      field: 'actions',
+      type: 'actions',
+      headerName: 'İşlemler',
+      width: 120,
+      cellClassName: 'actions',
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={<Iconify icon="solar:eye-bold" />}
+          label="Görüntüle"
+          onClick={() => handleViewRow(params.id)}
+        />,
+        <GridActionsCellItem
+          icon={<Iconify icon="solar:pen-bold" />}
+          label="Düzenle"
+          onClick={() => handleEditRow(params.id)}
+        />,
+        <GridActionsCellItem
+          icon={<Iconify icon="solar:trash-bin-trash-bold" />}
+          label="Sil"
+          onClick={() => handleDeleteRow(params.id)}
+          showInMenu
+          sx={{ color: 'error.main' }}
+        />,
+      ],
+    },
+  ];
 
   useEffect(() => {
     if (!therapists.length) {
@@ -79,7 +232,8 @@ export function TherapistListView() {
       const transformedTherapists = therapists.map((therapist) => ({
         ...therapist,
         id: therapist.therapistId,
-        therapistRating: therapist.therapistRating || '30',
+        therapistRating: therapist.therapistRating || 30,
+        fullName: `${therapist.therapistFirstName || ''} ${therapist.therapistSurname || ''}`.trim(),
       }));
       setTableData(transformedTherapists);
       return;
@@ -108,13 +262,12 @@ export function TherapistListView() {
       return matchesType && matchesRating;
     });
 
-
     // Filtrelenmiş veriyi dönüştür
     const transformedTherapists = filteredTherapists.map((therapist) => ({
       ...therapist,
       id: therapist.therapistId,
+      fullName: `${therapist.therapistFirstName || ''} ${therapist.therapistSurname || ''}`.trim(),
     }));
-
 
     setTableData(transformedTherapists);
   }, [therapists, filters.state.therapistType, filters.state.therapistRating]);
@@ -124,17 +277,6 @@ export function TherapistListView() {
 
   const dataFiltered = applyFilter({ inputData: tableData, filters: filters.state });
 
-  const handleDeleteRow = useCallback(
-    (id) => {
-      const deleteRow = tableData.filter((row) => row.id !== id);
-
-      toast.success('Delete success!');
-
-      setTableData(deleteRow);
-    },
-    [tableData]
-  );
-
   const handleDeleteRows = useCallback(() => {
     const deleteRows = tableData.filter((row) => !selectedRowIds.includes(row.id));
 
@@ -142,20 +284,6 @@ export function TherapistListView() {
 
     setTableData(deleteRows);
   }, [selectedRowIds, tableData]);
-
-  const handleEditRow = useCallback(
-    (id) => {
-      router.push(paths.dashboard.therapist.edit(id));
-    },
-    [router]
-  );
-
-  const handleViewRow = useCallback(
-    (id) => {
-      router.push(paths.dashboard.therapist.details(id));
-    },
-    [router]
-  );
 
   const CustomToolbarCallback = useCallback(
     () => (
@@ -170,143 +298,6 @@ export function TherapistListView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [filters.state, selectedRowIds]
   );
-
-  const columns = [
-    {
-      field: 'therapistId',
-      headerName: 'ID',
-      width: 40,
-      renderCell: (params) => <RenderCellID params={params} />,
-    },
-    {
-      field: 'therapistFirstName',
-      headerName: 'Ad',
-      flex: 1,
-      minWidth: 140,
-      renderCell: (params) => <RenderCellFullName params={params} />,
-    },
-    {
-      field: 'therapistPhoneNumber',
-      headerName: 'Telefon',
-      flex: 1.5,
-      minWidth: 130,
-      renderCell: (params) => <RenderCellPhone params={params} />,
-    },
-    {
-      field: 'therapistEmail',
-      headerName: 'Email',
-      flex: 1.2,
-      minWidth: 170,
-      renderCell: (params) => <RenderCellEmail params={params} />,
-    },
-    {
-      field: 'therapistAddress',
-      headerName: 'Adres',
-      flex: 2, // Adres genelde uzun olabilir
-      minWidth: 300,
-      renderCell: (params) => <RenderCellAddress params={params} />,
-    },
-    {
-      field: 'therapistEducation',
-      headerName: 'Eğitim',
-      flex: 1,
-      minWidth: 120,
-      renderCell: (params) => <RenderCellEducation params={params} />,
-    },
-    {
-      field: 'therapistUniversity',
-      headerName: 'Üniversite',
-      flex: 1.2,
-      minWidth: 150,
-      renderCell: (params) => <RenderCellUniversity params={params} />,
-    },
-    {
-      field: 'therapistType',
-      headerName: 'Danışman Türü',
-      flex: 1,
-      minWidth: 150,
-      renderCell: (params) => <RenderCellTherapistType params={params} />,
-    },
-    {
-      field: 'specializationAreas',
-      headerName: 'Uzmanlık Alanı',
-      flex: 2,
-      minWidth: 200,
-      renderCell: (params) => <RenderCellSpecializationAreas params={params} />,
-    },
-
-    {
-      field: 'yearsOfExperience',
-      headerName: 'Deneyim',
-      flex: 1,
-      minWidth: 120,
-      renderCell: (params) => <RenderCellYearsOfExperience params={params} />,
-    },
-    {
-      field: 'certifications',
-      headerName: 'Sertifikalar',
-      flex: 1.5,
-      minWidth: 150,
-      renderCell: (params) => <RenderCellCertifications params={params} />,
-    },
-    {
-      field: 'appointmentFee',
-      headerName: 'Randevu Ücreti',
-      flex: 1,
-      minWidth: 100,
-      renderCell: (params) => <RenderCellAppointmentFee params={params} />,
-    },
-    {
-      field: 'therapistRating',
-      headerName: 'Danışman Puanı',
-      width: 110,
-      type: 'singleSelect',
-      editable: true,
-      renderCell: (params) => <RenderCellTherapistRating params={params} />,
-    },
-    {
-      field: 'therapistAvailability',
-      headerName: 'Takvim',
-      width: 160,
-      type: 'singleSelect',
-      valueOptions: PRODUCT_STOCK_OPTIONS,
-      renderCell: (params) => <RenderCellTherapistAvailability params={params} />,
-    },
-    {
-      type: 'actions',
-      field: 'actions',
-      headerName: ' ',
-      align: 'right',
-      headerAlign: 'right',
-      width: 80, // Sabit genişlik
-      sortable: false,
-      filterable: false,
-      disableColumnMenu: true,
-      getActions: (params) => [
-        <GridActionsCellItem
-          showInMenu
-          icon={<Iconify icon="solar:eye-bold" />}
-          label="View"
-          onClick={() => handleViewRow(params.row.id)}
-        />,
-        <GridActionsCellItem
-          showInMenu
-          icon={<Iconify icon="solar:pen-bold" />}
-          label="Edit"
-          onClick={() => handleEditRow(params.row.id)}
-        />,
-        <GridActionsCellItem
-          showInMenu
-          icon={<Iconify icon="solar:trash-bin-trash-bold" />}
-          label="Delete"
-          onClick={() => {
-            handleDeleteRow(params.row.id);
-          }}
-          sx={{ color: 'error.main' }}
-        />,
-      ],
-    },
-  ];
 
   return (
     <>

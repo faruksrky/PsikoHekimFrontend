@@ -15,7 +15,7 @@ export function PatientEditView({ user: currentUser }) {
         heading="Güncelle"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Hasta', href: paths.dashboard.patient.root },
+          { name: 'Danışan', href: paths.dashboard.patient.root },
           { name: currentUser?.name },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

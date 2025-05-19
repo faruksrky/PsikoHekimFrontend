@@ -9,7 +9,7 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 
 import { useSetState } from 'src/hooks/use-set-state';
 
-import { varAlpha } from 'src/theme/styles';
+import { varAlpha } from 'minimal-shared/utils';
 
 // ----------------------------------------------------------------------
 export function PatientTableToolbar({ filters, options }) {
