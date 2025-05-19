@@ -49,6 +49,7 @@ export const navData = [
   {
     subheader: 'Psiko Hekim',
     items: [
+      { title: 'Gelen Kutusu', path: paths.dashboard.inbox, icon: ICONS.mail },
       { title: 'Takvim', path: paths.dashboard.calendar, icon: ICONS.calendar },
     ],
   },

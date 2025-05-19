@@ -10,7 +10,7 @@ import { AuthGuard } from 'src/auth/guard';
 
 // ----------------------------------------------------------------------
 
-
+const InboxView = lazy(() => import('src/sections/inbox/view/inbox-view').then(module => ({ default: module.InboxView })));
 const IndexPage = lazy(() => import('src/pages/dashboard/calendar/calendar'));
 
 const UserListPage = lazy(() => import('src/pages/dashboard/user/list'));
@@ -42,10 +42,10 @@ export const dashboardRoutes = [
     path: 'dashboard',
     element: CONFIG.auth.skip ? <>{layoutContent}</> : <AuthGuard>{layoutContent}</AuthGuard>,
     children: [
-      { element: <IndexPage />, index: true },
-      
+      { element: <Navigate to="/dashboard/inbox" replace />, index: true },
+      { path: 'inbox', element: <InboxView /> },
       { path: 'calendar', element: <CalendarView /> },
-     
+      
       {
         path: 'patient',
         children: [
