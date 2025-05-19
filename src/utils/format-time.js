@@ -1,25 +1,27 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/tr';
 
 // ----------------------------------------------------------------------
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
+dayjs.locale('tr');
 
 /**
  * Docs: https://day.js.org/docs/en/display/format
  */
 export const formatStr = {
-  dateTime: 'DD MMM YYYY h:mm a', // 17 Apr 2022 12:00 am
-  date: 'DD MMM YYYY', // 17 Apr 2022
-  time: 'h:mm a', // 12:00 am
+  dateTime: 'DD MMM YYYY HH:mm', // 17 Nis 2022 12:00
+  date: 'DD MMM YYYY', // 17 Nis 2022
+  time: 'HH:mm', // 12:00
   split: {
-    dateTime: 'DD/MM/YYYY h:mm a', // 17/04/2022 12:00 am
+    dateTime: 'DD/MM/YYYY HH:mm', // 17/04/2022 12:00
     date: 'DD/MM/YYYY', // 17/04/2022
   },
   paramCase: {
-    dateTime: 'DD-MM-YYYY h:mm a', // 17-04-2022 12:00 am
+    dateTime: 'DD-MM-YYYY HH:mm', // 17-04-2022 12:00
     date: 'DD-MM-YYYY', // 17-04-2022
   },
 };
@@ -147,10 +149,10 @@ export function fIsSame(startDate, endDate, units) {
 // ----------------------------------------------------------------------
 
 /** output:
- * Same day: 26 Apr 2024
- * Same month: 25 - 26 Apr 2024
- * Same month: 25 - 26 Apr 2024
- * Same year: 25 Apr - 26 May 2024
+ * Same day: 26 Nis 2024
+ * Same month: 25 - 26 Nis 2024
+ * Same month: 25 - 26 Nis 2024
+ * Same year: 25 Nis - 26 May 2024
  */
 export function fDateRangeShortLabel(startDate, endDate, initial) {
   const isValid = dayjs(startDate).isValid() && dayjs(endDate).isValid();
@@ -158,7 +160,7 @@ export function fDateRangeShortLabel(startDate, endDate, initial) {
   const isAfter = fIsAfter(startDate, endDate);
 
   if (!isValid || isAfter) {
-    return 'Invalid time value';
+    return 'Geçersiz tarih';
   }
 
   let label = `${fDate(startDate)} - ${fDate(endDate)}`;
