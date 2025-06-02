@@ -327,7 +327,15 @@ export function PatientNewEditForm({ currentPatient }) {
               variant="contained" 
               onClick={() => {
                 const url = paths.dashboard.patient.assignTherapist(patientId);
-                navigate(url);
+                navigate(url, { 
+                  state: { 
+                    patient: {
+                      patientFirstName: values.patientFirstName,
+                      patientLastName: values.patientLastName,
+                      patientId
+                    }
+                  }
+                });
               }}
             >
               Danışman Ata

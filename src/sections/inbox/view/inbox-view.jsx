@@ -1,15 +1,10 @@
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
 import { useTheme } from '@mui/material/styles';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
-import { _appAuthors, _appRelated, _appFeatured, _appInvoices, _appInstalled } from 'src/_mock';
-
-import { svgColorClasses } from 'src/components/svg-color';
-
-import { useMockedUser } from 'src/auth/hooks';
+import { _orders } from 'src/_mock';
 
 import { InboxWelcome } from '../inbox-welcome';
 import { InboxList } from '../inbox-list';
@@ -18,12 +13,10 @@ import { InboxWidgetSummary } from '../inbox-summary';
 // ----------------------------------------------------------------------
 
 export function InboxView() {
-  const { user } = useMockedUser();
-
   const theme = useTheme();
 
   return (
-    <DashboardContent maxWidth="xl">
+    <DashboardContent maxWidth="xl" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <InboxWelcome
@@ -35,11 +28,11 @@ export function InboxView() {
 
         <Grid item xs={12} md={4}>
           <InboxWidgetSummary
-            title="Total active users"
+            title="Toplam Aktif Kullanıcı"
             percent={2.6}
             total={18765}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+              categories: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu'],
               series: [15, 18, 12, 51, 68, 11, 39, 37],
             }}
           />
@@ -47,12 +40,12 @@ export function InboxView() {
 
         <Grid item xs={12} md={4}>
           <InboxWidgetSummary
-            title="Total installed"
+            title="Toplam Kurulum"
             percent={0.2}
             total={4876}
             chart={{
               colors: [theme.palette.info.main],
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+              categories: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu'],
               series: [20, 41, 63, 33, 28, 35, 50, 46],
             }}
           />
@@ -60,29 +53,19 @@ export function InboxView() {
 
         <Grid item xs={12} md={4}>
           <InboxWidgetSummary
-            title="Total downloads"
+            title="Toplam İndirme"
             percent={-0.1}
             total={678}
             chart={{
               colors: [theme.palette.error.main],
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+              categories: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu'],
               series: [18, 19, 31, 8, 16, 37, 12, 33],
             }}
           />
         </Grid>
 
         <Grid item xs={12}>
-          <InboxList
-            title="New invoice"
-            tableData={_appInvoices}
-            headCells={[
-              { id: 'id', label: 'Invoice ID' },
-              { id: 'category', label: 'Category' },
-              { id: 'price', label: 'Price' },
-              { id: 'status', label: 'Status' },
-              { id: '' },
-            ]}
-          />
+          <InboxList />
         </Grid>
       </Grid>
     </DashboardContent>

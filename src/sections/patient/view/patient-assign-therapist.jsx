@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useGetTherapists } from 'src/api/therapist';
 import { axiosInstanceBpmn } from 'src/utils/axios';
 import { paths } from 'src/routes/paths';
 import { CONFIG } from 'src/config-global';
 import { toast } from 'sonner';
+import { useAuthContext } from 'src/auth/hooks';
 
 import {
   Card,
@@ -32,7 +33,10 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 export function PatientAssignTherapistView() {
   const { id: patientId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const settings = useSettingsContext();
+  const { user } = useAuthContext();
+  const patient = location.state?.patient;
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -100,21 +104,38 @@ export function PatientAssignTherapistView() {
 
   const handleAssignTherapist = async (therapistId) => {
     try {
-      // Önce BPMN sürecini başlat
-      const bpmnResponse = await axiosInstanceBpmn.post(CONFIG.bpmn.endpoints.assignTherapist, {
-        bpmnProcessId: 'Process_Patient_Registration',
+      // Seçilen terapistin bilgilerini bul
+      const selectedTherapist = therapists.find(t => t.therapistId === therapistId);
+      if (!selectedTherapist) {
+        throw new Error('Terapist bulunamadı');
+      }
+
+      if (!patient) {
+        throw new Error('Danışan bilgileri bulunamadı');
+      }
+
+      // BPMN sürecini başlat
+      const bpmnRequest = {
+        messageName: 'startTherapistAssignmentProcess',
         variables: {
           patientId,
-          therapistId
-        }
-      });
+          therapistId: selectedTherapist.therapistId,
+          processName: 'Danışan Atama İsteği',
+          description: `${patient.patientFirstName} ${patient.patientLastName} isimli danışandan ${selectedTherapist.therapistFirstName} ${selectedTherapist.therapistLastName} için atama isteği gönderildi`,
+          startedBy: user?.displayName || 'Sistem',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      };
+
+      const bpmnResponse = await axiosInstanceBpmn.post(CONFIG.bpmn.endpoints.assignTherapist, bpmnRequest);
 
       if (!bpmnResponse.data) {
         throw new Error('BPMN süreci başlatılamadı');
       }
 
-      toast.success('Danışman başarıyla atandı!');
-      navigate(paths.dashboard.patient.root);
+      toast.success(`Danışman atama işlemi gerçekleştirildi. ${selectedTherapist.therapistFirstName} ${selectedTherapist.therapistLastName} isimli terapist onaya gönderildi.`);
+      navigate(paths.dashboard.inbox);
     } catch (assignError) {
       console.error('Danışman atama hatası:', assignError);
       toast.error(assignError.message || 'Danışman atanırken bir hata oluştu!');

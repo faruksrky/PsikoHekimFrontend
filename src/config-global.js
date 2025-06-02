@@ -28,6 +28,17 @@ export const CONFIG = {
     },
   },
 
+  process: {
+    inbox: {
+      pending: '/process/inbox/pending',
+      action: '/process/inbox/action',
+      actions: {
+        ACCEPTED: 'ACCEPTED',
+        REJECTED: 'REJECTED'
+      }
+    },
+  },
+
   therapistDetailsUrl: import.meta.env.VITE_THERAPIST_DETAILS_URL ?? '',
   therapistSearchUrl: import.meta.env.VITE_THERAPIST_SEARCH_URL ?? '',
   patientDetailsUrl: import.meta.env.VITE_PATIENT_DETAILS_URL ?? '',

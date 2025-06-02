@@ -45,7 +45,7 @@ export const dashboardRoutes = [
       { element: <Navigate to="/dashboard/inbox" replace />, index: true },
       { path: 'inbox', element: <InboxView /> },
       { path: 'calendar', element: <CalendarView /> },
-      
+     
       {
         path: 'patient',
         children: [
