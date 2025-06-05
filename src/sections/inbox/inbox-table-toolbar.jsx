@@ -8,8 +8,6 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { formHelperTextClasses } from '@mui/material/FormHelperText';
-
 import { Iconify } from 'src/components/iconify';
 import { CustomPopover } from 'src/components/custom-popover';
 import { tr } from 'date-fns/locale';
@@ -34,7 +32,7 @@ export function InboxTableToolbar({ filters, onResetPage, dateError }) {
   const handleFilterStartDate = useCallback(
     (newValue) => {
       onResetPage();
-      updateFilters({ startDate: newValue });
+      updateFilters({ createdAtStarted: newValue });
     },
     [onResetPage, updateFilters]
   );
@@ -42,7 +40,7 @@ export function InboxTableToolbar({ filters, onResetPage, dateError }) {
   const handleFilterEndDate = useCallback(
     (newValue) => {
       onResetPage();
-      updateFilters({ endDate: newValue });
+      updateFilters({ createdAtEnded: newValue });
     },
     [onResetPage, updateFilters]
   );
@@ -86,30 +84,30 @@ export function InboxTableToolbar({ filters, onResetPage, dateError }) {
         }}
       >
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={tr}>
-        <DatePicker
-          label="Başlangıç Tarihi"
-          value={currentFilters.startDate}
-          onChange={handleFilterStartDate}
-          TextFieldProps={{ fullWidth: true }}
-          sx={{ maxWidth: { md: 200 } }}
-        />
+          <DatePicker
+            label="Başlangıç Tarihi"
+            value={currentFilters.createdAtStarted}
+            onChange={handleFilterStartDate}
+            slotProps={{ 
+              textField: { 
+                fullWidth: true,
+                size: 'small'  // Daha kompakt görünüm için
+              } 
+            }}
+            sx={{ maxWidth: { md: 250 } }}
+          />
 
-        <DatePicker
-          label="Bitiş Tarihi"
-          value={currentFilters.endDate}
-          onChange={handleFilterEndDate}
-          TextFieldProps={{
-            fullWidth: true,
-            error: dateError,
-            helperText: dateError ? 'Bitiş tarihi başlangıç tarihinden sonra olmalıdır' : null,
-          }}
-          sx={{
-            maxWidth: { md: 200 },
-            [`& .${formHelperTextClasses.root}`]: {
-              position: { md: 'absolute' },
-              bottom: { md: -40 },
-            },
-          }}
+          <DatePicker
+            label="Bitiş Tarihi"
+            value={currentFilters.createdAtEnded}
+            onChange={handleFilterEndDate}
+            slotProps={{ 
+              textField: { 
+                fullWidth: true,
+                size: 'small'  // Daha kompakt görünüm için
+              } 
+            }}
+            sx={{ maxWidth: { md: 250 } }}
           />
         </LocalizationProvider>
 
@@ -126,7 +124,7 @@ export function InboxTableToolbar({ filters, onResetPage, dateError }) {
             fullWidth
             value={currentFilters.name}
             onChange={handleFilterName}
-            placeholder="Müşteri veya sipariş numarası ara..."
+            placeholder="Ara..."
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">

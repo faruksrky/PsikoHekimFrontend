@@ -4,7 +4,6 @@ import { useTheme } from '@mui/material/styles';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
-import { _orders } from 'src/_mock';
 
 import { InboxWelcome } from '../inbox-welcome';
 import { InboxList } from '../inbox-list';
@@ -17,20 +16,31 @@ export function InboxView() {
 
   return (
     <DashboardContent maxWidth="xl" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <InboxWelcome
-            title={`Hoşgeldiniz 👋 \n ${sessionStorage.getItem('username')}`}
-            description=""
-            img={<SeoIllustration hideBackground />}
-          />
-        </Grid>
+     <Grid container spacing={2}>
+  <Grid item xs={12}>
+    <InboxWelcome
+      title={`Hoşgeldiniz 👋 \n ${sessionStorage.getItem('username')}`}
+      description=""
+      img={<SeoIllustration hideBackground />}
+      sx={{ 
+        height: '80px', 
+        width: '100%',
+        '& .MuiBox-root': {  // img container'ı
+          height: '60px',
+          '& img': {         // img element'i
+            height: '60px',
+            width: 'auto'
+          }
+        }
+      }}
+    />
+  </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={4} >
           <InboxWidgetSummary
-            title="Toplam Aktif Kullanıcı"
+            title="Toplam Danışan Sayısı"
             percent={2.6}
-            total={18765}
+            total={3}
             chart={{
               categories: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu'],
               series: [15, 18, 12, 51, 68, 11, 39, 37],
@@ -40,7 +50,7 @@ export function InboxView() {
 
         <Grid item xs={12} md={4}>
           <InboxWidgetSummary
-            title="Toplam Kurulum"
+            title="Takvim Yükü"
             percent={0.2}
             total={4876}
             chart={{
@@ -53,7 +63,7 @@ export function InboxView() {
 
         <Grid item xs={12} md={4}>
           <InboxWidgetSummary
-            title="Toplam İndirme"
+            title="Toplam Danışan (Burayı soralım)"
             percent={-0.1}
             total={678}
             chart={{

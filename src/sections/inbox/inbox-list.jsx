@@ -44,7 +44,12 @@ import { InboxTableRow } from './inbox-table-row';
 import { InboxTableToolbar } from './inbox-table-toolbar';
 import { InboxTableFiltersResult } from './inbox-table-filters-result';
 
-const STATUS_OPTIONS = [{ value: 'all', label: 'Tümü' }, ...ORDER_STATUS_OPTIONS];
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'Tümü' },
+  { value: 'pending', label: 'Bekleyen' },
+  { value: 'accepted', label: 'Onaylanan' },
+  { value: 'rejected', label: 'Reddedilen' }
+];
 
 const TABLE_HEAD = [
   { id: 'processName', label: 'Akış Adı', width: 110 },
@@ -58,48 +63,82 @@ const TABLE_HEAD = [
 export function InboxList() {
   const table = useTable({ defaultOrderBy: 'createdAt' });
   const confirmDialog = useBoolean();
-  const [tableData, setTableData] = useState([]);
+  const [allData, setAllData] = useState([]); // Tüm veriler
   const [isLoading, setIsLoading] = useState(true);
   const therapistId = 3;
 
-  const filters = useSetState({ name: '', status: 'all', startDate: null, endDate: null });
+  const filters = useSetState({ 
+    name: '', 
+    status: 'pending', // Varsayılan olarak pending göster
+    createdAtStarted: null, 
+    createdAtEnded: null 
+  });
   const { state: currentFilters, setState: updateFilters } = filters;
 
-  const onApprove = useCallback((response) => {
-    toast.success('İstek onaylandı');
-    // Tabloyu güncelle
-    setTableData((prevData) => prevData.filter((row) => row.processId !== response.processId));
-  }, []);
-
-  const onReject = useCallback((response) => {
-    toast.success('İstek reddedildi');
-    // Tabloyu güncelle
-    setTableData((prevData) => prevData.filter((row) => row.processId !== response.processId));
-  }, []);
-
-  useEffect(() => {
-    const fetchPendingRequests = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axiosInstance.get(`${CONFIG.psikoHekimBaseUrl}${CONFIG.process.inbox.pending}`, {
-          params: { therapistId },
-        });
-        setTableData(response.data);
-      } catch (error) {
-        console.error('Bekleyen istekler alınırken hata:', error);
-        toast.error('Bekleyen istekler alınamadı');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPendingRequests();
+  // Sadece tek API çağrısı
+  const fetchAllData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      // Direkt endpoint kullan
+      const response = await axiosInstance.get('/process/inbox/pending', {
+        params: { therapistId },
+      });
+      setAllData(response.data);
+    } catch (error) {
+      console.error('Veriler alınırken hata:', error);
+      toast.error('Veriler alınamadı');
+    } finally {
+      setIsLoading(false);
+    }
   }, [therapistId]);
 
-  const dateError = fIsAfter(currentFilters.startDate, currentFilters.endDate);
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
+  // Tab değiştiğinde sadece filtre güncelle (API çağrısı yok)
+  const handleFilterStatus = useCallback(
+    (event, newValue) => {
+      table.onResetPage();
+      updateFilters({ status: newValue });
+    },
+    [updateFilters, table]
+  );
+
+  // Action handler
+  const handleAction = useCallback(async (processInstanceKey, action) => {
+    try {
+      const response = await axiosInstance.post('/process/inbox/action', {
+        processInstanceKey,
+        action: action.toUpperCase(), // ACCEPTED veya REJECTED
+      });
+      
+      toast.success(response.data.message || 'İşlem başarılı', {
+        onClick: async () => {
+          fetchAllData(); // Listeyi yenile
+        }
+      });
+    } catch (error) {
+      console.error('İşlem sırasında hata:', error);
+      toast.error('İşlem başarısız');
+    }
+  }, [fetchAllData]);
+
+  // Count hesaplama - sadece frontend
+  const getStatusCount = useCallback((status) => {
+    if (status === 'all') {
+      return allData.length;
+    }
+    return allData.filter((item) => 
+      item.status?.toLowerCase() === status.toLowerCase()
+    ).length;
+  }, [allData]);
+
+  const dateError = fIsAfter(currentFilters.createdAtStarted, currentFilters.createdAtEnded);
+
+  // Filtreleme işlemi - tüm veriler üzerinde çalışır
   const dataFiltered = applyFilter({
-    inputData: tableData,
+    inputData: allData,
     comparator: getComparator(table.order, table.orderBy),
     filters: currentFilters,
     dateError,
@@ -110,34 +149,34 @@ export function InboxList() {
   const canReset =
     !!currentFilters.name ||
     currentFilters.status !== 'all' ||
-    (!!currentFilters.startDate && !!currentFilters.endDate);
+    (!!currentFilters.createdAtStarted && !!currentFilters.createdAtEnded);
 
   const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
 
   const handleDeleteRow = useCallback(
     (id) => {
-      const deleteRow = tableData.filter((row) => row.id !== id);
+      const deleteRow = allData.filter((row) => row.id !== id);
       toast.success('İstek silindi');
-      setTableData(deleteRow);
+      setAllData(deleteRow);
       table.onUpdatePageDeleteRow(dataInPage.length);
     },
-    [dataInPage.length, table, tableData]
+    [dataInPage.length, table, allData]
   );
 
   const handleDeleteRows = useCallback(() => {
-    const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
+    const deleteRows = allData.filter((row) => !table.selected.includes(row.id));
     toast.success('Seçilen istekler silindi');
-    setTableData(deleteRows);
+    setAllData(deleteRows);
     table.onUpdatePageDeleteRows(dataInPage.length, dataFiltered.length);
-  }, [dataFiltered.length, dataInPage.length, table, tableData]);
+  }, [dataFiltered.length, dataInPage.length, table, allData]);
 
-  const handleFilterStatus = useCallback(
-    (event, newValue) => {
-      table.onResetPage();
-      updateFilters({ status: newValue });
-    },
-    [updateFilters, table]
-  );
+  const onApprove = useCallback((processInstanceKey) => {
+    handleAction(processInstanceKey, 'accepted');
+  }, [handleAction]);
+
+  const onReject = useCallback((processInstanceKey) => {
+    handleAction(processInstanceKey, 'rejected');
+  }, [handleAction]);
 
   return (
     <>
@@ -156,17 +195,15 @@ export function InboxList() {
                 label={tab.label}
                 icon={
                   <Label
-                    variant={tab.value === currentFilters.status || tab.value === 'all' ? 'filled' : 'soft'}
+                    variant={tab.value === currentFilters.status ? 'filled' : 'soft'}
                     color={
-                      (tab.value === 'completed' && 'success') ||
+                      (tab.value === 'accepted' && 'success') ||
                       (tab.value === 'pending' && 'warning') ||
-                      (tab.value === 'cancelled' && 'error') ||
+                      (tab.value === 'rejected' && 'error') ||
                       'default'
                     }
                   >
-                    {['completed', 'pending', 'cancelled'].includes(tab.value)
-                      ? tableData.filter((user) => user.status === tab.value).length
-                      : tableData.length}
+                    {getStatusCount(tab.value)}
                   </Label>
                 }
               />
@@ -284,7 +321,7 @@ export function InboxList() {
 }
 
 function applyFilter({ inputData, comparator, filters, dateError }) {
-  const { status, name, startDate, endDate } = filters;
+  const { status, name, createdAtStarted, createdAtEnded } = filters;
 
   const stabilized = inputData.map((el, index) => [el, index]);
   stabilized.sort((a, b) => {
@@ -300,11 +337,13 @@ function applyFilter({ inputData, comparator, filters, dateError }) {
   }
 
   if (status !== 'all') {
-    inputData = inputData.filter((row) => row.status === status);
+    inputData = inputData.filter((row) => 
+      row.status?.toLowerCase() === status.toLowerCase()
+    );
   }
 
-  if (!dateError && startDate && endDate) {
-    inputData = inputData.filter((row) => fIsBetween(row.createdAt, startDate, endDate));
+  if (!dateError && createdAtStarted && createdAtEnded) {
+    inputData = inputData.filter((row) => fIsBetween(row.createdAt, createdAtStarted, createdAtEnded));
   }
 
   return inputData;

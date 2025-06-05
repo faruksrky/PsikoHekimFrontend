@@ -3,7 +3,6 @@ import axios from 'axios';
 import { CONFIG } from 'src/config-global';
 
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -18,10 +17,6 @@ import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 
-import { RouterLink } from 'src/routes/components';
-
-import { fCurrency } from 'src/utils/format-number';
-import { fDate, fTime } from 'src/utils/format-time';
 import { format } from 'date-fns';
 
 import { Label } from 'src/components/label';
@@ -76,9 +71,7 @@ export function InboxTableRow({ row, selected, onSelectRow, onDeleteRow, details
         />
       </TableCell>
 
-      <TableCell>
-        <Typography variant="subtitle2">{processInstanceKey}</Typography>
-      </TableCell>
+    
 
       <TableCell>
         <Typography variant="subtitle2">{processName}</Typography>
@@ -107,7 +100,12 @@ export function InboxTableRow({ row, selected, onSelectRow, onDeleteRow, details
       <TableCell>
         <Label
           variant="soft"
-          color={(status === 'PENDING' && 'warning') || 'default'}
+          color={
+            (status === 'PENDING' && 'warning') ||
+            (status === 'REJECTED' && 'error') ||
+            (status === 'ACCEPTED' && 'success') ||
+            'default'
+          }
         >
           {status}
         </Label>
