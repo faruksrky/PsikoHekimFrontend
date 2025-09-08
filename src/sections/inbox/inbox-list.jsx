@@ -1,11 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
-import { axiosInstance } from 'src/utils/axios';
-import { CONFIG } from 'src/config-global';
 import { toast } from 'sonner';
-import { useBoolean, useSetState } from 'minimal-shared/hooks';
 import { varAlpha } from 'minimal-shared/utils';
-import { useGetPendingRequests } from 'src/api/inbox';
-import { paths } from 'src/routes/paths';
+import { useState, useEffect, useCallback } from 'react';
+import { useBoolean, useSetState } from 'minimal-shared/hooks';
 
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
@@ -14,15 +10,16 @@ import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
-import TableBody from '@mui/material/TableBody';
-import IconButton from '@mui/material/IconButton';
 import TableRow from '@mui/material/TableRow';
+import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
+import { axiosInstance } from 'src/utils/axios';
 import { fIsAfter, fIsBetween } from 'src/utils/format-time';
+
 import { DashboardContent } from 'src/layouts/dashboard';
-import { ORDER_STATUS_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -65,7 +62,7 @@ export function InboxList() {
   const confirmDialog = useBoolean();
   const [allData, setAllData] = useState([]); // Tüm veriler
   const [isLoading, setIsLoading] = useState(true);
-  const therapistId = 3;
+  const therapistId = 1;
 
   const filters = useSetState({ 
     name: '', 

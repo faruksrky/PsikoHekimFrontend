@@ -177,6 +177,9 @@ export function CalendarFilters({
       onClose={onClose}
       slotProps={{ backdrop: { invisible: true } }}
       PaperProps={{ sx: { width: 320 } }}
+      disableRestoreFocus={false}
+      keepMounted={false}
+      disablePortal={false}
     >
       {renderHead}
 

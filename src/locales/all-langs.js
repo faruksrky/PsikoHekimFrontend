@@ -4,6 +4,7 @@ import {
   viVN as viVNCore,
   zhCN as zhCNCore,
   arSA as arSACore,
+  trTR as trTRCore,
 } from '@mui/material/locale';
 // date pickers (MUI)
 import {
@@ -11,6 +12,7 @@ import {
   frFR as frFRDate,
   viVN as viVNDate,
   zhCN as zhCNDate,
+  trTR as trTRDate,
 } from '@mui/x-date-pickers/locales';
 // data grid (MUI)
 import {
@@ -19,6 +21,7 @@ import {
   viVN as viVNDataGrid,
   zhCN as zhCNDataGrid,
   arSD as arSDDataGrid,
+  trTR as trTRDataGrid,
 } from '@mui/x-data-grid/locales';
 
 // ----------------------------------------------------------------------
@@ -32,6 +35,16 @@ export const allLangs = [
     numberFormat: { code: 'en-US', currency: 'USD' },
     systemValue: {
       components: { ...enUSDate.components, ...enUSDataGrid.components },
+    },
+  },
+  {
+    value: 'tr',
+    label: 'Türkçe',
+    countryCode: 'TR',
+    adapterLocale: 'tr',
+    numberFormat: { code: 'tr-TR', currency: 'TRY' },
+    systemValue: {
+      components: { ...trTRCore.components, ...trTRDate.components, ...trTRDataGrid.components },
     },
   },
   {

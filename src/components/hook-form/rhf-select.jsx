@@ -35,6 +35,7 @@ export const RHFSelect = React.forwardRef(({
       render={({ field, fieldState: { error } }) => (
         <TextField
           {...field}
+          value={field.value ?? ''} // null/undefined ise boş string kullan
           select
           fullWidth
           SelectProps={{
@@ -82,7 +83,7 @@ export const RHFMultiSelect = React.forwardRef(({
         // `field.value`'ı array olarak dönüştür (string ise)
         const currentValue = Array.isArray(field.value)
           ? field.value
-          : field.value?.split(",") || [];
+          : (field.value ?? '').split(",").filter(Boolean);
 
         return (
           <FormControl error={!!error} {...other}>

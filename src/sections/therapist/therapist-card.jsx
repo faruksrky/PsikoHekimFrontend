@@ -1,3 +1,5 @@
+import { varAlpha } from 'minimal-shared/utils';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -10,7 +12,6 @@ import ListItemText from '@mui/material/ListItemText';
 import { fShortenNumber } from 'src/utils/format-number';
 
 import { _socials } from 'src/_mock';
-import { varAlpha } from 'minimal-shared/utils';
 import { AvatarShape } from 'src/assets/illustrations';
 import { TwitterIcon, FacebookIcon, LinkedinIcon, InstagramIcon } from 'src/assets/icons';
 

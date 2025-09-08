@@ -8,7 +8,7 @@ import { PatientNewEditForm } from '../patient-new-edit-form';
 
 // ----------------------------------------------------------------------
 
-export function PatientEditView({ user: currentUser }) {
+export function PatientEditView({ currentPatient }) {
   return (
     <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
@@ -16,12 +16,12 @@ export function PatientEditView({ user: currentUser }) {
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: 'Danışan', href: paths.dashboard.patient.root },
-          { name: currentUser?.name },
+          { name: currentPatient ? `${currentPatient.patientFirstName} ${currentPatient.patientLastName}` : 'Güncelle' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <PatientNewEditForm currentUser={currentUser} />
+      <PatientNewEditForm currentPatient={currentPatient} />
     </DashboardContent>
   );
 }

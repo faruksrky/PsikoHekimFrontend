@@ -18,9 +18,8 @@ const RHFDatePicker = forwardRef(({ name, slotProps, ...other }, ref) => {
       control={control}
       render={({ field, fieldState: { error } }) => (
         <DatePicker
-          {...field}
           ref={ref}
-          value={dayjs(field.value)}
+          value={field.value && dayjs(field.value).isValid() ? dayjs(field.value) : null}
           onChange={(newValue) => field.onChange(dayjs(newValue).format())}
           format={formatStr.split.date}
           slotProps={{
@@ -48,25 +47,36 @@ const RHFMobileDateTimePicker = forwardRef(({ name, slotProps, ...other }, ref) 
     <Controller
       name={name}
       control={control}
-      render={({ field, fieldState: { error } }) => (
-        <MobileDateTimePicker
-          {...field}
-          ref={ref}
-          value={dayjs(field.value)}
-          onChange={(newValue) => field.onChange(dayjs(newValue).format())}
-          format={formatStr.split.dateTime}
-          slotProps={{
-            textField: {
-              fullWidth: true,
-              error: !!error,
-              helperText: error?.message ?? slotProps?.textField?.helperText,
-              ...slotProps?.textField,
-            },
-            ...slotProps,
-          }}
-          {...other}
-        />
-      )}
+      render={({ field, fieldState: { error } }) => {
+        // Ensure the value is properly handled for dayjs
+        const fieldValue = field.value && dayjs(field.value).isValid() ? dayjs(field.value) : null;
+        
+        return (
+          <MobileDateTimePicker
+            ref={ref}
+            value={fieldValue}
+            onChange={(newValue) => {
+              // Return the Date object directly, preserving local timezone
+              if (newValue) {
+                field.onChange(newValue.toDate());
+              } else {
+                field.onChange(undefined);
+              }
+            }}
+            format={formatStr.split.dateTime}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                error: !!error,
+                helperText: error?.message ?? slotProps?.textField?.helperText,
+                ...slotProps?.textField,
+              },
+              ...slotProps,
+            }}
+            {...other}
+          />
+        );
+      }}
     />
   );
 });

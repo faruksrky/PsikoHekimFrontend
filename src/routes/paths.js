@@ -1,4 +1,4 @@
-import { _id, _postTitles } from 'src/_mock/assets';
+import { _id } from 'src/_mock/assets';
 // ----------------------------------------------------------------------
 
 
@@ -77,6 +77,7 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/therapist`,
       new: `${ROOTS.DASHBOARD}/therapist/new`,
       list: `${ROOTS.DASHBOARD}/therapist/list`,
+      details: (id) => `${ROOTS.DASHBOARD}/therapist/${id}/details`,
       edit: (id) => `${ROOTS.DASHBOARD}/therapist/${id}/edit`,
       demo: {
         edit: `${ROOTS.DASHBOARD}/therapist/${MOCK_ID}/edit`,
@@ -84,6 +85,20 @@ export const paths = {
     },
 
     analytics: `${ROOTS.DASHBOARD}/analytics`,
+
+    therapySession: {
+      root: `${ROOTS.DASHBOARD}/therapy-session`,
+      list: `${ROOTS.DASHBOARD}/therapy-session/list`,
+      new: `${ROOTS.DASHBOARD}/therapy-session/new`,
+      editGeneral: `${ROOTS.DASHBOARD}/therapy-session/edit`,
+      details: (id) => `${ROOTS.DASHBOARD}/therapy-session/${id}/details`,
+      edit: (id) => `${ROOTS.DASHBOARD}/therapy-session/${id}/edit`,
+      complete: (id) => `${ROOTS.DASHBOARD}/therapy-session/${id}/complete`,
+      cancel: (id) => `${ROOTS.DASHBOARD}/therapy-session/${id}/cancel`,
+      reschedule: (id) => `${ROOTS.DASHBOARD}/therapy-session/${id}/reschedule`,
+      calendar: `${ROOTS.DASHBOARD}/therapy-session/calendar`,
+      analytics: `${ROOTS.DASHBOARD}/therapy-session/analytics`,
+    },
 
     group: {
       root: `${ROOTS.DASHBOARD}/group`,

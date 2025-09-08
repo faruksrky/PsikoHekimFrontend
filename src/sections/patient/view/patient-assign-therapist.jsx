@@ -1,11 +1,6 @@
+import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useGetTherapists } from 'src/api/therapist';
-import { axiosInstanceBpmn } from 'src/utils/axios';
-import { paths } from 'src/routes/paths';
-import { CONFIG } from 'src/config-global';
-import { toast } from 'sonner';
-import { useAuthContext } from 'src/auth/hooks';
 
 import {
   Card,
@@ -16,19 +11,27 @@ import {
   TableBody,
   TableCell,
   Container,
+  TextField,
   Typography,
   TableContainer,
-  TablePagination,
-  TextField,
   InputAdornment,
-  Box,
+  TablePagination,
 } from '@mui/material';
+
+import { paths } from 'src/routes/paths';
+
+import { axiosInstanceBpmn } from 'src/utils/axios';
+
+import { CONFIG } from 'src/config-global';
+import { useGetTherapists } from 'src/api/therapist';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableHeadCustom } from 'src/components/table';
 import { useSettingsContext } from 'src/components/settings';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import { useAuthContext } from 'src/auth/hooks';
 
 export function PatientAssignTherapistView() {
   const { id: patientId } = useParams();

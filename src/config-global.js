@@ -43,6 +43,7 @@ export const CONFIG = {
   therapistSearchUrl: import.meta.env.VITE_THERAPIST_SEARCH_URL ?? '',
   patientDetailsUrl: import.meta.env.VITE_PATIENT_DETAILS_URL ?? '',
   patientSearchUrl: import.meta.env.VITE_PATIENT_SEARCH_URL ?? '',
+  therapistPatientPatientsUrl: import.meta.env.VITE_THERAPIST_PATIENT_PATIENTS_URL ?? '',
 
   /**
    * Auth
@@ -104,8 +105,8 @@ export const CONFIG = {
 
   // Outlook Calendar endpoints
   outlookCalendar: {
-    auth: '/api/outlook-calendar/redirect',
-    callback: '/api/outlook-calendar/callback',
+    auth: '/outlook-calendar/redirect',
+    callback: '/outlook-calendar/callback',
   },
 
   calendar: {
@@ -128,6 +129,19 @@ export const CONFIG = {
         callback: '/api/calendar/integrations/outlook/callback',
       }
     }
+  },
+
+  // Therapy Session endpoints
+  therapySession: {
+    create: '/therapy-sessions/addSession',
+    getAll: '/therapy-sessions/getSessions',
+    details: '/therapy-sessions/getSession',
+    update: '/therapy-sessions/updateSession',
+    delete: '/therapy-sessions/deleteSession',
+    assignments: '/therapist-patient/assignments',
+    complete: '/therapy-sessions/complete',
+    cancel: '/therapy-sessions/cancel',
+    reschedule: '/therapy-sessions/reschedule'
   }
 };
  

@@ -36,9 +36,8 @@ export function CalendarToolbar({
   const selectedItem = VIEW_OPTIONS.filter((item) => item.value === view)[0];
 
   // Tarih formatını kontrol et
-  const parsedDate = new Date(date); // Tarih değerini Date nesnesine dönüştür
-  const formattedDate = !Number.isNaN(parsedDate.getTime()) // Geçerli bir tarih mi kontrol et
-    ? parsedDate.toLocaleDateString('tr-TR', {
+  const formattedDate = date instanceof Date && !Number.isNaN(date.getTime())
+    ? date.toLocaleDateString('tr-TR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',

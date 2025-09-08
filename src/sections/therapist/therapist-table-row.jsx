@@ -1,7 +1,5 @@
 import { Chip } from '@mui/material';
-import Typography from '@mui/material/Typography';
 
-import { fCurrency } from 'src/utils/format-number';
 import { EXPERIENCE_YEARS_MAPPING } from 'src/_mock/_therapist';
 
 // ----------------------------------------------------------------------

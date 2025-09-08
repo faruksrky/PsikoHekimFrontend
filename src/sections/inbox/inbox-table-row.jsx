@@ -1,6 +1,6 @@
-import { useBoolean, usePopover } from 'minimal-shared/hooks';
 import axios from 'axios';
-import { CONFIG } from 'src/config-global';
+import { format } from 'date-fns';
+import { useBoolean, usePopover } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -14,10 +14,10 @@ import TableRow from '@mui/material/TableRow';
 import Checkbox from '@mui/material/Checkbox';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
-import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
+import ListItemText from '@mui/material/ListItemText';
 
-import { format } from 'date-fns';
+import { CONFIG } from 'src/config-global';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -43,6 +43,7 @@ export function InboxTableRow({ row, selected, onSelectRow, onDeleteRow, details
         action: CONFIG.process.inbox.actions[action]
       };
       
+
       const response = await axios.post(
         `${CONFIG.psikoHekimBaseUrl}${CONFIG.process.inbox.action}`,
         requestData
@@ -161,25 +162,35 @@ export function InboxTableRow({ row, selected, onSelectRow, onDeleteRow, details
       arrow="right-top"
     >
       <MenuList>
-        <MenuItem
-          onClick={() => {
-            confirmDialog.onTrue();
-            menuActions.onClose();
-          }}
-        >
-          <Iconify icon="solar:check-circle-bold" sx={{ color: 'success.main', mr: 1 }} />
-          Akışı Onayla
-        </MenuItem>
+        {status === 'PENDING' && (
+          <>
+            <MenuItem
+              onClick={() => {
+                confirmDialog.onTrue();
+                menuActions.onClose();
+              }}
+            >
+              <Iconify icon="solar:check-circle-bold" sx={{ color: 'success.main', mr: 1 }} />
+              Akışı Onayla
+            </MenuItem>
 
-        <MenuItem 
-          onClick={() => {
-            rejectDialog.onTrue();
-            menuActions.onClose();
-          }}
-        >
-          <Iconify icon="solar:close-circle-bold" sx={{ color: 'error.main', mr: 1 }} />
-          Akışı Reddet
-        </MenuItem>
+            <MenuItem 
+              onClick={() => {
+                rejectDialog.onTrue();
+                menuActions.onClose();
+              }}
+            >
+              <Iconify icon="solar:close-circle-bold" sx={{ color: 'error.main', mr: 1 }} />
+              Akışı Reddet
+            </MenuItem>
+          </>
+        )}
+        {status !== 'PENDING' && (
+          <MenuItem disabled>
+            <Iconify icon="solar:info-circle-bold" sx={{ color: 'text.disabled', mr: 1 }} />
+            {status === 'ACCEPTED' ? 'Akış Onaylandı' : status === 'REJECTED' ? 'Akış Reddedildi' : 'İşlem Tamamlandı'}
+          </MenuItem>
+        )}
       </MenuList>
     </CustomPopover>
   );

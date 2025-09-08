@@ -1,5 +1,7 @@
 import useSWR from 'swr';
+
 import { axiosInstance } from 'src/utils/axios';
+
 import { CONFIG } from 'src/config-global';
 
 export function useGetTherapists() {

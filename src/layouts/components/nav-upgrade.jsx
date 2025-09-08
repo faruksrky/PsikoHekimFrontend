@@ -12,8 +12,6 @@ import { _mock } from 'src/_mock';
 import { CONFIG } from 'src/config-global';
 import { varAlpha, bgGradient } from 'src/theme/styles';
 
-import { Label } from 'src/components/label'; 
-
 import { AuthContext } from '../../auth/context/auth-context';
 
 // ----------------------------------------------------------------------

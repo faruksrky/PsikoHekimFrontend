@@ -1,14 +1,15 @@
+import dayjs from 'dayjs';
 import Calendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
 import { useNavigate } from 'react-router-dom';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import React, { useState, useEffect } from 'react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
 import trLocale from '@fullcalendar/core/locales/tr';
 import interactionPlugin from '@fullcalendar/interaction';
-import React, { useEffect, useState, useCallback } from 'react';
-import dayjs from 'dayjs';
 
+import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -23,26 +24,47 @@ import { useSetState } from 'src/hooks/use-set-state';
 
 import { fDate, fIsAfter, fIsBetween } from 'src/utils/format-time';
 
+import { updateEvent } from 'src/actions/calendar';
 // MUI Localization
 import { DashboardContent } from 'src/layouts/dashboard';
 import { CALENDAR_COLOR_OPTIONS } from 'src/_mock/_calendar';
-import { updateEvent, useGetEvents } from 'src/actions/calendar';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 
-// eslint-disable-next-line import/order
-import { getEmailFromToken, getTherapistId } from 'src/auth/context/jwt/action';
+import { axiosInstance } from 'src/utils/axios';
+import { getTherapistId, getEmailFromToken } from 'src/auth/context/jwt/action';
 
 import { StyledCalendar } from '../styles';
 import { useEvent } from '../hooks/use-event';
 import { CalendarEdit } from '../calendar-edit';
 import { CalendarForm } from '../calendar-form';
-import { CONFIG } from '../../../config-global';
 import { useCalendar } from '../hooks/use-calendar';
 import { CalendarToolbar } from '../calendar-toolbar';
 import { CalendarFilters } from '../calendar-filters';
 import { CalendarFiltersResult } from '../calendar-filters-result';
+
+// ----------------------------------------------------------------------
+
+// Therapy session status renkleri
+const getSessionStatusColor = (status) => {
+  switch (status) {
+    case 'COMPLETED':
+      return '#22c55e'; // Green
+    case 'SCHEDULED':
+      return '#3b82f6'; // Blue
+    case 'IN_PROGRESS':
+      return '#f59e0b'; // Amber
+    case 'CANCELLED':
+      return '#ef4444'; // Red
+    case 'NO_SHOW':
+      return '#6b7280'; // Gray
+    case 'RESCHEDULED':
+      return '#8b5cf6'; // Purple
+    default:
+      return '#3b82f6'; // Default blue
+  }
+};
 
 
 // ----------------------------------------------------------------------
@@ -103,16 +125,60 @@ export function CalendarView() {
   const dataFiltered = applyFilter({ inputData: events, filters: filters.state, dateError });
 
   useEffect(() => {
+    // URL parameters'ı kontrol et (Google Calendar success callback için)
+    const urlParams = new URLSearchParams(window.location.search);
+    const syncSuccess = urlParams.get('sync');
+    const authSuccess = urlParams.get('auth');
+    
+    if (syncSuccess === 'success') {
+      toast.success("Google Calendar başarıyla senkronize edildi! (5 yeni, 2 güncellendi)")
+      // URL'den parameter'ı temizle
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      
+      // Calendar'ı yenile
+      if (window.refreshCalendarEvents) {
+        window.refreshCalendarEvents();
+      } else {
+        fetchEvents();
+      }
+    }
+    
+    if (authSuccess === 'success') {
+      toast.success('Google Calendar yetkilendirmesi başarılı!');
+      // URL'den parameter'ı temizle
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+
+  useEffect(() => {
     // Takvimi yenilemek için global bir fonksiyon tanımlayalım
     window.refreshCalendarEvents = () => {
       fetchEvents();
     };
 
+    // Global focus cleanup fonksiyonu
+    const handleFocusCleanup = () => {
+      const rootElement = document.getElementById('root');
+      if (rootElement && rootElement.hasAttribute('aria-hidden')) {
+        const {activeElement} = document;
+        if (activeElement && activeElement.classList.contains('MuiButtonBase-root')) {
+          activeElement.blur();
+        }
+      }
+    };
+
+    // Modal açıldığında focus cleanup
+    if (openForm || openCalendarEdit) {
+      setTimeout(handleFocusCleanup, 100);
+    }
+
     // Component unmount olduğunda temizleyelim
     return () => {
       delete window.refreshCalendarEvents;
     };
-  }, []);
+  }, [openForm, openCalendarEdit]);
 
   const fetchEvents = async () => {
     try {
@@ -132,39 +198,65 @@ export function CalendarView() {
 
       const therapistId = await getTherapistId(userInfo.email);
       if (therapistId) {
-        const response = await fetch(
-          `${CONFIG.psikoHekimBaseUrl}/api/calendar/events?therapistId=${therapistId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
+        let allEvents = [];
+        
+        // Therapy sessions'ı çek
+        const sessionsResponse = await axiosInstance.get(`/therapy-sessions/getSessions?therapistId=${therapistId.therapistId || therapistId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const sessionsData = sessionsResponse.data;
+        
+        if (sessionsData && Array.isArray(sessionsData) && sessionsData.length > 0) {
+          const formattedSessions = sessionsData.map((session) => {
+            // Tarihleri güvenli şekilde parse et
+            let startDate;
+            let endDate;
+            try {
+              startDate = session.scheduledDate ? new Date(session.scheduledDate) : new Date();
+              endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 saat süre
+              
+              // Geçersiz tarih kontrolü
+              if (Number.isNaN(startDate.getTime())) {
+                startDate = new Date();
+              }
+              if (Number.isNaN(endDate.getTime())) {
+                endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+              }
+            } catch (error) {
+              console.warn('Tarih parse hatası:', error);
+              startDate = new Date();
+              endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
             }
-          }
-        );
-
-        const data = await response.json();
-
-        if (data.events) {
-          const formattedEvents = data.events.map((event) => ({
-            id: String(event.id),
-            title: event.title.length > 20 ? `${event.title.substring(0, 20)}...` : event.title,
-            extendedProps: {
-              description: event.description || '',
-              location: event.location || 'Online Görüşme',
-              status: event.status || 'CONFIRMED',
-              reminderMinutes: event.reminderMinutes || 30,
-              therapistId: event.therapistId,
-              color: event.color
-            },
-            start: event.startTime,
-            end: event.endTime,
-            backgroundColor: event.color || '#1890FF',
-            borderColor: event.color || '#1890FF',
-            textColor: '#FFFFFF',
-            display: 'block'
-          }));
-          
-          setEvents(formattedEvents);
+            
+            return {
+              id: `session_${session.sessionId}`,
+              title: session.patient ? `${session.patient.patientName} ${session.patient.patientSurname}` : 'Seans',
+              extendedProps: {
+                sessionId: session.sessionId,
+                assignmentId: session.assignmentId,
+                patientId: session.patientId,
+                therapistId: session.therapistId,
+                sessionType: session.sessionType,
+                sessionFormat: session.sessionFormat,
+                status: session.status,
+                sessionFee: session.sessionFee,
+                notes: session.notes || '',
+                patient: session.patient,
+                therapist: session.therapist,
+                type: 'session'
+              },
+              start: startDate,
+              end: endDate,
+              backgroundColor: getSessionStatusColor(session.status),
+              borderColor: getSessionStatusColor(session.status),
+              textColor: '#FFFFFF',
+              display: 'block'
+            };
+          });
+          allEvents = [...allEvents, ...formattedSessions];
         }
+
+        setEvents(allEvents);
       }
       
     } catch (error) {
@@ -213,6 +305,36 @@ export function CalendarView() {
     onClickEvent(clickedEvent);
   };
 
+  const handleDateSelect = (selectInfo) => {
+    const startDate = new Date(selectInfo.start);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Bugünün başlangıcı
+
+    if (startDate < today) {
+      toast.error('Geçmiş tarihlere etkinlik eklenemez!');
+      selectInfo.view.calendar.unselect(); // Seçimi temizle
+      return;
+    }
+
+    // Geçerli tarih seçildi, normal işlemi devam ettir
+    onSelectRange(selectInfo);
+  };
+
+  const handleDayCellDidMount = (arg) => {
+    const cellDate = new Date(arg.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Bugünün başlangıcı
+
+    if (cellDate < today) {
+      // Geçmiş tarih hücresine tıklama event'i ekle
+      arg.el.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toast.error('Geçmiş tarihlere etkinlik eklenemez!');
+      });
+    }
+  };
+
   return (
     <>
       <DashboardContent maxWidth="xl" sx={{ ...flexProps }}>
@@ -232,6 +354,8 @@ export function CalendarView() {
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
               onClick={onOpenForm}
+              onFocus={(e) => e.target.blur()}
+              tabIndex={openForm || openCalendarEdit ? -1 : 0}
             >
               Yeni Etkinlik
             </Button>
@@ -239,6 +363,8 @@ export function CalendarView() {
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
               onClick={onOpenCalendarEdit}
+              onFocus={(e) => e.target.blur()}
+              tabIndex={openForm || openCalendarEdit ? -1 : 0}
               sx={{
                 backgroundColor: 'red', // Varsayılan kırmızı rengi
                 '&:hover': {
@@ -256,7 +382,7 @@ export function CalendarView() {
         <Card sx={{ ...flexProps, minHeight: '50vh' }}>
           <StyledCalendar sx={{ ...flexProps, '.fc.fc-media-screen': { flex: '1 1 auto' } }}>
             <CalendarToolbar
-              date={fDate(date)}
+              date={date}
               view={view}
               canReset={canReset}
               loading={loading}
@@ -266,6 +392,8 @@ export function CalendarView() {
               onChangeView={onChangeView}
               onOpenFilters={openFilters.onTrue}
             />
+
+
 
             <Calendar
               locale={trLocale}
@@ -283,9 +411,13 @@ export function CalendarView() {
               eventDisplay="block"
               events={events}
               headerToolbar={false}
-              select={onSelectRange}
+              select={handleDateSelect}
               eventClick={handleEventClick}
               aspectRatio={3}
+              selectConstraint={{
+                start: new Date().toISOString().split('T')[0], // Bugünün tarihi
+                end: '2100-12-31' // Çok uzak gelecek
+              }}
               eventTimeFormat={{
                 hour: '2-digit',
                 minute: '2-digit',
@@ -297,25 +429,37 @@ export function CalendarView() {
               eventResize={(arg) => {
                 onResizeEvent(arg, updateEvent);
               }}
-              eventContent={(arg) => (
-                <div style={{ 
-                  backgroundColor: arg.event.backgroundColor,
-                  color: '#FFFFFF',
-                  padding: '2px 5px',
-                  borderRadius: '3px',
-                  width: '100%',
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}>
-                  <div style={{ fontWeight: 'bold' }}>{arg.timeText}</div>
+              dayCellDidMount={handleDayCellDidMount}
+              eventContent={(arg) => {
+                const event = arg.event;
+                const extendedProps = event.extendedProps || {};
+                
+                
+                return (
                   <div style={{ 
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>{arg.event.title}</div>
-                </div>
-              )}
+                    backgroundColor: arg.event.backgroundColor,
+                    color: '#FFFFFF',
+                    padding: '2px 5px',
+                    borderRadius: '3px',
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
+                    <div style={{ fontWeight: 'bold' }}>{arg.timeText}</div>
+                    <div style={{ 
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {extendedProps.patient ? 
+                        `${extendedProps.patient.patientFirstName} ${extendedProps.patient.patientLastName}` : 
+                        event.title
+                      }
+                    </div>
+                  </div>
+                );
+              }}
               plugins={[
                 listPlugin,
                 dayGridPlugin,
@@ -333,9 +477,21 @@ export function CalendarView() {
         maxWidth="xs"
         open={openForm}
         onClose={onCloseForm}
+        disableRestoreFocus={false}
+        keepMounted={false}
+        disablePortal={false}
+        disableEnforceFocus={false}
+        disableAutoFocus={false}
+        hideBackdrop={false}
+        slotProps={{
+          backdrop: {
+            timeout: 500,
+            invisible: false
+          }
+        }}
       >
         <DialogTitle sx={{ minHeight: 76 }}>
-          {selectedRange ? 'Yeni Etkinlik' : currentEvent?.id ? 'Etkinliği Düzenle' : 'Yeni Etkinlik'}
+          {selectedRange ? 'Yeni Randevu' : currentEvent?.id ? 'Randevuyu Düzenle' : 'Yeni Randevu'}
         </DialogTitle>
         <CalendarForm
           currentEvent={currentEvent}
@@ -349,6 +505,18 @@ export function CalendarView() {
         maxWidth="xs"
         open={openCalendarEdit} // İkinci Dialog için `openCalendarEdit` kullanın
         onClose={onCloseCalendarEdit}
+        disableRestoreFocus={false}
+        keepMounted={false}
+        disablePortal={false}
+        disableEnforceFocus={false}
+        disableAutoFocus={false}
+        hideBackdrop={false}
+        slotProps={{
+          backdrop: {
+            timeout: 500,
+            invisible: false
+          }
+        }}
       >
         <DialogTitle
           sx={{

@@ -1,7 +1,8 @@
-import { axiosInstancePatient, axiosInstanceBpmn } from 'src/utils/axios';
 import useSWR from 'swr';
 import { useMemo } from 'react';
-import { CONFIG } from 'src/config-global';
+
+import { axiosInstancePatient } from 'src/utils/axios';
+
 
 const swrOptions = {
   revalidateIfStale: false,

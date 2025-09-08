@@ -38,6 +38,7 @@ const ICONS = {
   technicalService: icon('ic-technicalservice'),
   patient: icon('ic-user'),
   therapist: icon('ic-job'),
+  therapySession: icon('ic-calendar'),
 };
 
 // ----------------------------------------------------------------------
@@ -77,6 +78,18 @@ export const navData = [
           { title: 'Bilgi Güncelle', path: paths.dashboard.therapist.demo.edit },
         ],
       },
+
+      {
+        title: 'Terapi Seansları',
+        path: paths.dashboard.therapySession.root,
+        icon: ICONS.therapySession,
+        children: [
+          { title: 'Seans Listesi', path: paths.dashboard.therapySession.list },
+          { title: 'Yeni Seans', path: paths.dashboard.therapySession.new },
+          { title: 'Analitik', path: paths.dashboard.therapySession.analytics },
+        ],
+      },
+
       {
         title: 'Kullanıcı',
         path: paths.dashboard.user.root,

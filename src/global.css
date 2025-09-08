@@ -58,3 +58,45 @@ input[type='number']::-webkit-inner-spin-button {
   margin: 0;
   -webkit-appearance: none;
 }
+
+/* MUI X DataGrid height fix - Enhanced */
+.MuiDataGrid-root {
+  min-height: 400px !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.MuiDataGrid-main {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+.MuiDataGrid-virtualScroller {
+  overflow: auto !important;
+  flex: 1 1 auto !important;
+}
+
+.MuiDataGrid-virtualScrollerContent {
+  min-height: auto !important;
+}
+
+.MuiDataGrid-virtualScrollerRenderZone {
+  min-height: auto !important;
+}
+
+/* DataGrid container fix */
+.datagrid-container {
+  height: 600px !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.datagrid-container .MuiDataGrid-root {
+  height: 100% !important;
+  max-height: 100% !important;
+  flex: 1 1 auto !important;
+}

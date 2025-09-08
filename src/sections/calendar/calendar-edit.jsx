@@ -1,77 +1,46 @@
-import { Helmet } from 'react-helmet-async';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { Box } from '@mui/material';
-import { jwtDecode } from 'jwt-decode';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+
+import { GoogleIcon, OutlookIcon } from 'src/assets/icons';
+
 import { toast } from 'src/components/snackbar';
 
-import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
-import { GoogleIcon, OutlookIcon } from 'src/assets/icons';
 import { CONFIG } from '../../config-global';
-import { getEmailFromToken } from '../../auth/context/jwt/action';
+import { getTherapistId, getEmailFromToken } from '../../auth/context/jwt/action';
 
 
 export function CalendarEdit() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const getTherapistId = async (email) => {
-    try {
-      const token = sessionStorage.getItem('jwt_access_token');
-      const response = await fetch(
-        `${CONFIG.psikoHekimBaseUrl}/api/therapist/by-email?email=${email}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
-      if (!response.ok) {
-        const error = await response.json();
-        toast.error(error.message || 'Lütfen önce bir terapist seçiniz');
-        navigate('/dashboard/therapist-select'); // Terapist seçim sayfasına yönlendir
-        return null;
-      }
-      
-      const therapistId = await response.json();
-      return therapistId;
-    } catch (error) {
-      console.error('Therapist ID alınamadı:', error);
-      toast.error('Lütfen önce bir terapist seçiniz');
-      navigate('/dashboard/therapist-select'); // Terapist seçim sayfasına yönlendir
-      return null;
-    }
-  };
-
   const handleGoogleCalendarAuth = async () => {
     try {
       setLoading(true);
       const token = sessionStorage.getItem('jwt_access_token');
-      const email = getEmailFromToken();
+      const emailData = getEmailFromToken();
       
-      if (!token || !email) {
+      if (!token || !emailData || !emailData.email) {
         console.error('Token veya email bulunamadı');
         navigate('/auth/login');
         return;
       }
 
-      const therapistId = await getTherapistId(email);
+      const therapistId = await getTherapistId(emailData.email);
       if (!therapistId) {
         console.error('Therapist ID bulunamadı');
+        toast.error('Lütfen önce bir terapist seçiniz');
+        navigate('/dashboard/therapist-select');
         return;
       }
 
+      const successRedirectUrl = encodeURIComponent(`${window.location.origin}/dashboard/calendar`);
+      
       const response = await fetch(
-        `${CONFIG.psikoHekimBaseUrl}${CONFIG.googleCalendar.auth}?therapistId=${therapistId}`,
+        `${CONFIG.psikoHekimBaseUrl}${CONFIG.googleCalendar.auth}?therapistId=${therapistId}&redirectUrl=${successRedirectUrl}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -81,10 +50,12 @@ export function CalendarEdit() {
       
       const data = await response.json();
       if (data.authUrl) {
+        toast.success('Google Calendar\'a yönlendiriliyorsunuz...');
         window.location.href = data.authUrl;
       }
     } catch (error) {
       console.error('Google Calendar yetkilendirme hatası:', error);
+      toast.error('Google Calendar bağlantısı sırasında hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -109,7 +80,7 @@ export function CalendarEdit() {
           sx={{
             backgroundColor: '#FFFFFF',
             color: '#FF0000',
-            minWidth: '190px',
+            minWidth: '200px',
             border: '1px solid #FF0000',
             '&:hover': { backgroundColor: '#FFFFFF', color: '#FF0000' },
           }}
@@ -125,7 +96,7 @@ export function CalendarEdit() {
           sx={{
             backgroundColor: '#FFFFFF',
             color: '#0078D4',
-            minWidth: '190px',
+            minWidth: '200px',
             border: '1px solid #0078D4',
             '&:hover': { backgroundColor: '#F3F3F3', color: '#005A9E' },
           }}

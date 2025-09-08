@@ -1,4 +1,6 @@
 import { useCallback } from 'react';
+import { varAlpha } from 'minimal-shared/utils';
+import { usePopover } from 'minimal-shared/hooks';
 
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -8,10 +10,6 @@ import FormControl from '@mui/material/FormControl';
 import OutlinedInput from '@mui/material/OutlinedInput';
 
 import { useSetState } from 'src/hooks/use-set-state';
-
-import { varAlpha } from 'minimal-shared/utils';
-
-import { usePopover } from 'minimal-shared/hooks';
 
 // ----------------------------------------------------------------------
 export function TherapistTableToolbar({ filters, options }) {

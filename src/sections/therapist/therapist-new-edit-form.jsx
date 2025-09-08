@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { useMemo, useState, useCallback } from 'react';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
-import { toast } from 'src/components/snackbar';
 
 import Box from '@mui/material/Box';
 import MuiAlert from '@mui/lab/Alert';
@@ -25,11 +24,12 @@ import axios from 'src/utils/axios';
 
 import {
   THERAPIST_TYPE_OPTIONS,
+  EXPERIENCE_YEARS_OPTIONS,
   PSIKOLOG_SPECIALISTIES_OPTIONS,
-  PSIKIYATR_SPECIALISTIES_OPTIONS,
-  EXPERIENCE_YEARS_OPTIONS
+  PSIKIYATR_SPECIALISTIES_OPTIONS
 } from 'src/_mock/_therapist';
 
+import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
 import { CONFIG } from '../../config-global';

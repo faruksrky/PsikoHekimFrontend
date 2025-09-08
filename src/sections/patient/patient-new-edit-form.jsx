@@ -1,35 +1,33 @@
+import 'react-phone-number-input/style.css';
+
 import 'dayjs/locale/tr';
 import dayjs from 'dayjs';
 import { z as zod } from 'zod';
 import { useMemo, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, Controller, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, Controller, FormProvider } from 'react-hook-form';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
-import { toast } from 'src/components/snackbar';
-import { RHFTextField, Field, schemaHelper } from 'src/components/hook-form';
-import { LoadingButton } from '@mui/lab';
-import { Card, Stack, Alert, Snackbar, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
-import { CONFIG } from 'src/config-global';
-import { axiosInstanceBpmn, axiosInstancePatient } from 'src/utils/axios';
-import { paths } from 'src/routes/paths';
 
 import Box from '@mui/material/Box';
+import { LoadingButton } from '@mui/lab';
 import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Unstable_Grid2';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
+import { Card, Stack, Alert, Dialog, Button, Snackbar, TextField, Typography, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
-import { GENDER_TYPE_OPTIONS } from 'src/_mock/_patient';
-
-
-// ...
-
+import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import { useBoolean } from 'src/hooks/use-boolean';
+import { axiosInstancePatient } from 'src/utils/axios';
+
+import { CONFIG } from 'src/config-global';
+import { GENDER_TYPE_OPTIONS } from 'src/_mock/_patient';
+
+import { toast } from 'src/components/snackbar';
+import { PaymentMethodSelect } from 'src/components/payment';
+import { Field, schemaHelper } from 'src/components/hook-form';
 
 // Day.js'i Türkçe olarak ayarla
 dayjs.locale('tr');
@@ -56,7 +54,6 @@ export const NewPatientSchema = zod.object({
     }).min(0, { message: 'Yaş 0\'dan küçük olamaz!' })
   ),
 });
-
 
 export function PatientNewEditForm({ currentPatient }) {
   const router = useRouter();
@@ -288,7 +285,21 @@ export function PatientNewEditForm({ currentPatient }) {
                     rows={1}
                     sx={{ gridColumn: 'span 2' }}
                   />
-                  <Field.Text name="paymentMethod" label="Ödeme Yöntemi" />
+                  <Controller
+                    name="paymentMethod"
+                    control={control}
+                    defaultValue={defaultValues.paymentMethod}
+                    render={({ field, fieldState: { error } }) => (
+                      <PaymentMethodSelect
+                        {...field}
+                        label="Ödeme Yöntemi"
+                        placeholder="Ödeme yöntemi seçin"
+                        error={!!error}
+                        helperText={error?.message}
+                        required
+                      />
+                    )}
+                  />
                   <Field.Text name="patientReference" label="Referans" />
                 </Box>
 
@@ -322,7 +333,16 @@ export function PatientNewEditForm({ currentPatient }) {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setShowAssignDialog(false)}>Daha Sonra</Button>
+            <Button onClick={() => {
+              setShowAssignDialog(false);
+              // Form içeriğini temizle
+              reset();
+              // State'leri temizle
+              setPatientId(null);
+              setProcessInstanceKey(null);
+              // Başarı mesajı göster
+              toast.success("Form temizlendi. Yeni hasta kaydı yapabilirsiniz.");
+            }}>Daha Sonra</Button>
             <Button 
               variant="contained" 
               onClick={() => {

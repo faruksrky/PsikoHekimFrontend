@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 
 import Box from '@mui/material/Box';
 import Tooltip from '@mui/material/Tooltip';
@@ -36,6 +36,37 @@ export const NavItem = forwardRef(
     },
     ref
   ) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Modal state detection
+    useEffect(() => {
+      const checkModalState = () => {
+        const rootElement = document.getElementById('root');
+        const isAriaHidden = rootElement && rootElement.getAttribute('aria-hidden') === 'true';
+        setIsModalOpen(isAriaHidden);
+      };
+
+      // Initial check
+      checkModalState();
+
+      // Listen for aria-hidden changes
+      const observer = new MutationObserver(() => {
+        checkModalState();
+      });
+
+      const rootElement = document.getElementById('root');
+      if (rootElement) {
+        observer.observe(rootElement, {
+          attributes: true,
+          attributeFilter: ['aria-hidden']
+        });
+      }
+
+      return () => {
+        observer.disconnect();
+      };
+    }, []);
+
     const navItem = useNavItem({
       path,
       icon,
@@ -47,14 +78,24 @@ export const NavItem = forwardRef(
       enabledRootRedirect,
     });
 
+    const handleFocus = (event) => {
+      // Modal açıkken focus'u engelle
+      if (isModalOpen) {
+        event.preventDefault();
+        event.target.blur();
+      }
+    };
+
     return (
       <StyledNavItem
         ref={ref}
         aria-label={title}
         depth={depth}
         active={active}
-        disabled={disabled}
+        disabled={disabled || isModalOpen}
         open={open && !active}
+        tabIndex={isModalOpen ? -1 : 0}
+        onFocus={handleFocus}
         sx={{
           ...slotProps?.sx,
           [`& .${navSectionClasses.item.icon}`]: slotProps?.icon,
@@ -63,8 +104,13 @@ export const NavItem = forwardRef(
           [`& .${navSectionClasses.item.caption}`]: slotProps?.caption,
           [`& .${navSectionClasses.item.info}`]: slotProps?.info,
           [`& .${navSectionClasses.item.arrow}`]: slotProps?.arrow,
+          // Modal açıkken pointer events'ı disable et
+          ...(isModalOpen && {
+            pointerEvents: 'none',
+            opacity: 0.6
+          })
         }}
-        className={stateClasses({ open: open && !active, active, disabled })}
+        className={stateClasses({ open: open && !active, active, disabled: disabled || isModalOpen })}
         {...navItem.baseProps}
         {...other}
       >

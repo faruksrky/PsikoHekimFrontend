@@ -1,7 +1,6 @@
-import qs from 'qs';
 import { jwtDecode } from 'jwt-decode';
 
-import { axiosInstanceKeycloak } from 'src/utils/axios';
+import { axiosInstance, axiosInstanceKeycloak } from 'src/utils/axios';
 
 import { setSession } from './utils';
 import { STORAGE_KEY } from './constant';
@@ -133,26 +132,38 @@ export const resetPassword = async ({ username }) => {
 export const getTherapistId = async (email) => {
   try {
     const token = sessionStorage.getItem('jwt_access_token');
-    const response = await fetch(
-      `${CONFIG.psikoHekimBaseUrl}/therapist/by-email?email=${email}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }
-    );
+    // URL'i manuel olarak oluştur ve encode et
+    const encodedEmail = encodeURIComponent(email);
+    const url = `${CONFIG.psikoHekimBaseUrl}/therapist/by-email?email=${encodedEmail}`;
+  
+    // Axios kullanarak daha güvenli istek
+    const response = await axiosInstance.get(`/therapist/by-email?email=${encodedEmail}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 10000 // 10 saniye timeout
+    });
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error('Terapist bilgisi alınamadı');
-    }
-
-    const therapistId = await response.json();
-    return therapistId;
+    return response.data;
   } catch (error) {
-    console.error('Therapist ID alınamadı:', error);
+    console.error('Therapist ID Error Details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      headers: error.response?.headers
+    });
+    
+    if (error.response?.status === 404) {
+      return null;
+    }
+    
+    if (error.code === 'ERR_NETWORK') {
+      console.error('CORS veya Network hatası - Backend CORS ayarlarını kontrol edin');
+    }
+    
     return null;
   }
 };

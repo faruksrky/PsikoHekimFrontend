@@ -8,7 +8,7 @@ import { TherapistNewEditForm } from '../therapist-new-edit-form';
 
 // ----------------------------------------------------------------------
 
-export function TherapistEditView({ user: currentUser }) {
+export function TherapistEditView({ currentTherapist }) {
   return (
     <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
@@ -16,12 +16,12 @@ export function TherapistEditView({ user: currentUser }) {
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: 'Danışman', href: paths.dashboard.therapist.root },
-          { name: currentUser?.name },
+          { name: currentTherapist ? `${currentTherapist.therapistFirstName} ${currentTherapist.therapistLastName}` : 'Güncelle' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <TherapistNewEditForm currentUser={currentUser} />
+      <TherapistNewEditForm currentTherapist={currentTherapist} />
     </DashboardContent>
   );
 }

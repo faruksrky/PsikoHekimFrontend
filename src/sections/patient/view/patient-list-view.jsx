@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -29,6 +29,7 @@ import { GENDER_TYPE_OPTIONS } from 'src/_mock/_patient';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
+import { DataGridContainer } from 'src/components/datagrid';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -326,38 +327,37 @@ export function PatientListView() {
         <Card
           sx={{
             flexGrow: 1,
-            height: '600px', // Sabit yükseklik
-            width: '100%', // Tam genişlik
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          <DataGrid
-            localeText={trTR.components.MuiDataGrid.defaultProps.localeText} // Türkçe metin desteği
-            rows={dataFiltered.length ? dataFiltered : []} // Filtrelenmiş veriyi göster
-            columns={columns} // Kolonlar
-            loading={patientsLoading} // Yükleme durumu
-            pageSizeOptions={[5, 10, 25]} // Sayfa büyüklüğü
-            initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-            onRowSelectionModelChange={(newSelectionModel) => setSelectedRowIds(newSelectionModel)}
-            slots={{
-              toolbar: CustomToolbarCallback,
-              noRowsOverlay: () => <EmptyContent />,
-              noResultsOverlay: () => <EmptyContent title="Veri Bulunamadı!" />,
-            }}
-            slotProps={{
-              panel: { anchorEl: filterButtonEl },
-              toolbar: { setFilterButtonEl },
-            }}
-            sx={{
-              flexGrow: 1,
-              height: '100%',
-              '& .MuiDataGrid-virtualScroller': {
-                overflow: 'auto',
-              },
-            }}
-            ref={gridRef}
-          />
+          <DataGridContainer height={600} className="datagrid-container">
+            <DataGrid
+              localeText={trTR.components.MuiDataGrid.defaultProps.localeText} // Türkçe metin desteği
+              rows={dataFiltered.length ? dataFiltered : []} // Filtrelenmiş veriyi göster
+              columns={columns} // Kolonlar
+              loading={patientsLoading} // Yükleme durumu
+              pageSizeOptions={[5, 10, 25]} // Sayfa büyüklüğü
+              initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+              onRowSelectionModelChange={(newSelectionModel) => setSelectedRowIds(newSelectionModel)}
+              slots={{
+                toolbar: CustomToolbarCallback,
+                noRowsOverlay: () => <EmptyContent />,
+                noResultsOverlay: () => <EmptyContent title="Veri Bulunamadı!" />,
+              }}
+              slotProps={{
+                panel: { anchorEl: filterButtonEl },
+                toolbar: { setFilterButtonEl },
+              }}
+              ref={gridRef}
+              style={{ height: '100%', minHeight: '400px', width: '100%' }}
+              sx={{
+                height: '100% !important',
+                minHeight: '400px !important',
+                width: '100% !important',
+              }}
+            />
+          </DataGridContainer>
         </Card>
       </DashboardContent>
 

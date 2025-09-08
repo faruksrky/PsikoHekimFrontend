@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { varAlpha } from 'minimal-shared/utils';
 
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -8,8 +9,6 @@ import FormControl from '@mui/material/FormControl';
 import OutlinedInput from '@mui/material/OutlinedInput';
 
 import { useSetState } from 'src/hooks/use-set-state';
-
-import { varAlpha } from 'minimal-shared/utils';
 
 // ----------------------------------------------------------------------
 export function PatientTableToolbar({ filters, options }) {

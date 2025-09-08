@@ -24,25 +24,73 @@ export function useCalendar() {
   const [view, setView] = useState(smUp ? 'dayGridMonth' : 'listWeek');
 
   const onOpenForm = useCallback(() => {
+    // Mevcut focus'lu elementi kaydet
+    const {activeElement} = document;
+    if (activeElement && activeElement.blur) {
+      activeElement.blur();
+    }
     setOpenForm(true);
   }, []);
-
 
   const onCloseForm = useCallback(() => {
     setOpenForm(false);
     setSelectedRange(null);
     setSelectEventId('');
+    // Focus'u temizle ve root elementi kontrol et
+    setTimeout(() => {
+      const rootElement = document.getElementById('root');
+      if (rootElement && rootElement.hasAttribute('aria-hidden')) {
+        rootElement.removeAttribute('aria-hidden');
+      }
+      
+      const {activeElement} = document;
+      if (activeElement && activeElement.blur) {
+        activeElement.blur();
+      }
+      
+      // Tüm MUI button'ları kontrol et ve focus'u kaldır
+      const buttons = document.querySelectorAll('button[class*="MuiButton"]');
+      buttons.forEach(button => {
+        if (button === document.activeElement) {
+          button.blur();
+        }
+      });
+    }, 150);
   }, []);
 
   const onOpenCalendarEdit= useCallback(() => {
+    // Mevcut focus'lu elementi kaydet
+    const {activeElement} = document;
+    if (activeElement && activeElement.blur) {
+      activeElement.blur();
+    }
     setOpenCalendarEdit(true);
   }, []);
-
 
   const onCloseCalendarEdit = useCallback(() => {
     setOpenCalendarEdit(false);
     setSelectedRange(null);
     setSelectEventId('');
+    // Focus'u temizle ve root elementi kontrol et
+    setTimeout(() => {
+      const rootElement = document.getElementById('root');
+      if (rootElement && rootElement.hasAttribute('aria-hidden')) {
+        rootElement.removeAttribute('aria-hidden');
+      }
+      
+      const {activeElement} = document;
+      if (activeElement && activeElement.blur) {
+        activeElement.blur();
+      }
+      
+      // Tüm MUI button'ları kontrol et ve focus'u kaldır
+      const buttons = document.querySelectorAll('button[class*="MuiButton"]');
+      buttons.forEach(button => {
+        if (button === document.activeElement) {
+          button.blur();
+        }
+      });
+    }, 150);
   }, []);
 
   const onInitialView = useCallback(() => {

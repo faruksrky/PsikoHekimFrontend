@@ -1,0 +1,30 @@
+
+
+  VITE v5.4.19  ready in 356 ms
+
+  ➜  Local:   http://localhost:3031/
+  ➜  Network: http://192.168.1.2:3031/
+  ➜  press h + enter to show help
+ ERROR(ESLint)  'yup' should be listed in the project's dependencies. Run 'npm i -S yup' to add it (impor
+ ERROR(ESLint)  'yup' should be listed in the project's dependencies. Run 'npm i -S yup' to add it (import/no-extraneous-dependencies)
+ FILE  /Users/fs648/Desktop/PsikoHekim/PsikoHekimFrontend/src/sections/therapy-session/therapy-session-ne
+ FILE  /Users/fs648/Desktop/PsikoHekim/PsikoHekimFrontend/src/sections/therapy-session/therapy-session-new-edit-form.jsx:13:1
+
+    11 | } from '@mui/material';
+    12 | import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+  > 13 | import * as Yup from 'yup';
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    14 | import { useForm, Controller } from 'react-hook-form';
+    15 | import { yupResolver } from '@hookform/resolvers/yup';
+    16 |
+
+[ESLint] Found 1 error and 0 warning
+fs648@ekbaduser-MacBook-Pro PsikoHekimFrontend % > @minimal-kit/starter-vite-js@6.1.0 dev
+> vite
+
+
+  VITE v5.4.19  ready in 356 ms
+
+  ➜  Local:   http://localhost:3031/
+  ➜  Network: http://192.168.1.2:3031/
+  ➜  press h + enter to show zsh: no such file or directory: @minimal-kit/starter-vite-js@6.1.0clear

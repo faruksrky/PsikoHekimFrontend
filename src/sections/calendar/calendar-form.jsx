@@ -1,57 +1,59 @@
+import dayjs from 'dayjs';
 import { z as zod } from 'zod';
-import { useCallback, useEffect } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
-import dayjs from 'dayjs';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
+import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
-import MenuItem from '@mui/material/MenuItem';
+import CircularProgress from '@mui/material/CircularProgress';
+import Typography from '@mui/material/Typography';
 
-import { uuidv4 } from 'src/utils/uuidv4';
 import { fIsAfter } from 'src/utils/format-time';
-
-import { createEvent, updateEvent, deleteEvent } from 'src/actions/calendar';
+import { getTherapistId, getEmailFromToken } from 'src/auth/context/jwt/action';
+import { CONFIG } from 'src/config-global';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Form, Field } from 'src/components/hook-form';
-import { ColorPicker } from 'src/components/color-utils';
 
 // ----------------------------------------------------------------------
 
 export const EventSchema = zod.object({
-  title: zod.string().min(1, { message: 'Başlık gereklidir!' }),
-  description: zod.string().min(1, { message: 'Açıklama gereklidir!' }),
-  location: zod.string().optional().default(''),
-  status: zod.enum(['CONFIRMED', 'TENTATIVE', 'CANCELLED']).default('CONFIRMED'),
-  color: zod.string(),
-  start: zod.any(),
-  end: zod.any(),
-  reminderMinutes: zod.number().min(0).max(1440).default(30),
+  patientId: zod.string().min(1, { message: 'Hasta seçimi gereklidir!' }),
+  scheduledDate: zod.any().refine((val) => val && dayjs(val).isValid(), {
+    message: 'Geçerli bir tarih ve saat seçiniz!'
+  }),
+  sessionType: zod.enum(['INITIAL', 'REGULAR', 'FOLLOWUP', 'FINAL']).default('REGULAR'),
+  sessionFormat: zod.enum(['IN_PERSON', 'ONLINE', 'PHONE']).default('IN_PERSON'),
+  sessionFee: zod.number().min(0).optional(),
+  notes: zod.string().optional().default(''),
 });
 
 // ----------------------------------------------------------------------
 
 export function CalendarForm({ currentEvent, colorOptions, onClose }) {
+  const [patients, setPatients] = useState([]);
+  const [loadingPatients, setLoadingPatients] = useState(false);
+  const [therapistId, setTherapistId] = useState(null);
+
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(EventSchema),
     defaultValues: {
-      title: currentEvent?.title || '',
-      description: currentEvent?.description || '',
-      location: currentEvent?.location || '',
-      status: currentEvent?.status || 'CONFIRMED',
-      color: currentEvent?.color || colorOptions[0],
-      start: currentEvent?.start ? dayjs(currentEvent.start) : dayjs(),
-      end: currentEvent?.end ? dayjs(currentEvent.end) : dayjs().add(1, 'hour'),
-      reminderMinutes: currentEvent?.reminderMinutes || 30,
+      patientId: currentEvent?.patientId || '',
+      scheduledDate: currentEvent?.scheduledDate ? dayjs(currentEvent.scheduledDate) : undefined,
+      sessionType: currentEvent?.sessionType || 'REGULAR',
+      sessionFormat: currentEvent?.sessionFormat || 'IN_PERSON',
+      sessionFee: currentEvent?.sessionFee || '',
+      notes: currentEvent?.notes || '',
     },
   });
 
@@ -65,134 +67,211 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
   const values = watch();
 
-  const dateError = fIsAfter(values.start, values.end);
-
+  // Therapist ID'yi al ve hasta listesini çek
   useEffect(() => {
-    if (currentEvent) {
-      methods.reset({
-        title: currentEvent.title || '',
-        description: currentEvent.description || '',
-        location: currentEvent.location || '',
-        status: currentEvent.status || 'CONFIRMED',
-        color: currentEvent.color || colorOptions[0],
-        start: currentEvent.start ? dayjs(currentEvent.start) : dayjs(),
-        end: currentEvent.end ? dayjs(currentEvent.end) : dayjs().add(1, 'hour'),
-        reminderMinutes: currentEvent.reminderMinutes || 30,
+    const fetchTherapistId = async () => {
+      try {
+        const userInfo = getEmailFromToken();
+        if (!userInfo?.email) {
+          toast.error('Kullanıcı bilgisi bulunamadı');
+          return;
+        }
+        
+        const id = await getTherapistId(userInfo.email);
+        setTherapistId(id);
+        if (id) {
+          fetchPatients(id);
+        }
+      } catch (error) {
+        console.error('Therapist ID alınamadı:', error);
+        toast.error('Terapist bilgisi alınamadı');
+      }
+    };
+
+    fetchTherapistId();
+  }, []);
+
+  // Hasta listesini getir
+  const fetchPatients = async (therapistIdParam) => {
+    setLoadingPatients(true);
+    try {
+      const token = sessionStorage.getItem('jwt_access_token');
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapist-patient/${therapistIdParam}/patients`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPatients(data.data || []);
+      } else {
+        toast.error('Hasta listesi alınamadı');
+      }
+    } catch (error) {
+      console.error('Hasta listesi hatası:', error);
+      toast.error('Hasta listesi alınamadı');
+    } finally {
+      setLoadingPatients(false);
     }
-  }, [currentEvent, colorOptions, methods]);
+  };
 
   const onSubmit = handleSubmit(async (data) => {
-    const eventData = {
-      id: currentEvent?.id ? currentEvent?.id : uuidv4(),
-      title: data.title || '',
-      description: data.description || '',
-      location: data.location || '',
-      status: data.status || 'CONFIRMED',
-      color: data.color || colorOptions[0],
-      reminderMinutes: Number(data.reminderMinutes || 30),
-      start: data.start,
-      end: data.end,
+    
+    if (!therapistId) {
+      toast.error('Terapist bilgisi bulunamadı');
+      return;
+    }
+
+    // patientId'yi number'a çevir ve assignmentId'yi bul
+    const patientId = Number(data.patientId);
+    const selectedPatient = patients.find(p => p.patientId === patientId);
+    const assignmentId = selectedPatient?.assignmentId;
+    
+    
+    if (!assignmentId) {
+      toast.error('Hasta ataması bulunamadı');
+      return;
+    }
+
+    const sessionData = {
+      assignmentId,
+      scheduledDate: dayjs(data.scheduledDate).format('YYYY-MM-DDTHH:mm:ss'),
+      sessionType: data.sessionType,
+      sessionFormat: data.sessionFormat,
+      sessionFee: data.sessionFee ? parseFloat(data.sessionFee) : null,
+      notes: data.notes || '',
     };
 
     try {
-      if (!dateError) {
-        let result;
-        if (currentEvent?.id) {
-          result = await updateEvent(eventData);
-          if (result) {
-            toast.success('Etkinlik başarıyla güncellendi!');
-            onClose();
-            reset();
-            if (typeof window.refreshCalendarEvents === 'function') {
-              window.refreshCalendarEvents();
-            }
-          }
-        } else {
-          result = await createEvent(eventData);
-          if (result) {
-            toast.success('Etkinlik başarıyla eklendi!');
-            onClose();
-            reset();
-            if (typeof window.refreshCalendarEvents === 'function') {
-              window.refreshCalendarEvents();
-            }
-          }
+      const token = sessionStorage.getItem('jwt_access_token');
+      const url = currentEvent?.sessionId 
+        ? `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/${currentEvent.sessionId}`
+        : `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/addSession`;
+
+      const method = currentEvent?.sessionId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(sessionData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(currentEvent?.sessionId ? 'Randevu başarıyla güncellendi!' : 'Randevu başarıyla oluşturuldu!');
+        onClose();
+        reset();
+        if (typeof window.refreshCalendarEvents === 'function') {
+          window.refreshCalendarEvents();
         }
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Randevu kaydedilemedi');
       }
     } catch (error) {
-      console.error(error);
-      toast.error('İşlem sırasında bir hata oluştu');
+      console.error('Randevu kaydetme hatası:', error);
+      toast.error('Randevu kaydedilirken bir hata oluştu');
     }
   });
 
   const onDelete = useCallback(async () => {
+    if (!currentEvent?.sessionId) return;
+
     try {
-      const result = await deleteEvent(currentEvent?.id);
-      if (result) {
-        toast.success('Etkinlik başarıyla silindi!');
+      const token = sessionStorage.getItem('jwt_access_token');
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapy-sessions/${currentEvent.sessionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        toast.success('Randevu başarıyla silindi!');
         onClose();
         if (typeof window.refreshCalendarEvents === 'function') {
           window.refreshCalendarEvents();
         }
+      } else {
+        toast.error('Randevu silinemedi');
       }
     } catch (error) {
-      console.error(error);
-      toast.error('Etkinlik silinirken bir hata oluştu');
+      console.error('Randevu silme hatası:', error);
+      toast.error('Randevu silinirken bir hata oluştu');
     }
-  }, [currentEvent?.id, onClose]);
+  }, [currentEvent?.sessionId, onClose]);
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
       <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>
         <Stack spacing={3}>
-          <Field.Text name="title" label="Başlık" />
-
-          <Field.Text name="description" label="Açıklama" multiline rows={3} />
-
-          <Field.Text name="location" label="Konum" />
-
-          <Field.Select name="status" label="Durum">
-            <MenuItem value="CONFIRMED">Onaylandı</MenuItem>
-            <MenuItem value="TENTATIVE">Geçici</MenuItem>
-            <MenuItem value="CANCELLED">İptal Edildi</MenuItem>
+          {/* Hasta Seçimi */}
+          <Field.Select 
+            name="patientId" 
+            label="Hasta Seçimi"
+            disabled={loadingPatients}
+            InputProps={{
+              endAdornment: loadingPatients ? <CircularProgress size={20} /> : null
+            }}
+          >
+            {patients.length === 0 ? (
+              <MenuItem disabled value="">
+                {loadingPatients ? 'Hastalar yükleniyor...' : 'Hasta bulunamadı'}
+              </MenuItem>
+            ) : (
+              patients.map((patient, index) => (
+                <MenuItem key={patient.patientId || `patient-${index}`} value={String(patient.patientId)}>
+                  {patient.patientName}
+                </MenuItem>
+              ))
+            )}
           </Field.Select>
 
-          <Field.MobileDateTimePicker 
-            name="start" 
-            label="Başlangıç Tarihi"
-            format="DD/MM/YYYY HH:mm"
-          />
 
-          <Field.MobileDateTimePicker
-            name="end"
-            label="Bitiş Tarihi"
+          {/* Randevu Tarihi ve Saati */}
+          <Field.MobileDateTimePicker 
+            name="scheduledDate" 
+            label="Randevu Tarihi ve Saati"
             format="DD/MM/YYYY HH:mm"
+            disablePast
             slotProps={{
               textField: {
-                error: dateError,
-                helperText: dateError ? 'Bitiş tarihi başlangıç tarihinden sonra olmalıdır' : null,
+                helperText: 'Geçmiş tarihler seçilemez',
+                placeholder: "Tarih ve saat seçin"
               },
             }}
           />
 
-          <Controller
-            name="color"
-            control={control}
-            render={({ field }) => (
-              <ColorPicker
-                selected={field.value}
-                onSelectColor={(color) => field.onChange(color)}
-                colors={colorOptions}
-              />
-            )}
-          />
+          {/* Seans Türü */}
+          <Field.Select name="sessionType" label="Seans Türü">
+            <MenuItem value="INITIAL">İlk Seans</MenuItem>
+            <MenuItem value="REGULAR">Normal Seans</MenuItem>
+            <MenuItem value="FOLLOWUP">Takip Seansı</MenuItem>
+            <MenuItem value="FINAL">Son Seans</MenuItem>
+          </Field.Select>
+
+          {/* Seans Formatı */}
+          <Field.Select name="sessionFormat" label="Seans Formatı">
+            <MenuItem value="IN_PERSON">Yüz Yüze</MenuItem>
+            <MenuItem value="ONLINE">Online</MenuItem>
+            <MenuItem value="PHONE">Telefon</MenuItem>
+          </Field.Select>
+
+          {/* Seans Ücreti */}
+          <Field.Text name="sessionFee" label="Seans Ücreti (TL)" type="number" />
+
+          {/* Notlar */}
+          <Field.Text name="notes" label="Notlar" multiline rows={3} />
         </Stack>
       </Scrollbar>
 
       <DialogActions sx={{ flexShrink: 0 }}>
-        {!!currentEvent?.id && (
-          <Tooltip title="Etkinliği Sil">
+        {!!currentEvent?.sessionId && (
+          <Tooltip title="Randevuyu Sil">
             <IconButton onClick={onDelete}>
               <Iconify icon="solar:trash-bin-trash-bold" />
             </IconButton>
@@ -209,9 +288,8 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
           type="submit"
           variant="contained"
           loading={isSubmitting}
-          disabled={dateError}
         >
-          {currentEvent?.id ? 'Güncelle' : 'Ekle'}
+          {currentEvent?.sessionId ? 'Güncelle' : 'Randevu Oluştur'}
         </LoadingButton>
       </DialogActions>
     </Form>

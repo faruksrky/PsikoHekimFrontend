@@ -1,10 +1,13 @@
+import useSWR from 'swr';
 import { useMemo } from 'react';
-import useSWR, { mutate } from 'swr';
-import { toast } from 'src/components/snackbar';
-import { CONFIG } from 'src/config-global';
-import { getEmailFromToken, getTherapistId } from 'src/auth/context/jwt/action';
 
-import axios, { fetcher, endpoints } from 'src/utils/axios';
+import { fetcher, endpoints } from 'src/utils/axios';
+
+import { CONFIG } from 'src/config-global';
+
+import { toast } from 'src/components/snackbar';
+
+import { getTherapistId, getEmailFromToken } from 'src/auth/context/jwt/action';
 
 // ----------------------------------------------------------------------
 
@@ -96,7 +99,7 @@ export async function createEvent(eventData) {
       endTime
     };
     
-    const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/api/calendar/events`, {
+    const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/calendar/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -129,7 +132,7 @@ export async function updateEvent(eventData) {
   try {
     const token = sessionStorage.getItem('jwt_access_token');
     
-    const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/api/calendar/events/${eventData.id}`, {
+    const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/calendar/events/${eventData.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -165,7 +168,7 @@ export async function deleteEvent(eventId) {
   try {
     const token = sessionStorage.getItem('jwt_access_token');
     
-    const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/api/calendar/events/${eventId}`, {
+    const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/calendar/events/${eventId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`

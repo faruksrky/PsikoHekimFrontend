@@ -1,12 +1,11 @@
-import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import { useTheme } from '@mui/material/styles';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
 
-import { InboxWelcome } from '../inbox-welcome';
 import { InboxList } from '../inbox-list';
+import { InboxWelcome } from '../inbox-welcome';
 import { InboxWidgetSummary } from '../inbox-summary';
 
 // ----------------------------------------------------------------------
