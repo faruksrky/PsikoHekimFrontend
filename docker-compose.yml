@@ -1,18 +1,132 @@
 services:
-  postgres:
-    image: postgres:latest
-    container_name: postgresPsikoHekim
+
+  # Backend (Spring Boot)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - DB_URL=jdbc:postgresql://postgres-app:5432/psiko_db
+      - DB_USERNAME=keycloak
+      - DB_PASSWORD=password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - GOOGLE_REDIRECT_URI=http://localhost:8083/api/google-calendar/callback
+      - CAMUNDA_BASE_URL=http://zeebe:26500
+      - CAMUNDA_PROCESS_KEY=Process_Patient
+      - BPMN_SERVICE_URL=http://zeebe:26500/api/bpmn
+      - WEBHOOK_BASE_URL=http://localhost:8083
+      - WEBHOOK_PATH=/webhooks/whatsapp
+    secrets:
+      - google_client_id
+      - google_client_secret
+      - twilio_account_sid
+      - twilio_auth_token
+      - twilio_whatsapp_from
+    networks:
+      - psiko-network
+    depends_on:
+      postgres-app:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # PostgreSQL for Application Data
+  postgres-app:
+    image: postgres:15
+    container_name: postgres-app
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: psiko_db
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_app_data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/sql:/docker-entrypoint-initdb.d
+    networks:
+      - psiko-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d psiko_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL for Keycloak
+  postgres-keycloak:
+    image: postgres:15
+    container_name: postgres-keycloak
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_keycloak_data:/var/lib/postgresql/data
+    networks:
+      - psiko-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Keycloak (Authentication)
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    command: start
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_SCHEMA=public
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=password
+      - KC_DB_URL=jdbc:postgresql://postgres-keycloak:5432/keycloak
+      - KC_FEATURES=token-exchange,admin-fine-grained-authz
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_HTTP_ENABLED=true
+      - KC_PROXY=none
+    networks:
+      - psiko-network
+    depends_on:
+      postgres-keycloak:
+        condition: service_healthy
+
+  # Redis (Caching)
+  redis:
+    image: redis:7
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - psiko-network
+
+  # Camunda BPM Services
+  postgres-bpm:
+    image: postgres:15
+    container_name: postgres-bpm
     ports:
       - "5433:5432"
     environment:
+      POSTGRES_DB: psiko_bpm
       POSTGRES_USER: camunda
       POSTGRES_PASSWORD: camunda
-      POSTGRES_DB: psiko_bpm
-    restart: always
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_bpm_data:/var/lib/postgresql/data
+    networks:
+      - psiko-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U camunda"]
+      test: ["CMD-SHELL", "pg_isready -U camunda -d psiko_bpm"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,6 +147,11 @@ services:
       - "9600:9600"
     volumes:
       - zeebe_data:/usr/local/zeebe/data
+    networks:
+      - psiko-network
+    depends_on:
+      postgres-bpm:
+        condition: service_healthy
 
   operate:
     platform: linux/amd64
@@ -46,6 +165,8 @@ services:
       - CAMUNDA_OPERATE_CSRFPREVENTIONENABLED=false
     ports:
       - "8081:8080"
+    networks:
+      - psiko-network
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -64,6 +185,8 @@ services:
       - CAMUNDA_TASKLIST_CSRFPREVENTIONENABLED=false
     ports:
       - "8084:8080"
+    networks:
+      - psiko-network
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -81,6 +204,8 @@ services:
       - "9200:9200"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - psiko-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cat/health || exit 1"]
       interval: 30s
@@ -88,7 +213,25 @@ services:
       start_period: 30s
       timeout: 10s
 
+networks:
+  psiko-network:
+    driver: bridge
+
 volumes:
-  postgres_data:
+  postgres_app_data:
+  postgres_keycloak_data:
+  postgres_bpm_data:
   elasticsearch_data:
-  zeebe_data: 
+  zeebe_data:
+
+secrets:
+  google_client_id:
+    file: ./backend/secrets/google-client-id
+  google_client_secret:
+    file: ./backend/secrets/google-client-secret
+  twilio_account_sid:
+    file: ./backend/secrets/twilio-account-sid
+  twilio_auth_token:
+    file: ./backend/secrets/twilio-auth-token
+  twilio_whatsapp_from:
+    file: ./backend/secrets/twilio-whatsapp-from
