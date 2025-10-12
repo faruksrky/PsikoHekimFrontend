@@ -11,6 +11,13 @@ import {CONFIG} from '../../../config-global';
  *************************************** */
 export const signInWithPassword = async ({ username, password }) => {
     try {
+      console.log('Keycloak login attempt:', {
+        baseURL: axiosInstanceKeycloak.defaults.baseURL,
+        endpoint: '/keycloak/getToken',
+        username,
+        passwordLength: password?.length
+      });
+
       const res = await axiosInstanceKeycloak.post('/keycloak/getToken', {
         username,
         password
@@ -39,14 +46,43 @@ export const signInWithPassword = async ({ username, password }) => {
       setSession(accessToken, user);
 
     } catch (error) {
+      console.error('Authentication error:', error);
+      
+      // Handle specific error cases with descriptive messages
       if (error.response) {
-        console.error(error.response.data);
+        const { status, data } = error.response;
+        console.error('Error response:', data);
+        
+        if (status === 400) {
+          if (data?.error === 'invalid_grant') {
+            if (data?.error_description === 'Account is not fully set up') {
+              throw new Error('Hesabınız henüz tam olarak ayarlanmamış. Lütfen sistem yöneticisi ile iletişime geçin.');
+            } else if (data?.error_description === 'Invalid user credentials') {
+              throw new Error('Kullanıcı adı veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.');
+            } else {
+              throw new Error('Giriş bilgileri hatalı. Lütfen kullanıcı adı ve şifrenizi kontrol edin.');
+            }
+          } else {
+            throw new Error('Geçersiz istek. Lütfen bilgilerinizi kontrol edin.');
+          }
+        } else if (status === 401) {
+          throw new Error('Yetkilendirme hatası. Kullanıcı adı veya şifre hatalı.');
+        } else if (status === 403) {
+          throw new Error('Erişim reddedildi. Hesabınızın sisteme erişim yetkisi bulunmuyor.');
+        } else if (status === 404) {
+          throw new Error('Kimlik doğrulama servisi bulunamadı. Sistem yöneticisi ile iletişime geçin.');
+        } else if (status >= 500) {
+          throw new Error('Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.');
+        } else {
+          throw new Error('Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.');
+        }
+      } else if (error.request) {
+        console.error('Network error:', error.request);
+        throw new Error('Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.');
+      } else {
+        console.error('Unexpected error:', error);
+        throw new Error('Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.');
       }
-      else if(error.request){
-        console.error(error.request);
-      }
-      console.error('Sunucu yanıt veremedi', error);
-      throw error;
     }
 }
 

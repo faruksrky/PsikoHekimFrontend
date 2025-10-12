@@ -122,6 +122,13 @@ export function TherapySessionListView() {
         },
       });
 
+      if (response.status === 404) {
+        // 404 hatası için boş array döndür
+        console.log('No therapy sessions found, returning empty list');
+        setTableData([]);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(`Failed to fetch therapy sessions: ${response.status}`);
       }
@@ -131,6 +138,8 @@ export function TherapySessionListView() {
     } catch (error) {
       console.error('Error fetching therapy sessions:', error);
       toast('Seanslar yüklenirken bir hata oluştu', { variant: 'error' });
+      // Hata durumunda da boş array set et
+      setTableData([]);
     } finally {
       setLoading(false);
     }

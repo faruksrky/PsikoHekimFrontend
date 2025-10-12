@@ -35,6 +35,7 @@ import { fDateTime } from 'src/utils/format-time';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import Iconify from 'src/components/iconify';
+import { TableNoData } from 'src/components/table';
 import { useSnackbar } from 'src/components/snackbar';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -218,51 +219,59 @@ export function TherapistInboxView() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {requests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell>{request.patientName}</TableCell>
-                    <TableCell>{request.patientAge}</TableCell>
-                    <TableCell>{fDateTime(request.requestDate)}</TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={request.status === 'pending' ? 'Beklemede' : 
-                               request.status === 'accepted' ? 'Kabul Edildi' : 'Reddedildi'} 
-                        color={request.status === 'pending' ? 'warning' : 
-                               request.status === 'accepted' ? 'success' : 'error'} 
-                        size="small" 
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1}>
-                        <Tooltip title="Detaylar">
-                          <IconButton onClick={() => handleViewDetails(request)}>
-                            <Iconify icon="mdi:eye-outline" />
-                          </IconButton>
-                        </Tooltip>
-                        {request.status === 'pending' && (
-                          <>
-                            <Button
-                              variant="contained"
-                              color="success"
-                              size="small"
-                              onClick={() => handleAccept(request.id)}
-                            >
-                              Kabul Et
-                            </Button>
-                            <Button
-                              variant="contained"
-                              color="error"
-                              size="small"
-                              onClick={() => handleReject(request.id)}
-                            >
-                              Reddet
-                            </Button>
-                          </>
-                        )}
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {requests.length > 0 ? (
+                  requests.map((request) => (
+                    <TableRow key={request.id}>
+                      <TableCell>{request.patientName}</TableCell>
+                      <TableCell>{request.patientAge}</TableCell>
+                      <TableCell>{fDateTime(request.requestDate)}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={request.status === 'pending' ? 'Beklemede' : 
+                                 request.status === 'accepted' ? 'Kabul Edildi' : 'Reddedildi'} 
+                          color={request.status === 'pending' ? 'warning' : 
+                                 request.status === 'accepted' ? 'success' : 'error'} 
+                          size="small" 
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1}>
+                          <Tooltip title="Detaylar">
+                            <IconButton onClick={() => handleViewDetails(request)}>
+                              <Iconify icon="mdi:eye-outline" />
+                            </IconButton>
+                          </Tooltip>
+                          {request.status === 'pending' && (
+                            <>
+                              <Button
+                                variant="contained"
+                                color="success"
+                                size="small"
+                                onClick={() => handleAccept(request.id)}
+                              >
+                                Kabul Et
+                              </Button>
+                              <Button
+                                variant="contained"
+                                color="error"
+                                size="small"
+                                onClick={() => handleReject(request.id)}
+                              >
+                                Reddet
+                              </Button>
+                            </>
+                          )}
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableNoData
+                    notFound={requests.length === 0}
+                    title="Henüz hiç istek bulunmamaktadır"
+                    description="Danışan atama istekleri burada görüntülenecek."
+                  />
+                )}
               </TableBody>
             </Table>
           </TableContainer>

@@ -5,6 +5,7 @@ import { CONFIG } from 'src/config-global';
 import { DashboardLayout } from 'src/layouts/dashboard';
 
 import { LoadingScreen } from 'src/components/loading-screen';
+import { ProtectedRoute } from 'src/components/ProtectedRoute';
 
 import { AuthGuard } from 'src/auth/guard';
 
@@ -53,53 +54,207 @@ export const dashboardRoutes = [
     element: CONFIG.auth.skip ? <>{layoutContent}</> : <AuthGuard>{layoutContent}</AuthGuard>,
     children: [
       { element: <Navigate to="/dashboard/inbox" replace />, index: true },
-      { path: 'inbox', element: <InboxView /> },
-      { path: 'calendar', element: <CalendarView /> },
-     
+      { 
+        path: 'inbox', 
+        element: (
+          <ProtectedRoute requiredRole="USER">
+            <InboxView />
+          </ProtectedRoute>
+        ) 
+      },
+      { 
+        path: 'calendar', 
+        element: (
+          <ProtectedRoute requiredRole="USER">
+            <CalendarView />
+          </ProtectedRoute>
+        ) 
+      },
+      
       {
         path: 'patient',
         children: [
           { element: <Navigate to="/dashboard/patient/list" replace />, index: true },
-          { path: 'list', element: <PatientListPage /> },
-          { path: 'new', element: <PatientCreatePage /> },
-          { path: ':id/details', element: <PatientDetailsPage /> },
-          { path: ':id/edit', element: <PatientEditPage /> },
-          { path: ':id/assign-therapist', element: <AssignTherapistView /> },
+          { 
+            path: 'list', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <PatientListPage />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: 'new', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <PatientCreatePage />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: ':id/details', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <PatientDetailsPage />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: ':id/edit', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <PatientEditPage />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: ':id/assign-therapist', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <AssignTherapistView />
+              </ProtectedRoute>
+            ) 
+          },
         ],
       },
     
       {
         path: 'user',
         children: [
-          { path: 'list', element: <UserListPage /> },
-          { path: 'new', element: <UserCreatePage /> },
-          { path: ':id/edit', element: <UserEditPage /> },
+          { 
+            path: 'list', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <UserListPage />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: 'new', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <UserCreatePage />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: ':id/edit', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <UserEditPage />
+              </ProtectedRoute>
+            ) 
+          },
         ],
       },
       {
         path: 'therapist',
         children: [
           { element: <Navigate to="/dashboard/therapist/list" replace />, index: true },
-          { path: 'list', element: <TherapistListPage /> },
-          { path: 'new', element: <TherapistCreatePage /> },
-          { path: ':id/details', element: <TherapistDetailsView /> },
-          { path: ':id/edit', element: <TherapistEditPage /> },
+          { 
+            path: 'list', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <TherapistListPage />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: 'new', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <TherapistCreatePage />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: ':id/details', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <TherapistDetailsView />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: ':id/edit', 
+            element: (
+              <ProtectedRoute requiredRole="ADMIN">
+                <TherapistEditPage />
+              </ProtectedRoute>
+            ) 
+          },
         ],
       },
       {
         path: 'therapy-session',
         children: [
           { element: <Navigate to="/dashboard/therapy-session/list" replace />, index: true },
-          { path: 'list', element: <TherapySessionListView /> },
-          { path: 'new', element: <TherapySessionCreateView /> },
-          { path: 'edit', element: <TherapySessionEditView /> },
-          { path: 'analytics', element: <TherapySessionAnalyticsView /> },
-          { path: ':id/details', element: <TherapySessionDetailsView /> },
-          { path: ':id/edit', element: <TherapySessionEditView /> },
-          { path: ':id/reschedule', element: <TherapySessionRescheduleView /> },
+          { 
+            path: 'list', 
+            element: (
+              <ProtectedRoute requiredRole="USER">
+                <TherapySessionListView />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: 'new', 
+            element: (
+              <ProtectedRoute requiredRole="USER">
+                <TherapySessionCreateView />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: 'edit', 
+            element: (
+              <ProtectedRoute requiredRole="USER">
+                <TherapySessionEditView />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: 'analytics', 
+            element: (
+              <ProtectedRoute requiredRole="USER">
+                <TherapySessionAnalyticsView />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: ':id/details', 
+            element: (
+              <ProtectedRoute requiredRole="USER">
+                <TherapySessionDetailsView />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: ':id/edit', 
+            element: (
+              <ProtectedRoute requiredRole="USER">
+                <TherapySessionEditView />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: ':id/reschedule', 
+            element: (
+              <ProtectedRoute requiredRole="USER">
+                <TherapySessionRescheduleView />
+              </ProtectedRoute>
+            ) 
+          },
         ],
       },
-      { path: 'analytics', element: <OverviewAnalyticsPage /> },
+      { 
+        path: 'analytics', 
+        element: (
+          <ProtectedRoute requiredRole="USER">
+            <OverviewAnalyticsPage />
+          </ProtectedRoute>
+        ) 
+      },
     ],
   },
 ];

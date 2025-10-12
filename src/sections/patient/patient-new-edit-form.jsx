@@ -21,6 +21,7 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { axiosInstancePatient } from 'src/utils/axios';
+import { mutate } from 'swr';
 
 import { CONFIG } from 'src/config-global';
 import { GENDER_TYPE_OPTIONS } from 'src/_mock/_patient';
@@ -106,25 +107,49 @@ export function PatientNewEditForm({ currentPatient }) {
 
   const onSubmit = async (data) => {
     try {
-      // 1. Önce hasta kaydını yap
-      const registerRes = await axiosInstancePatient.post(CONFIG.addPatientUrl, data);
-      console.log('Register Response:', registerRes.data);
+      let response;
+      
+      if (currentPatient && currentPatient.patientId) {
+        // Güncelleme işlemi - PUT request
+        console.log('Updating patient:', currentPatient.patientId);
+        response = await axiosInstancePatient.put(
+          `${CONFIG.addPatientUrl}/${currentPatient.patientId}`, 
+          data
+        );
+        console.log('Update Response:', response.data);
+        toast.success("Hasta bilgileri başarıyla güncellendi.");
+        
+        // SWR cache'ini tamamen temizle ve yeniden yükle
+        mutate(CONFIG.patientListUrl, undefined, { revalidate: true });
+        // Alternatif olarak cache'i tamamen temizle
+        mutate(CONFIG.patientListUrl, () => undefined, { revalidate: true });
+        
+        // Güncelleme sonrası liste sayfasına dön
+        setTimeout(() => {
+          navigate(paths.dashboard.patient.list);
+        }, 1500);
+      } else {
+        // Yeni hasta ekleme - POST request
+        console.log('Creating new patient');
+        response = await axiosInstancePatient.post(CONFIG.addPatientUrl, data);
+        console.log('Create Response:', response.data);
 
-      if (!registerRes.data) {
-        throw new Error("API yanıtı boş!");
+        if (!response.data) {
+          throw new Error("API yanıtı boş!");
+        }
+
+        const newPatientId = response.data.patientId;
+        console.log('Patient ID:', newPatientId);
+
+        if (!newPatientId) {
+          console.error('API Response:', response.data);
+          throw new Error(`Danışan ID alınamadı! API yanıtı: ${JSON.stringify(response.data)}`);
+        }
+
+        setPatientId(newPatientId);
+        setShowAssignDialog(true);
+        toast.success("Hasta kaydı yapıldı ve süreç başlatıldı.");
       }
-
-      const newPatientId = registerRes.data.patientId;
-      console.log('Patient ID:', newPatientId);
-
-      if (!newPatientId) {
-        console.error('API Response:', registerRes.data);
-        throw new Error(`Danışan ID alınamadı! API yanıtı: ${JSON.stringify(registerRes.data)}`);
-      }
-
-      setPatientId(newPatientId);
-      setShowAssignDialog(true);
-      toast.success("Hasta kaydı yapıldı ve süreç başlatıldı.");
 
     } catch (error) {
       console.error("Hata Detayı:", {
@@ -134,12 +159,26 @@ export function PatientNewEditForm({ currentPatient }) {
         stack: error.stack
       });
       
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        
+        if (status === 400) {
+          toast.error(errorData?.message || 'Girilen bilgilerde hata var. Lütfen tüm alanları kontrol edin.');
+        } else if (status === 409) {
+          toast.error('Bu e-posta adresi veya telefon numarası zaten kullanımda.');
+        } else if (status === 422) {
+          toast.error('Girilen bilgiler geçersiz. Lütfen tüm alanları doğru şekilde doldurun.');
+        } else if (status >= 500) {
+          toast.error('Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.');
+        } else {
+          toast.error(errorData?.message || 'Hasta kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+        }
+      } else if (error.request) {
+        toast.error('Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.');
       } else if (error.message) {
         toast.error(error.message);
       } else {
-        toast.error("Bir hata oluştu!");
+        toast.error("Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.");
       }
     }
   };
@@ -310,7 +349,7 @@ export function PatientNewEditForm({ currentPatient }) {
                     variant="contained" 
                     loading={isSubmitting}
                   >
-                    {!currentPatient ? 'Danışan Oluştur' : 'Değişiklikleri Kaydet'}
+                    {!currentPatient?.patientId ? 'Hasta Oluştur' : 'Güncelle'}
                   </LoadingButton>
                 </Stack>
               </Card>

@@ -19,8 +19,10 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { useRouter } from 'src/routes/hooks';
+import { paths } from 'src/routes/paths';
 
 import axios from 'src/utils/axios';
+import { mutate } from 'swr';
 
 import {
   THERAPIST_TYPE_OPTIONS,
@@ -155,12 +157,41 @@ export function TherapistNewEditForm({ currentTherapist }) {
         setSeverity('success');
         setOpen(true);
         reset();
+        
+        // SWR cache'ini yenile - danışman listesini güncelle
+        mutate(CONFIG.therapistListUrl, undefined, { revalidate: true });
+        
+        // Listeye geri dön
+        setTimeout(() => {
+          router.push(paths.dashboard.therapist.root);
+        }, 1500);
       } else {
-        throw new Error('Beklenmeyen yanıt durumu');
+        throw new Error('Sunucudan beklenmeyen bir yanıt alındı. Lütfen tekrar deneyin.');
       }
     } catch (error) {
-      console.error('Backend Hatası:', error.response?.data || error);
-      setMessage(error.response?.data?.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+      console.error('Therapist form submission error:', error);
+      
+      let errorMessage = 'Danışman kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.';
+      
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        
+        if (status === 400) {
+          errorMessage = errorData?.message || 'Girilen bilgilerde hata var. Lütfen tüm alanları kontrol edin.';
+        } else if (status === 409) {
+          errorMessage = 'Bu e-posta adresi veya telefon numarası zaten kullanımda.';
+        } else if (status === 422) {
+          errorMessage = 'Girilen bilgiler geçersiz. Lütfen tüm alanları doğru şekilde doldurun.';
+        } else if (status >= 500) {
+          errorMessage = 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.';
+        } else {
+          errorMessage = errorData?.message || 'Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.';
+        }
+      } else if (error.request) {
+        errorMessage = 'Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.';
+      }
+      
+      setMessage(errorMessage);
       setSeverity('error');
       setOpen(true);
     }

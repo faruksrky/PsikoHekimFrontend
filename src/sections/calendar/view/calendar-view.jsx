@@ -9,7 +9,6 @@ import timelinePlugin from '@fullcalendar/timeline';
 import trLocale from '@fullcalendar/core/locales/tr';
 import interactionPlugin from '@fullcalendar/interaction';
 
-import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -22,7 +21,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
 
-import { fDate, fIsAfter, fIsBetween } from 'src/utils/format-time';
+import { axiosInstance } from 'src/utils/axios';
+import { fIsAfter, fIsBetween } from 'src/utils/format-time';
 
 import { updateEvent } from 'src/actions/calendar';
 // MUI Localization
@@ -32,7 +32,6 @@ import { CALENDAR_COLOR_OPTIONS } from 'src/_mock/_calendar';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 
-import { axiosInstance } from 'src/utils/axios';
 import { getTherapistId, getEmailFromToken } from 'src/auth/context/jwt/action';
 
 import { StyledCalendar } from '../styles';
@@ -431,7 +430,7 @@ export function CalendarView() {
               }}
               dayCellDidMount={handleDayCellDidMount}
               eventContent={(arg) => {
-                const event = arg.event;
+                const {event} = arg;
                 const extendedProps = event.extendedProps || {};
                 
                 

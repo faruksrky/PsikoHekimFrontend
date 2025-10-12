@@ -90,6 +90,7 @@ export function TherapistListView() {
     (id) => {
       const deleteRow = tableData.filter((row) => row.id !== id);
       setTableData(deleteRow);
+      toast.success('Danışman başarıyla silindi!');
     },
     [tableData]
   );
@@ -199,23 +200,30 @@ export function TherapistListView() {
       type: 'actions',
       headerName: 'İşlemler',
       width: 120,
+      align: 'right',
+      headerAlign: 'right',
       cellClassName: 'actions',
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
       getActions: (params) => [
         <GridActionsCellItem
+          showInMenu
           icon={<Iconify icon="solar:eye-bold" />}
-          label="Görüntüle"
+          label="Detayları Görüntüle"
           onClick={() => handleViewRow(params.id)}
         />,
         <GridActionsCellItem
+          showInMenu
           icon={<Iconify icon="solar:pen-bold" />}
           label="Düzenle"
           onClick={() => handleEditRow(params.id)}
         />,
         <GridActionsCellItem
+          showInMenu
           icon={<Iconify icon="solar:trash-bin-trash-bold" />}
           label="Sil"
           onClick={() => handleDeleteRow(params.id)}
-          showInMenu
           sx={{ color: 'error.main' }}
         />,
       ],
@@ -279,7 +287,7 @@ export function TherapistListView() {
   const handleDeleteRows = useCallback(() => {
     const deleteRows = tableData.filter((row) => !selectedRowIds.includes(row.id));
 
-    toast.success('Delete success!');
+    toast.success(`${selectedRowIds.length} danışman başarıyla silindi!`);
 
     setTableData(deleteRows);
   }, [selectedRowIds, tableData]);
@@ -339,8 +347,14 @@ export function TherapistListView() {
               onRowSelectionModelChange={(newSelectionModel) => setSelectedRowIds(newSelectionModel)}
               slots={{
                 toolbar: CustomToolbarCallback,
-                noRowsOverlay: () => <EmptyContent />,
-                noResultsOverlay: () => <EmptyContent title="Veri Bulunamadı!" />,
+                noRowsOverlay: () => <EmptyContent 
+                  title="Henüz hiç danışman kaydı bulunmamaktadır" 
+                  description="Yeni danışman eklemek için 'Yeni Danışman' butonunu kullanabilirsiniz."
+                />,
+                noResultsOverlay: () => <EmptyContent 
+                  title="Arama kriterlerinize uygun danışman bulunamadı" 
+                  description="Farklı arama terimleri deneyebilir veya filtreleri temizleyebilirsiniz."
+                />,
               }}
               slotProps={{
                 panel: { anchorEl: filterButtonEl },
@@ -360,10 +374,10 @@ export function TherapistListView() {
       <ConfirmDialog
         open={confirmRows.value}
         onClose={confirmRows.onFalse}
-        title="Delete"
+        title="Silme Onayı"
         content={
           <>
-            Are you sure want to delete <strong> {selectedRowIds.length} </strong> items?
+            <strong> {selectedRowIds.length} </strong> danışmanı silmek istediğinizden emin misiniz?
           </>
         }
         action={
@@ -375,7 +389,7 @@ export function TherapistListView() {
               confirmRows.onFalse();
             }}
           >
-            Delete
+            Sil
           </Button>
         }
       />
@@ -418,7 +432,7 @@ function CustomToolbar({
               startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
               onClick={onOpenConfirmDeleteRows}
             >
-              Delete ({selectedRowIds.length})
+              Sil ({selectedRowIds.length})
             </Button>
           )}
 

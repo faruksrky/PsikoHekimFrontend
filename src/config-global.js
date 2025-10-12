@@ -10,7 +10,7 @@ export const CONFIG = {
   loginUrl: import.meta.env.VITE_LOGIN_URL ?? '',
   signUpUrl: import.meta.env.VITE_SIGNUP_URL ?? '',
   assetsDir: import.meta.env.VITE_ASSETS_DIR ?? '',
-  psikoHekimBaseUrl: import.meta.env.VITE_PSIKOHEKIM_BASE_URL ?? '',
+  psikoHekimBaseUrl: import.meta.env.VITE_PSIKOHEKIM_BASE_URL ?? 'http://localhost:8083',
   addTherapistUrl: import.meta.env.VITE_THERAPIST_ADD_URL ?? '',
   addPatientUrl: import.meta.env.VITE_PATIENT_ADD_URL ?? '',
   therapistListUrl: import.meta.env.VITE_THERAPIST_LIST_URL ?? '',
@@ -20,9 +20,9 @@ export const CONFIG = {
   googleAuthUrl: import.meta.env.VITE_GET_GOOGLE_AUTH_URL ?? '',
   googleCallbackUrl: import.meta.env.VITE_GET_GOOGLE_CALLBACK_URL ?? '',
   googleCalendarEventsUrl: import.meta.env.VITE_GET_GOOGLE_CALENDAR_EVENTS_URL ?? '',
-  keycloakBaseUrl: import.meta.env.VITE_KEYCLOAK_BASE_URL ?? '',
+  keycloakBaseUrl: import.meta.env.VITE_KEYCLOAK_BASE_URL ?? 'http://localhost:8080',
   bpmn: {
-    baseUrl: import.meta.env.VITE_BPMN_BASE_URL ?? '',
+    baseUrl: import.meta.env.VITE_BPMN_BASE_URL ?? 'http://localhost:26500',
     endpoints: {
       assignTherapist: '/api/bpmn/patient/start-process',
     },
@@ -43,7 +43,7 @@ export const CONFIG = {
   therapistSearchUrl: import.meta.env.VITE_THERAPIST_SEARCH_URL ?? '',
   patientDetailsUrl: import.meta.env.VITE_PATIENT_DETAILS_URL ?? '',
   patientSearchUrl: import.meta.env.VITE_PATIENT_SEARCH_URL ?? '',
-  therapistPatientPatientsUrl: import.meta.env.VITE_THERAPIST_PATIENT_PATIENTS_URL ?? '',
+  therapistPatientPatientsUrl: import.meta.env.VITE_THERAPIST_PATIENT_PATIENTS_URL ?? 'http://localhost:8083/therapist-patient',
 
   /**
    * Auth

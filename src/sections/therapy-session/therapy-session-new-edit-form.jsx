@@ -257,9 +257,9 @@ export function TherapySessionNewEditForm({ currentSession }) {
         await updateSession(currentSession.sessionId, data);
         toast.success('Seans başarıyla güncellendi!');
       } else {
-        // Create new session
-        await createSession(data, false);
-        toast.success('Seans başarıyla oluşturuldu ve planlandı!');
+        // Create new session with WhatsApp/Twilio notification
+        await createSessionWithNotification(data);
+        toast.success('Seans oluşturuldu! Hasta ve danışmana WhatsApp bildirimi gönderildi. Hasta onayını bekliyoruz...');
       }
       
       router.push(paths.dashboard.therapySession.list);
@@ -320,6 +320,78 @@ export function TherapySessionNewEditForm({ currentSession }) {
     }
   };
 
+  const createSessionWithNotification = async (sessionData) => {
+    try {
+      const token = sessionStorage.getItem('jwt_access_token');
+      
+      // Önce atama bilgisini kontrol et
+      const assignmentResponse = await fetch(`${CONFIG.therapistPatientPatientsUrl}/${parseInt(sessionData.therapistId, 10)}/patients`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!assignmentResponse.ok) {
+        throw new Error('Atama bilgisi alınamadı');
+      }
+
+      const assignmentData = await assignmentResponse.json();
+      const assignment = assignmentData.data.find(a => a.patientId === parseInt(sessionData.patientId, 10));
+
+      if (!assignment) {
+        throw new Error('Seçilen danışan için atama bulunamadı');
+      }
+
+      // Seans oluştur ve WhatsApp/Twilio bildirimi gönder
+      const requestBody = {
+        assignmentId: assignment.assignmentId,
+        scheduledDate: new Date(sessionData.scheduledDate).toISOString().slice(0, 19),
+        sessionFee: parseFloat(sessionData.sessionFee) || 0,
+        sessionType: sessionData.sessionType || 'REGULAR',
+        sessionFormat: sessionData.sessionFormat || 'IN_PERSON',
+        notes: sessionData.sessionNotes || '',
+        // WhatsApp/Twilio notification flags
+        sendNotification: true,
+        notificationType: 'WHATSAPP_TWILIO', // WhatsApp ve Twilio ile bildirim
+        requirePatientApproval: true // Hasta onayı gerekli
+      };
+
+      console.log('Creating session with notification:', requestBody);
+
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.create}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const responseText = await response.text();
+
+      if (!response.ok) {
+        let errorMessage = 'Seans oluşturulamadı';
+        try {
+          if (responseText && responseText.trim().startsWith('{')) {
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.message || errorMessage;
+          } else {
+            errorMessage = responseText || errorMessage;
+          }
+        } catch (e) {
+          console.error('Error parsing error response:', e);
+          errorMessage = responseText || response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      return responseText ? JSON.parse(responseText) : null;
+    } catch (error) {
+      console.error('Error creating session with notification:', error);
+      throw error;
+    }
+  };
+
   const createSession = async (sessionData, isDraft = false) => {
     try {
       const token = sessionStorage.getItem('jwt_access_token');
@@ -344,7 +416,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
 
       // Seans oluştur
       const requestBody = {
-        assignmentId: assignment.patientId,
+        assignmentId: assignment.assignmentId,
         scheduledDate: new Date(sessionData.scheduledDate).toISOString().slice(0, 19),
         sessionFee: parseFloat(sessionData.sessionFee) || 0,
         sessionType: sessionData.sessionType || 'REGULAR',

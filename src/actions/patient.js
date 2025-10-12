@@ -1,7 +1,7 @@
 import useSWR from 'swr';
 import { useMemo } from 'react';
 
-import { fetcher, endpoints, fetcherPatient } from 'src/utils/axios';
+import { fetcher, endpoints, fetcherPatient, fetcherSinglePatient } from 'src/utils/axios';
 
 import { CONFIG } from 'src/config-global';
 
@@ -36,18 +36,18 @@ export function useGetPatients() {
 
 
 export function useGetPatient(patientId) {
-    const url = patientId ? [endpoints.patient.details, { params: { patientId } }] : '';
+    const url = patientId ? `/patient/${patientId}` : '';
   
-    const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrOptions);
+    const { data, isLoading, error, isValidating } = useSWR(url, fetcherSinglePatient, swrOptions);
   
     const memoizedValue = useMemo(
       () => ({
-        patient: data?.patient,
+        patient: data, // API direkt patient objesi dönüyor, data.patient değil
         patientLoading: isLoading,
         patientError: error,
         patientValidating: isValidating,
       }),
-      [data?.patient, error, isLoading, isValidating]
+      [data, error, isLoading, isValidating]
     );
   
     return memoizedValue;

@@ -67,8 +67,18 @@ export function JwtSignInView() {
 
       router.refresh();
     } catch (error) {
-      console.error(error);
-      setErrorMsg(typeof error === 'string' ? error : error.message);
+      console.error('Sign-in error:', error);
+      
+      // Display user-friendly error message
+      let errorMessage = 'Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.';
+      
+      if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      setErrorMsg(errorMessage);
     }
   });
 

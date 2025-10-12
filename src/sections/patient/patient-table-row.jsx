@@ -1,6 +1,7 @@
 
-// ----------------------------------------------------------------------
+import Chip from '@mui/material/Chip';
 
+// ----------------------------------------------------------------------
 
 export function RenderCellID({ params }) {
   return params.row.id;
@@ -40,4 +41,17 @@ export function RenderCellGender({ params }) {
 
 export function RenderCellReference({ params }) {
   return params.row.patientReference;
+}
+
+export function RenderCellAssignmentStatus({ params }) {
+  const isAssigned = params.row.isAssigned;
+  
+  return (
+    <Chip
+      label={isAssigned ? 'Atanmış' : 'Atanmamış'}
+      color={isAssigned ? 'success' : 'warning'}
+      size="small"
+      variant={isAssigned ? 'filled' : 'outlined'}
+    />
+  );
 }

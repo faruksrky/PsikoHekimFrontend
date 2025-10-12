@@ -39,6 +39,7 @@ const ICONS = {
   patient: icon('ic-user'),
   therapist: icon('ic-job'),
   therapySession: icon('ic-calendar'),
+  process: icon('ic-parameter'),
 };
 
 // ----------------------------------------------------------------------
@@ -50,8 +51,8 @@ export const navData = [
   {
     subheader: 'Psiko Hekim',
     items: [
-      { title: 'Gelen Kutusu', path: paths.dashboard.inbox, icon: ICONS.mail },
-      { title: 'Takvim', path: paths.dashboard.calendar, icon: ICONS.calendar },
+      { title: 'Gelen Kutusu', path: paths.dashboard.inbox, icon: ICONS.mail, requiredRole: 'USER' },
+      { title: 'Takvim', path: paths.dashboard.calendar, icon: ICONS.calendar, requiredRole: 'USER' },
     ],
   },
 
@@ -61,10 +62,11 @@ export const navData = [
         title: 'Danışan',
         path: paths.dashboard.patient.root,
         icon: ICONS.patient,
+        requiredRole: 'ADMIN', // Sadece ADMIN görebilir
         children: [
-          { title: 'Liste', path: paths.dashboard.patient.list },
-          { title: 'Yeni Danışan', path: paths.dashboard.patient.new },
-          { title: 'Bilgi Güncelle', path: paths.dashboard.patient.demo.edit }
+          { title: 'Liste', path: paths.dashboard.patient.list, requiredRole: 'ADMIN' },
+          { title: 'Yeni Danışan', path: paths.dashboard.patient.new, requiredRole: 'ADMIN' },
+          { title: 'Bilgi Güncelle', path: paths.dashboard.patient.demo.edit, requiredRole: 'ADMIN' }
         ],
       },
 
@@ -72,10 +74,11 @@ export const navData = [
         title: 'Danışman',
         path: paths.dashboard.therapist.root,
         icon: ICONS.therapist,
+        requiredRole: 'ADMIN', // Sadece ADMIN görebilir
         children: [
-          { title: 'Liste', path: paths.dashboard.therapist.list },
-          { title: 'Yeni Danışman', path: paths.dashboard.therapist.new },
-          { title: 'Bilgi Güncelle', path: paths.dashboard.therapist.demo.edit },
+          { title: 'Liste', path: paths.dashboard.therapist.list, requiredRole: 'ADMIN' },
+          { title: 'Yeni Danışman', path: paths.dashboard.therapist.new, requiredRole: 'ADMIN' },
+          { title: 'Bilgi Güncelle', path: paths.dashboard.therapist.demo.edit, requiredRole: 'ADMIN' },
         ],
       },
 
@@ -83,10 +86,11 @@ export const navData = [
         title: 'Terapi Seansları',
         path: paths.dashboard.therapySession.root,
         icon: ICONS.therapySession,
+        requiredRole: 'USER', // USER ve üzeri görebilir
         children: [
-          { title: 'Seans Listesi', path: paths.dashboard.therapySession.list },
-          { title: 'Yeni Seans', path: paths.dashboard.therapySession.new },
-          { title: 'Analitik', path: paths.dashboard.therapySession.analytics },
+          { title: 'Seans Listesi', path: paths.dashboard.therapySession.list, requiredRole: 'USER' },
+          { title: 'Yeni Seans', path: paths.dashboard.therapySession.new, requiredRole: 'USER' },
+          { title: 'Analitik', path: paths.dashboard.therapySession.analytics, requiredRole: 'USER' },
         ],
       },
 
@@ -94,14 +98,15 @@ export const navData = [
         title: 'Kullanıcı',
         path: paths.dashboard.user.root,
         icon: ICONS.technicalService,
+        requiredRole: 'ADMIN', // Sadece ADMIN görebilir
         children: [
-          { title: 'Liste', path: paths.dashboard.user.list },
-          { title: 'Yeni Kullanıcı', path: paths.dashboard.user.new },
-          { title: 'Bilgi Güncelle', path: paths.dashboard.user.demo.edit },
+          { title: 'Liste', path: paths.dashboard.user.list, requiredRole: 'ADMIN' },
+          { title: 'Yeni Kullanıcı', path: paths.dashboard.user.new, requiredRole: 'ADMIN' },
+          { title: 'Bilgi Güncelle', path: paths.dashboard.user.demo.edit, requiredRole: 'ADMIN' },
         ],
       },
 
-      { title: 'Analytics', path: paths.dashboard.analytics, icon: ICONS.analytics },
+      { title: 'Analytics', path: paths.dashboard.analytics, icon: ICONS.analytics, requiredRole: 'USER' },
       
     ],
     

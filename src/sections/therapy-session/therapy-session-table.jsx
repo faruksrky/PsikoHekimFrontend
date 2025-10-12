@@ -171,7 +171,11 @@ export function TherapySessionTable({
                       />
                     ))
                 ) : (
-                  <TableNoData notFound />
+                  <TableNoData 
+                    notFound 
+                    title="Henüz hiç terapi seansı bulunmamaktadır"
+                    description="Yeni seans oluşturmak için 'Yeni Seans' butonunu kullanabilirsiniz."
+                  />
                 )}
 
                 <TableEmptyRows

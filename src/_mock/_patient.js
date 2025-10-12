@@ -1,7 +1,6 @@
 export const GENDER_TYPE_OPTIONS = [
   { value: 'ERKEK', label: 'Erkek' },
   { value: 'KADIN', label: 'Kadın' },
-  { value: 'DIGER', label: 'Diğer' },
 ];
 
 // Hasta atama durumları (Backend AssignmentStatus enum ile uyumlu)

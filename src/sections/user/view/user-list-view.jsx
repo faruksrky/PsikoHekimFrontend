@@ -67,20 +67,60 @@ export function UserListView() {
   const accessToken = sessionStorage.getItem(STORAGE_KEY);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchKeycloakUsers = async () => {
       try {
-        const response = await axios.get(CONFIG.usersListUrl, {
+        setLoading(true);
+        
+        // Keycloak Auth Service'ten kullanıcıları getir
+        const keycloakAuthServiceUrl = `http://localhost:6700/users/list`;
+        
+        console.log('Fetching users from Keycloak Auth Service:', keycloakAuthServiceUrl);
+        
+        const response = await axios.get(keycloakAuthServiceUrl, {
           headers: {
-            Authorization: `Bearer ${accessToken}`
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
           }
         });
-        setTableData(response.data);
+        
+        if (Array.isArray(response.data)) {
+          // Keycloak kullanıcı formatını bizim format'a çevir
+          const formattedUsers = response.data.map((user, index) => ({
+            id: user.id || `user-${index}`,
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+            email: user.email || '',
+            userName: user.username || user.email || `user-${index}`
+          }));
+          
+          setTableData(formattedUsers);
+          console.log('Keycloak users loaded:', formattedUsers.length);
+        } else {
+          console.warn('Unexpected Keycloak response format:', response.data);
+          setTableData([]);
+        }
       } catch (error) {
-        console.error('error', error);
+        console.error('Error fetching Keycloak users:', error);
+        
+        if (error.response?.status === 401) {
+          console.log('Unauthorized access to Keycloak Admin API');
+          setTableData([]);
+        } else if (error.response?.status === 404) {
+          console.log('Keycloak realm not found');
+          setTableData([]);
+        } else {
+          console.log('Keycloak API error, using fallback');
+          setTableData([]);
+        }
+      } finally {
+        setLoading(false);
       }
     };
-    fetchData();
-  }, [accessToken]); // Include 'accessToken' in the dependency array
+    
+    if (accessToken) {
+      fetchKeycloakUsers();
+    }
+  }, [accessToken]);
   
   // Rest of the code...
   
@@ -124,7 +164,7 @@ export function UserListView() {
           sx={{ mb: { xs: 3, md: 5 } }}
         />
 
-<Card sx={{ width: '100%', overflowX: 'auto' }}>
+        <Card sx={{ width: '100%', overflowX: 'auto', minHeight: '600px' }}>
             <Tabs
               value={filters.state.status}
               onChange={handleFilterStatus}
@@ -234,7 +274,11 @@ export function UserListView() {
                         emptyRows={emptyRows(table.page, table.rowsPerPage, dataFiltered.length)}
                       />
 
-                      <TableNoData notFound={notFound} />
+                      <TableNoData 
+                        notFound={notFound}
+                        title="Henüz hiç kullanıcı kaydı bulunmamaktadır"
+                        description="Yeni kullanıcı eklemek için 'Yeni Kullanıcı' butonunu kullanabilirsiniz."
+                      />
                     </TableBody>
                   </Table>
                 </Scrollbar>

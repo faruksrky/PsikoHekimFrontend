@@ -4,6 +4,8 @@ import Stack from '@mui/material/Stack';
 import Collapse from '@mui/material/Collapse';
 import { useTheme } from '@mui/material/styles';
 
+import { useAuth } from 'src/hooks/useAuth';
+
 import { NavList } from './nav-list';
 import { navSectionClasses } from '../classes';
 import { navSectionCssVars } from '../css-vars';
@@ -20,16 +22,41 @@ export function NavSectionVertical({
   cssVars: overridesVars,
 }) {
   const theme = useTheme();
+  const { hasRole } = useAuth();
 
   const cssVars = {
     ...navSectionCssVars.vertical(theme),
     ...overridesVars,
   };
 
+  // Filter data based on user roles
+  const filteredData = data.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      // If no requiredRole, show to everyone
+      if (!item.requiredRole) return true;
+      
+      // Check if user has required role
+      return hasRole(item.requiredRole);
+    }).map((item) => {
+      // Filter children based on roles
+      if (item.children) {
+        return {
+          ...item,
+          children: item.children.filter((child) => {
+            if (!child.requiredRole) return true;
+            return hasRole(child.requiredRole);
+          })
+        };
+      }
+      return item;
+    })
+  })).filter((group) => group.items.length > 0); // Remove empty groups
+
   return (
     <Stack component="nav" className={navSectionClasses.vertical.root} sx={{ ...cssVars, ...sx }}>
       <NavUl sx={{ flex: '1 1 auto', gap: 'var(--nav-item-gap)' }}>
-        {data.map((group) => (
+        {filteredData.map((group) => (
           <Group
             key={group.subheader ?? group.items[0].title}
             subheader={group.subheader}

@@ -69,25 +69,71 @@ axiosInstance.interceptors.response.use(
 // Response interceptor for Keycloak instance
 axiosInstanceKeycloak.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject((error.response && error.response.data) || 'Keycloak işlemlerinde hata var!')
+  (error) => {
+    // Preserve the original error structure but add better logging
+    console.error('Keycloak API Error Details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+      baseURL: error.config?.baseURL,
+      fullURL: `${error.config?.baseURL || ''}${error.config?.url || ''}`,
+      headers: error.config?.headers,
+      requestData: error.config?.data
+    });
+    
+    // Return the original error to preserve error handling in calling functions
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor for BPMN instance
 axiosInstanceBpmn.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject((error.response && error.response.data) || 'BPMN işlemlerinde hata var!')
+  (error) => {
+    console.error('BPMN API Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method
+    });
+    
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor for Therapist instance
 axiosInstanceTherapist.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject((error.response && error.response.data) || 'Therapist işlemlerinde hata var!')
+  (error) => {
+    console.error('Therapist API Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method
+    });
+    
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor for Patient instance
 axiosInstancePatient.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject((error.response && error.response.data) || 'Patient işlemlerinde hata var!')
+  (error) => {
+    console.error('Patient API Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method
+    });
+    
+    return Promise.reject(error);
+  }
 );
 
 export default axiosInstance;
@@ -111,6 +157,13 @@ export const fetcherTherapist = async () => {
     return res.data;
   } catch (error) {
     console.error('Failed to fetch therapist:', error);
+    
+    // 404 hatası için boş liste döndür
+    if (error.response?.status === 404) {
+      console.log('No therapists found, returning empty list');
+      return { therapists: [] };
+    }
+    
     throw error;
   }
 };
@@ -121,6 +174,23 @@ export const fetcherPatient = async () => {
     return res.data;
   } catch (error) {
     console.error('Failed to fetch patient:', error);
+    
+    // 404 hatası için boş liste döndür
+    if (error.response?.status === 404) {
+      console.log('No patients found, returning empty list');
+      return { patients: [] };
+    }
+    
+    throw error;
+  }
+};
+
+export const fetcherSinglePatient = async (url) => {
+  try {
+    const res = await axiosInstancePatient.get(url);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch single patient:', error);
     throw error;
   }
 };

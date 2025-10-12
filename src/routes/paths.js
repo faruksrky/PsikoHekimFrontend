@@ -65,6 +65,7 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/patient/new`,
       list: `${ROOTS.DASHBOARD}/patient/list`,
       details: (id) => `${ROOTS.DASHBOARD}/patient/${id}/details`,
+      payments: (id) => `${ROOTS.DASHBOARD}/patient/${id}/payments`,
       assignTherapist: (patientId) => 
         `${ROOTS.DASHBOARD}/patient/${patientId}/assign-therapist`,
       edit: (id) => `${ROOTS.DASHBOARD}/patient/${id}/edit`,
@@ -85,6 +86,12 @@ export const paths = {
     },
 
     analytics: `${ROOTS.DASHBOARD}/analytics`,
+
+    process: {
+      root: `${ROOTS.DASHBOARD}/process`,
+      assignments: `${ROOTS.DASHBOARD}/process/assignments`,
+      status: (processInstanceKey) => `${ROOTS.DASHBOARD}/process/status/${processInstanceKey}`,
+    },
 
     therapySession: {
       root: `${ROOTS.DASHBOARD}/therapy-session`,

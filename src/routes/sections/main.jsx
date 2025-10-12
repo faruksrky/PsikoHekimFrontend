@@ -7,6 +7,7 @@ import { SplashScreen } from 'src/components/loading-screen';
 
 // Error
 const Page404 = lazy(() => import('src/pages/error/404'));
+const UnauthorizedPage = lazy(() => import('src/pages/error/unauthorized'));
 
 // ----------------------------------------------------------------------
 
@@ -17,6 +18,9 @@ export const mainRoutes = [
         <Outlet />
       </Suspense>
     ),
-    children: [{ path: '404', element: <Page404 /> }],
+    children: [
+      { path: '404', element: <Page404 /> },
+      { path: 'unauthorized', element: <UnauthorizedPage /> },
+    ],
   },
 ];

@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 import { z as zod } from 'zod';
-import { useEffect, useCallback, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, Controller } from 'react-hook-form';
+import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -13,16 +13,15 @@ import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
 import CircularProgress from '@mui/material/CircularProgress';
-import Typography from '@mui/material/Typography';
 
-import { fIsAfter } from 'src/utils/format-time';
-import { getTherapistId, getEmailFromToken } from 'src/auth/context/jwt/action';
 import { CONFIG } from 'src/config-global';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Form, Field } from 'src/components/hook-form';
+
+import { getTherapistId, getEmailFromToken } from 'src/auth/context/jwt/action';
 
 // ----------------------------------------------------------------------
 

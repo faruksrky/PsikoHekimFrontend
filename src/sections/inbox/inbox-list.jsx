@@ -18,7 +18,9 @@ import Typography from '@mui/material/Typography';
 
 import { axiosInstance } from 'src/utils/axios';
 import { fIsAfter, fIsBetween } from 'src/utils/format-time';
+import { mutate } from 'swr';
 
+import { CONFIG } from 'src/config-global';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
@@ -62,7 +64,7 @@ export function InboxList() {
   const confirmDialog = useBoolean();
   const [allData, setAllData] = useState([]); // Tüm veriler
   const [isLoading, setIsLoading] = useState(true);
-  const therapistId = 1;
+  const therapistId = 2;
 
   const filters = useSetState({ 
     name: '', 
@@ -76,10 +78,11 @@ export function InboxList() {
   const fetchAllData = useCallback(async () => {
     try {
       setIsLoading(true);
-      // Direkt endpoint kullan
-      const response = await axiosInstance.get('/process/inbox/pending', {
+      // PsikoHekim backend'ine istek at (port 8083)
+      const response = await axiosInstance.get(`${CONFIG.psikoHekimBaseUrl}/process/inbox/pending`, {
         params: { therapistId },
       });
+      
       setAllData(response.data);
     } catch (error) {
       console.error('Veriler alınırken hata:', error);
@@ -105,16 +108,50 @@ export function InboxList() {
   // Action handler
   const handleAction = useCallback(async (processInstanceKey, action) => {
     try {
-      const response = await axiosInstance.post('/process/inbox/action', {
-        processInstanceKey,
-        action: action.toUpperCase(), // ACCEPTED veya REJECTED
+      // Backend endpoint'leri test et - farklı URL formatları dene
+      console.log('Backend therapist endpoint çağrısı yapılıyor (inbox-list)');
+      console.log('CONFIG.psikoHekimBaseUrl:', CONFIG.psikoHekimBaseUrl);
+      console.log('processInstanceKey:', processInstanceKey, typeof processInstanceKey);
+      
+      // Token kontrolü
+      const token = sessionStorage.getItem('jwt_access_token');
+      console.log('Token exists:', !!token);
+      
+      // Doğru endpoint'i kullan: /process/inbox/action
+      const url = `/process/inbox/action`;
+      console.log('Using correct endpoint:', url);
+      console.log('Request data:', {
+        processInstanceKey: parseInt(processInstanceKey, 10),
+        action: action.toUpperCase()
       });
       
-      toast.success(response.data.message || 'İşlem başarılı', {
-        onClick: async () => {
-          fetchAllData(); // Listeyi yenile
-        }
+      const response = await axiosInstance.post(url, {
+        processInstanceKey: parseInt(processInstanceKey, 10),
+        action: action.toUpperCase()
       });
+      
+      console.log('Backend Response (inbox-list):', response.data);
+      
+      // Listeyi hemen yenile
+      await fetchAllData();
+      
+      // Event dispatch et - Patient list dinleyecek
+      console.log('Dispatching patient list refresh event...');
+      window.dispatchEvent(new CustomEvent('patientListRefresh', {
+        detail: {
+          processInstanceKey: parseInt(processInstanceKey, 10),
+          action: action.toUpperCase(),
+          timestamp: new Date().toISOString()
+        }
+      }));
+      
+      // Başarı mesajı
+      if (action.toUpperCase() === 'REJECTED') {
+        toast.success('Akış reddedildi - İşlem sonlandırıldı');
+      } else {
+        toast.success('Akış onaylandı - İşlem tamamlandı');
+      }
+      
     } catch (error) {
       console.error('İşlem sırasında hata:', error);
       toast.error('İşlem başarısız');
@@ -168,10 +205,12 @@ export function InboxList() {
   }, [dataFiltered.length, dataInPage.length, table, allData]);
 
   const onApprove = useCallback((processInstanceKey) => {
+    console.log('onApprove called with:', processInstanceKey, typeof processInstanceKey);
     handleAction(processInstanceKey, 'accepted');
   }, [handleAction]);
 
   const onReject = useCallback((processInstanceKey) => {
+    console.log('onReject called with:', processInstanceKey, typeof processInstanceKey);
     handleAction(processInstanceKey, 'rejected');
   }, [handleAction]);
 
@@ -281,7 +320,11 @@ export function InboxList() {
                     emptyRows={emptyRows(table.page, table.rowsPerPage, dataFiltered.length)}
                   />
 
-                  <TableNoData notFound={notFound} />
+                  <TableNoData 
+                    notFound={notFound} 
+                    title="Henüz hiç mesaj bulunmamaktadır"
+                    description="Gelen kutusunda görüntülenecek mesaj bulunmuyor."
+                  />
                 </TableBody>
               </Table>
             </Scrollbar>

@@ -99,12 +99,29 @@ export function UserNewEditForm({ currentUser }) {
       setOpen(true);
       reset();
     } catch (error) {
-      console.log('error', error);
-      if (error.response && error.response.status === 409) {
-        setMessage('Bu e-posta adresi veya kullanıcı adı zaten kullanımda.');
-      } else {
-        setMessage('Kullanıcı kaydedilemedi, lütfen tekrar deneyin.');
+      console.error('User registration error:', error);
+      
+      let errorMessage = 'Kullanıcı kaydedilemedi, lütfen tekrar deneyin.';
+      
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        
+        if (status === 400) {
+          errorMessage = errorData?.message || 'Girilen bilgilerde hata var. Lütfen tüm alanları kontrol edin.';
+        } else if (status === 409) {
+          errorMessage = 'Bu e-posta adresi veya kullanıcı adı zaten kullanımda.';
+        } else if (status === 422) {
+          errorMessage = 'Girilen bilgiler geçersiz. Lütfen tüm alanları doğru şekilde doldurun.';
+        } else if (status >= 500) {
+          errorMessage = 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.';
+        } else {
+          errorMessage = errorData?.message || 'Kullanıcı kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.';
+        }
+      } else if (error.request) {
+        errorMessage = 'Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.';
       }
+      
+      setMessage(errorMessage);
       setSeverity('error');
       setOpen(true);
     }

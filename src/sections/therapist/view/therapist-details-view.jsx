@@ -1,17 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
 
 import {
-  Container,
+  Box,
   Card,
   Grid,
+  Chip,
   Stack,
   Button,
-  Typography,
-  Box,
   Avatar,
-  Chip,
   Divider,
+  Container,
+  Typography,
 } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
@@ -108,19 +108,20 @@ export function TherapistDetailsView() {
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
           <Card sx={{ p: 3, textAlign: 'center' }}>
-            <Avatar
-              sx={{
-                width: 120,
-                height: 120,
-                mx: 'auto',
-                mb: 2,
-                bgcolor: 'primary.main',
-              }}
-            >
-              <Typography variant="h3" color="white">
-                {therapist.therapistFirstName?.[0]}{therapist.therapistLastName?.[0]}
-              </Typography>
-            </Avatar>
+            <Typography variant="h4" sx={{ 
+              bgcolor: 'primary.main', 
+              color: 'white', 
+              borderRadius: '50%', 
+              width: 120, 
+              height: 120, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2
+            }}>
+              {therapist.therapistFirstName?.[0]}{therapist.therapistLastName?.[0]}
+            </Typography>
             
             <Typography variant="h5" gutterBottom>
               {therapist.therapistFirstName} {therapist.therapistLastName}

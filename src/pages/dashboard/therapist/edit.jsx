@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useState, useEffect, useCallback } from 'react';
 
+import { paths } from 'src/routes/paths';
 import { useParams, useRouter } from 'src/routes/hooks';
 
 import { CONFIG } from 'src/config-global';
-import { paths } from 'src/routes/paths';
 
 import { toast } from 'src/components/snackbar';
+
 import { TherapistEditView } from 'src/sections/therapist/view';
 
 // ----------------------------------------------------------------------

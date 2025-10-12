@@ -24,6 +24,7 @@ import { axiosInstanceBpmn } from 'src/utils/axios';
 
 import { CONFIG } from 'src/config-global';
 import { useGetTherapists } from 'src/api/therapist';
+import { useGetPatient } from 'src/actions/patient';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -47,6 +48,7 @@ export function PatientAssignTherapistView() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { therapists, isLoading, error, mutate } = useGetTherapists();
+  const { patient: fetchedPatient, patientLoading, patientError } = useGetPatient(patientId);
 
   useEffect(() => {
     if (!patientId) {
@@ -75,7 +77,7 @@ export function PatientAssignTherapistView() {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || patientLoading) {
     return (
       <Container maxWidth={settings.themeStretch ? false : 'xl'}>
         <Typography>Yükleniyor...</Typography>
@@ -83,10 +85,14 @@ export function PatientAssignTherapistView() {
     );
   }
 
-  if (error) {
+  if (error || patientError) {
     return (
       <Container maxWidth={settings.themeStretch ? false : 'xl'}>
-        <Typography color="error">Danışman listesi yüklenirken bir hata oluştu: {error.message}</Typography>
+        <Typography color="error">
+          {error ? `Danışman listesi yüklenirken bir hata oluştu: ${error.message}` : 
+           patientError ? `Danışan bilgileri yüklenirken bir hata oluştu: ${patientError.message}` : 
+           'Bilinmeyen bir hata oluştu'}
+        </Typography>
       </Container>
     );
   }
@@ -113,7 +119,8 @@ export function PatientAssignTherapistView() {
         throw new Error('Terapist bulunamadı');
       }
 
-      if (!patient) {
+      const currentPatient = patient || fetchedPatient;
+      if (!currentPatient) {
         throw new Error('Danışan bilgileri bulunamadı');
       }
 
@@ -122,9 +129,15 @@ export function PatientAssignTherapistView() {
         messageName: 'startTherapistAssignmentProcess',
         variables: {
           patientId,
+          patientFirstName: currentPatient.patientFirstName,
+          patientLastName: currentPatient.patientLastName,
+          patientEmail: currentPatient.patientEmail,
+          patientPhoneNumber: currentPatient.patientPhoneNumber,
           therapistId: selectedTherapist.therapistId,
+          therapistFirstName: selectedTherapist.therapistFirstName,
+          therapistLastName: selectedTherapist.therapistLastName,
           processName: 'Danışan Atama İsteği',
-          description: `${patient.patientFirstName} ${patient.patientLastName} isimli danışandan ${selectedTherapist.therapistFirstName} ${selectedTherapist.therapistLastName} için atama isteği gönderildi`,
+          description: `${currentPatient.patientFirstName} ${currentPatient.patientLastName} isimli danışandan ${selectedTherapist.therapistFirstName} ${selectedTherapist.therapistLastName} için atama isteği gönderildi`,
           startedBy: user?.displayName || 'Sistem',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),

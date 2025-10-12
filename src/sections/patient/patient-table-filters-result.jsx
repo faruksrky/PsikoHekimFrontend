@@ -17,6 +17,14 @@ export function PatientTableFiltersResult({ filters, totalResults, sx }) {
     [filters]
   );
 
+  const handleRemoveAssignmentStatus = useCallback(
+    (inputValue) => {
+      const newValue = filters.state.assignmentStatus.filter((item) => item !== inputValue);
+      filters.setState({ assignmentStatus: newValue });
+    },
+    [filters]
+  );
+
   return (
     <FiltersResult totalResults={totalResults} onReset={filters.onResetState} sx={sx}>
       <FiltersBlock label="Cinsiyet:" isShow={!!filters.state.patientGender.length}>
@@ -26,6 +34,17 @@ export function PatientTableFiltersResult({ filters, totalResults, sx }) {
             key={item}
             label={sentenceCase(item)}
             onDelete={() => handleRemovePatientGender(item)}
+          />
+        ))}
+      </FiltersBlock>
+
+      <FiltersBlock label="Danışman Atama Durumu:" isShow={!!filters.state.assignmentStatus.length}>
+        {filters.state.assignmentStatus.map((item) => (
+          <Chip
+            {...chipProps}
+            key={item}
+            label={item === 'assigned' ? 'Atanmış' : item === 'unassigned' ? 'Atanmamış' : item}
+            onDelete={() => handleRemoveAssignmentStatus(item)}
           />
         ))}
       </FiltersBlock>

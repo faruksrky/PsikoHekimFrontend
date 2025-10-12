@@ -1,4 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { mutate } from 'swr';
+
+import { CONFIG } from 'src/config-global';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -45,7 +48,8 @@ import {
   RenderCellAddress,
   RenderCellCountry,
   RenderCellFullName,
-  RenderCellReference
+  RenderCellReference,
+  RenderCellAssignmentStatus
 } from '../patient-table-row';
 
 // ----------------------------------------------------------------------
@@ -59,7 +63,7 @@ export function PatientListView() {
 
   const { patients, patientsLoading } = useGetPatients();
 
-  const filters = useSetState({ patientGender: [], patientCountry: [] });
+  const filters = useSetState({ patientGender: [], patientCountry: [], assignmentStatus: [] });
 
   const [tableData, setTableData] = useState([]);
 
@@ -69,17 +73,42 @@ export function PatientListView() {
 
   const gridRef = useRef();
 
+  // Event listener for patient list refresh
+  useEffect(() => {
+    const handlePatientListRefresh = (event) => {
+      console.log('Patient list refresh event received:', event.detail);
+      // SWR cache'ini invalidate et
+      mutate(CONFIG.patientListUrl, undefined, { revalidate: true });
+    };
+
+    window.addEventListener('patientListRefresh', handlePatientListRefresh);
+    
+    return () => {
+      window.removeEventListener('patientListRefresh', handlePatientListRefresh);
+    };
+  }, []);
+
   useEffect(() => {
     if (!patients || !patients.length) {
       setTableData([]);
       return;
     }
 
+    // Debug: Patient verilerini kontrol et
+    console.log('Patient Data Debug:', patients.map(p => ({
+      id: p.patientId,
+      name: `${p.patientFirstName} ${p.patientLastName}`,
+      therapistId: p.therapistId,
+      therapistIdType: typeof p.therapistId,
+      allFields: Object.keys(p)
+    })));
+
     // Filtreleme yapılmadıysa tüm verileri göster
-    if (!filters.state.patientGender.length && !filters.state.patientCountry.length) {
+    if (!filters.state.patientGender.length && !filters.state.patientCountry.length && !filters.state.assignmentStatus.length) {
       const transformedPatients = patients.map((patient) => ({
         ...patient,
         id: patient.patientId,
+        isAssigned: patient.therapistId && patient.therapistId !== null && patient.therapistId !== undefined && patient.therapistId !== '' && patient.therapistId !== 0,
       }));
       
       setTableData(transformedPatients);
@@ -105,19 +134,29 @@ export function PatientListView() {
         (patient.therapistRating &&
           normalizedPatientCountry.includes(patient.patientCountry.toString().toLowerCase()));
 
-      return matchesType && matchesRating;
+      // Atama durumu filtresi
+      const matchesAssignmentStatus = !filters.state.assignmentStatus.length || 
+        filters.state.assignmentStatus.some(status => {
+          const isAssigned = patient.therapistId && patient.therapistId !== null && patient.therapistId !== undefined && patient.therapistId !== '' && patient.therapistId !== 0;
+          if (status === 'assigned') return isAssigned;
+          if (status === 'unassigned') return !isAssigned;
+          return true;
+        });
+
+      return matchesType && matchesRating && matchesAssignmentStatus;
     });
 
     const transformedPatients = filteredPatients.map((patient) => ({
       ...patient,
       id: patient.patientId,
+      isAssigned: patient.therapistId && patient.therapistId !== null && patient.therapistId !== undefined && patient.therapistId !== '' && patient.therapistId !== 0,
     }));
 
     setTableData(transformedPatients);
-  }, [patients, filters.state.patientGender, filters.state.patientCountry]);
+  }, [patients, filters.state.patientGender, filters.state.patientCountry, filters.state.assignmentStatus]);
 
   const canReset =
-    filters.state.patientGender.length > 0 || filters.state.patientCountry.length > 0;
+    filters.state.patientGender.length > 0 || filters.state.patientCountry.length > 0 || filters.state.assignmentStatus.length > 0;
 
   const dataFiltered = applyFilter({ inputData: tableData, filters: filters.state });
 
@@ -125,7 +164,7 @@ export function PatientListView() {
     (id) => {
       const deleteRow = tableData.filter((row) => row.id !== id);
 
-      toast.success('Delete success!');
+      toast.success('Danışan başarıyla silindi!');
 
       setTableData(deleteRow);
     },
@@ -135,7 +174,7 @@ export function PatientListView() {
   const handleDeleteRows = useCallback(() => {
     const deleteRows = tableData.filter((row) => !selectedRowIds.includes(row.id));
 
-    toast.success('Delete success!');
+    toast.success(`${selectedRowIds.length} danışan başarıyla silindi!`);
 
     setTableData(deleteRows);
   }, [selectedRowIds, tableData]);
@@ -150,6 +189,27 @@ export function PatientListView() {
   const handleViewRow = useCallback(
     (id) => {
       router.push(paths.dashboard.patient.details(id));
+    },
+    [router]
+  );
+
+  const handleAssignTherapist = useCallback(
+    (patient) => {
+      // Eğer danışan zaten atanmışsa uyarı göster
+      if (patient.isAssigned) {
+        const confirmDialog = window.confirm(
+          `Bu danışan zaten bir danışmana atanmış. Değiştirmek istediğinize emin misiniz?`
+        );
+        
+        if (!confirmDialog) {
+          return; // Kullanıcı iptal etti
+        }
+      }
+      
+      // Danışman atama sayfasına git
+      router.push(paths.dashboard.patient.assignTherapist(patient.id), {
+        state: { patient }
+      });
     },
     [router]
   );
@@ -240,15 +300,20 @@ export function PatientListView() {
       minWidth: 150,
       renderCell: (params) => <RenderCellReference params={params} />,
     },
-    
-
+    {
+      field: 'isAssigned',
+      headerName: 'Danışman Atama Durumu',
+      flex: 1,
+      minWidth: 180,
+      renderCell: (params) => <RenderCellAssignmentStatus params={params} />,
+    },
     {
       type: 'actions',
       field: 'actions',
-      headerName: ' ',
+      headerName: 'Danışman Ata',
       align: 'right',
       headerAlign: 'right',
-      width: 80, // Sabit genişlik
+      width: 120,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
@@ -256,19 +321,25 @@ export function PatientListView() {
         <GridActionsCellItem
           showInMenu
           icon={<Iconify icon="solar:eye-bold" />}
-          label="View"
+          label="Detayları Görüntüle"
           onClick={() => handleViewRow(params.row.id)}
         />,
         <GridActionsCellItem
           showInMenu
           icon={<Iconify icon="solar:pen-bold" />}
-          label="Edit"
+          label="Düzenle"
           onClick={() => handleEditRow(params.row.id)}
         />,
         <GridActionsCellItem
           showInMenu
+          icon={<Iconify icon="solar:user-plus-bold" />}
+          label="Danışman Ata"
+          onClick={() => handleAssignTherapist(params.row)}
+        />,
+        <GridActionsCellItem
+          showInMenu
           icon={<Iconify icon="solar:trash-bin-trash-bold" />}
-          label="Delete"
+          label="Sil"
           onClick={() => {
             handleDeleteRow(params.row.id);
           }}
@@ -342,8 +413,14 @@ export function PatientListView() {
               onRowSelectionModelChange={(newSelectionModel) => setSelectedRowIds(newSelectionModel)}
               slots={{
                 toolbar: CustomToolbarCallback,
-                noRowsOverlay: () => <EmptyContent />,
-                noResultsOverlay: () => <EmptyContent title="Veri Bulunamadı!" />,
+                noRowsOverlay: () => <EmptyContent 
+                  title="Henüz hiç hasta kaydı bulunmamaktadır" 
+                  description="Yeni hasta eklemek için 'Yeni Danışan' butonunu kullanabilirsiniz."
+                />,
+                noResultsOverlay: () => <EmptyContent 
+                  title="Arama kriterlerinize uygun hasta bulunamadı" 
+                  description="Farklı arama terimleri deneyebilir veya filtreleri temizleyebilirsiniz."
+                />,
               }}
               slotProps={{
                 panel: { anchorEl: filterButtonEl },
@@ -364,10 +441,10 @@ export function PatientListView() {
       <ConfirmDialog
         open={confirmRows.value}
         onClose={confirmRows.onFalse}
-        title="Delete"
+        title="Silme Onayı"
         content={
           <>
-            Are you sure want to delete <strong> {selectedRowIds.length} </strong> items?
+            <strong> {selectedRowIds.length} </strong> danışanı silmek istediğinizden emin misiniz?
           </>
         }
         action={
@@ -379,7 +456,7 @@ export function PatientListView() {
               confirmRows.onFalse();
             }}
           >
-            Delete
+            Sil
           </Button>
         }
       />
@@ -422,7 +499,7 @@ function CustomToolbar({
               startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
               onClick={onOpenConfirmDeleteRows}
             >
-              Delete ({selectedRowIds.length})
+              Sil ({selectedRowIds.length})
             </Button>
           )}
 
@@ -444,7 +521,7 @@ function CustomToolbar({
 }
 
 function applyFilter({ inputData, filters }) {
-  const { patientGender } = filters;
+  const { patientGender, assignmentStatus } = filters;
 
   let filteredData = inputData;
 
@@ -455,6 +532,17 @@ function applyFilter({ inputData, filters }) {
         patient.patientGender &&
         normalizedPatientGender.includes(patient.patientGender.trim().toLowerCase())
     );
+  }
+
+  if (Array.isArray(assignmentStatus) && assignmentStatus.length > 0) {
+    filteredData = filteredData.filter((patient) => {
+      const isAssigned = patient.therapistId && patient.therapistId !== null && patient.therapistId !== undefined && patient.therapistId !== '' && patient.therapistId !== 0;
+      return assignmentStatus.some(status => {
+        if (status === 'assigned') return isAssigned;
+        if (status === 'unassigned') return !isAssigned;
+        return true;
+      });
+    });
   }
 
   return filteredData;
