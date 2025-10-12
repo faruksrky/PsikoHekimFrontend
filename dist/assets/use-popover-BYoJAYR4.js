@@ -1,0 +1,1 @@
+import{r as e}from"./index-CynfWJw_.js";function a(){const[n,o]=e.useState(null),r=e.useCallback(s=>{o(s.currentTarget)},[]),t=e.useCallback(()=>{o(null)},[]);return{open:!!n,anchorEl:n,onOpen:r,onClose:t,setAnchorEl:o}}export{a as u};
