@@ -1,10 +1,11 @@
 node_modules
 
-# Environment files
+# Environment files (ignore actual env files, but keep examples)
 .env
 .env.dev
 .env.local
 .env.production
+# Keep .env.example and .env.production.example in git
 
 # Secrets
 secrets/
