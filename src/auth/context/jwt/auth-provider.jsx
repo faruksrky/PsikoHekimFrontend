@@ -27,8 +27,14 @@ export function AuthProvider({ children }) {
           : jwtDecodeModule(accessToken);
 
         // Token'dan kullanıcı bilgilerini al
-        // Role'ü JWT token'dan çek (Keycloak format: resource_access.DN.roles)
-        const roles = decodedToken.resource_access?.DN?.roles || [];
+        // Role'ü JWT token'dan çek (Keycloak format: resource_access.DN.roles veya realm_access.roles)
+        let roles = decodedToken.resource_access?.DN?.roles || [];
+        
+        // Eğer DN.roles yoksa, realm_access.roles kullan
+        if (roles.length === 0 && decodedToken.realm_access?.roles) {
+          roles = decodedToken.realm_access.roles;
+        }
+        
         const isAdmin = roles.includes('Admin') || roles.includes('admin') || roles.includes('ADMIN');
         
         const user = {

@@ -41,7 +41,15 @@ export const signInWithPassword = async ({ username, password }) => {
       
       // JWT token'dan role bilgisini çek
       const decodedToken = jwtDecode(accessToken);
-      const roles = decodedToken.resource_access?.DN?.roles || [];
+      
+      // Önce resource_access.DN.roles'dan kontrol et, yoksa realm_access.roles'a bak
+      let roles = decodedToken.resource_access?.DN?.roles || [];
+      
+      // Eğer DN.roles yoksa, realm_access.roles kullan
+      if (roles.length === 0 && decodedToken.realm_access?.roles) {
+        roles = decodedToken.realm_access.roles;
+      }
+      
       const isAdmin = roles.includes('Admin') || roles.includes('admin') || roles.includes('ADMIN');
       
       const user = {
