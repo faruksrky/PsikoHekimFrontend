@@ -9,43 +9,15 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // JWT token'dan user bilgilerini al
-    const token = sessionStorage.getItem('jwt_access_token');
+    // auth-provider.jsx'den kaydedilen user bilgisini al
+    const userData = sessionStorage.getItem('user');
     
-    if (token) {
+    if (userData) {
       try {
-        // JWT token'ı decode et
-        const payload = jwtDecode(token);
-        
-        // Keycloak token yapısından role bilgilerini al
-        const roles = [];
-        
-        // Keycloak resource_access'den role'ları al
-        if (payload.resource_access) {
-          Object.values(payload.resource_access).forEach(client => {
-            if (client.roles) {
-              roles.push(...client.roles);
-            }
-          });
-        }
-        
-        // Realm roles'den de al
-        if (payload.realm_access?.roles) {
-          roles.push(...payload.realm_access.roles);
-        }
-        
-        // User bilgilerini set et
-        setUser({
-          id: payload.sub || payload.user_id,
-          email: payload.email,
-          name: payload.name || payload.preferred_username,
-          roles: roles.length > 0 ? roles : ['USER'], // Default role
-          // Diğer user bilgileri
-          ...payload
-        });
-        
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
       } catch (error) {
-        console.error('Token decode error:', error);
+        console.error('User data parse error:', error);
         setUser(null);
       }
     } else {
@@ -56,22 +28,25 @@ export function useAuth() {
   }, []);
 
   const hasRole = (requiredRole) => {
-    if (!user || !user.roles) {
+    if (!user) {
       return false;
     }
     
-    // Role hierarchy: ADMIN > USER
+    // auth-provider.jsx'den gelen user.role kullan
+    const userRole = user.role || 'user';
+    
+    // Role hierarchy: admin > user
     const roleHierarchy = {
+      'user': 1,
+      'admin': 2,
       'USER': 1,
-      'ADMIN': 2,
-      'Admin': 2, // Keycloak'ta büyük harfle başlayabilir
-      'admin': 2
+      'ADMIN': 2
     };
     
-    const userMaxRole = Math.max(...user.roles.map(role => roleHierarchy[role] || 0));
+    const userRoleLevel = roleHierarchy[userRole] || 0;
     const requiredRoleLevel = roleHierarchy[requiredRole] || 0;
     
-    return userMaxRole >= requiredRoleLevel;
+    return userRoleLevel >= requiredRoleLevel;
   };
 
   const isAdmin = () => hasRole('ADMIN');
