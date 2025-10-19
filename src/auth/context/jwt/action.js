@@ -38,9 +38,16 @@ export const signInWithPassword = async ({ username, password }) => {
       });
 
       const userInfo = userInfoRes.data;
+      
+      // JWT token'dan role bilgisini çek
+      const decodedToken = jwtDecode(accessToken);
+      const roles = decodedToken.resource_access?.DN?.roles || [];
+      const isAdmin = roles.includes('Admin') || roles.includes('admin') || roles.includes('ADMIN');
+      
       const user = {
         email: userInfo.email,
-        name: userInfo.name
+        name: userInfo.name,
+        role: isAdmin ? 'admin' : 'user'  // Role'ü ekle
       };
 
       setSession(accessToken, user);

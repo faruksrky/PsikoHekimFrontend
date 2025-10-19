@@ -67,7 +67,7 @@ export function AuthProvider({ children }) {
       user: state.user
         ? {
             ...state.user,
-            role: state.user?.role ?? 'admin',
+            role: state.user?.role ?? 'user',  // Default: user (güvenlik için)
           }
         : null,
       checkUserSession,
