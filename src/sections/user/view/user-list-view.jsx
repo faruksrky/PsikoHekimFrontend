@@ -1,5 +1,6 @@
-import axios from 'axios';
 import { useState, useEffect } from 'react';
+
+import { axiosInstanceKeycloak } from 'src/utils/axios';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -71,12 +72,12 @@ export function UserListView() {
       try {
         setLoading(true);
         
-        // Keycloak Auth Service'ten kullanıcıları getir
-        const keycloakAuthServiceUrl = `http://localhost:6700/users/list`;
+        // Keycloak Auth Service'ten kullanıcıları getir (axiosInstanceKeycloak kullan)
+        const keycloakAuthServiceUrl = `/users/list`;
         
         console.log('Fetching users from Keycloak Auth Service:', keycloakAuthServiceUrl);
         
-        const response = await axios.get(keycloakAuthServiceUrl, {
+        const response = await axiosInstanceKeycloak.get(keycloakAuthServiceUrl, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
