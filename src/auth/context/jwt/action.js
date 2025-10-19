@@ -221,6 +221,7 @@ export const getEmailFromToken = () => {
   
   return {
     email: decoded.email,
-    isAdmin
+    isAdmin,
+    therapistId: decoded.therapistId || decoded.therapist_id || null  // JWT'den therapistId varsa al
   };
 };

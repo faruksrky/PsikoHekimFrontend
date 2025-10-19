@@ -22,6 +22,7 @@ import { mutate } from 'swr';
 
 import { CONFIG } from 'src/config-global';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { getTherapistId, getEmailFromToken } from 'src/auth/context/jwt/action';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -64,7 +65,7 @@ export function InboxList() {
   const confirmDialog = useBoolean();
   const [allData, setAllData] = useState([]); // Tüm veriler
   const [isLoading, setIsLoading] = useState(true);
-  const therapistId = 2;
+  const [therapistId, setTherapistId] = useState(null);
 
   const filters = useSetState({ 
     name: '', 
@@ -74,8 +75,40 @@ export function InboxList() {
   });
   const { state: currentFilters, setState: updateFilters } = filters;
 
+  // Therapist ID'yi JWT token'dan al
+  useEffect(() => {
+    const loadTherapistId = async () => {
+      try {
+        const userInfo = getEmailFromToken();
+        if (!userInfo || !userInfo.email) {
+          console.error('Email bulunamadı');
+          toast.error('Kullanıcı bilgisi alınamadı');
+          return;
+        }
+        
+        const id = await getTherapistId(userInfo.email);
+        if (id) {
+          setTherapistId(id);
+        } else {
+          console.error('Therapist ID bulunamadı');
+          toast.error('Terapist bilgisi bulunamadı');
+        }
+      } catch (error) {
+        console.error('Therapist ID alınırken hata:', error);
+        toast.error('Terapist bilgisi alınırken hata oluştu');
+      }
+    };
+    
+    loadTherapistId();
+  }, []);
+
   // Sadece tek API çağrısı
   const fetchAllData = useCallback(async () => {
+    if (!therapistId) {
+      console.log('Therapist ID bekleniyor...');
+      return;
+    }
+    
     try {
       setIsLoading(true);
       // PsikoHekim backend'ine istek at (port 8083)
