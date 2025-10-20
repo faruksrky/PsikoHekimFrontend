@@ -1,0 +1,26 @@
+# PsikoHekim Backend Tunnel URLs
+# Generated: Sun Oct 19 17:33:32 +03 2025
+
+VITE_PSIKOHEKIM_BASE_URL=https://positioning-fda-washington-going.trycloudflare.com
+VITE_KEYCLOAK_BASE_URL=https://gilbert-rna-confirmed-total.trycloudflare.com
+VITE_BPMN_BASE_URL=https://race-working-nano-mining.trycloudflare.com
+
+# Keycloak Endpoints
+VITE_KEYCLOAK_GET_TOKEN_URL=https://gilbert-rna-confirmed-total.trycloudflare.com/keycloak/getToken
+VITE_KEYCLOAK_GET_USER_INFO_URL=https://gilbert-rna-confirmed-total.trycloudflare.com/keycloak/userInfo
+VITE_KEYCLOAK_USERS_URL=https://gilbert-rna-confirmed-total.trycloudflare.com/users
+
+# Patient Endpoints
+VITE_PATIENT_LIST_URL=https://positioning-fda-washington-going.trycloudflare.com/patient/all
+VITE_PATIENT_DETAILS_URL=https://positioning-fda-washington-going.trycloudflare.com/patient/details
+VITE_PATIENT_SEARCH_URL=https://positioning-fda-washington-going.trycloudflare.com/patient/search
+VITE_PATIENT_ADD_URL=/patient/addPatient
+
+# Therapist Endpoints
+VITE_THERAPIST_LIST_URL=https://positioning-fda-washington-going.trycloudflare.com/therapist/all
+VITE_THERAPIST_DETAILS_URL=https://positioning-fda-washington-going.trycloudflare.com/therapist/details
+VITE_THERAPIST_SEARCH_URL=https://positioning-fda-washington-going.trycloudflare.com/therapist/search
+VITE_THERAPIST_ADD_URL=https://positioning-fda-washington-going.trycloudflare.com/therapist/addTherapist
+
+# Therapist-Patient
+VITE_THERAPIST_PATIENT_PATIENTS_URL=https://positioning-fda-washington-going.trycloudflare.com/therapist-patient
