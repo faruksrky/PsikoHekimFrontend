@@ -27,6 +27,7 @@ export function UserTableRow({ row, selected, onSelectRow }) {
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.lastName}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.email}</TableCell>
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.userName}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.role || 'USER'}</TableCell>
       </TableRow>
 
 {/*

@@ -104,25 +104,46 @@ export const signInWithPassword = async ({ username, password }) => {
 /** **************************************
  * Sign up
  *************************************** */
-export const signUp = async ({ userName, email, password, firstName, lastName }) => {
+export const signUp = async ({ userName, email, password, firstName, lastName, role }) => {
+  // Backend UserRequest DTO: userName, password, firstName, lastName, email, role
   const params = {
-    userName,
+    userName: userName || email,  // userName yoksa email kullan
     email,
     password,
     firstName,
     lastName,
+    role: role || 'USER',  // Default olarak USER
   };
 
   try {
-    const res = await axiosInstanceKeycloak.post('/keycloak/register', params);
-    const accessToken = sessionStorage.getItem('jwt_access_token');
-
-    sessionStorage.setItem(STORAGE_KEY, accessToken);
-
-    // Return a success message
+    const accessToken = sessionStorage.getItem(STORAGE_KEY);
+    
+    console.log('Creating user with params:', { 
+      userName: params.userName,
+      email: params.email, 
+      firstName: params.firstName,
+      lastName: params.lastName,
+      role: params.role,
+      password: '***' 
+    });
+    
+    // Backend /users endpoint'e gönder
+    const res = await axiosInstanceKeycloak.post('/users', params, {
+      headers: {
+        Authorization: accessToken ? `Bearer ${accessToken}` : undefined,
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    console.log('User created successfully:', res.status);
+    
     return 'Başarılı bir şekilde kayıt oldunuz.';
   } catch (error) {
     console.error('Yeni kullanıcı oluştururken hata oluştu:', error);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
     throw error;
   }
 };

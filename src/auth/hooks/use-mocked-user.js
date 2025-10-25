@@ -14,10 +14,12 @@ import { _mock } from 'src/_mock';
 // ----------------------------------------------------------------------
 
 export function useMockedUser() {
+  // Note: This is a mock user for development only
+  // In production, use useAuthContext() to get real user from JWT
   const user = {
     id: '8864c717-587d-472a-929a-8e5f298024da-0',
-    displayName: 'Jaydon Frankie',
-    email: 'demo@minimals.cc',
+    displayName: 'Test User',
+    email: 'test@example.com',
     photoURL: _mock.image.avatar(24),
     phoneNumber: _mock.phoneNumber(1),
     country: _mock.countryNames(1),

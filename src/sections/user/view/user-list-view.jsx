@@ -54,6 +54,7 @@ const TABLE_HEAD = [
   { id: 'lastName', label: 'Soyad' },
   { id: 'email', label: 'Email' },
   { id: 'userName', label: 'Kullanıcı Adı'},
+  { id: 'role', label: 'Rol' },
 ];
 
 // ----------------------------------------------------------------------
@@ -91,7 +92,8 @@ export function UserListView() {
             firstName: user.firstName || '',
             lastName: user.lastName || '',
             email: user.email || '',
-            userName: user.username || user.email || `user-${index}`
+            userName: user.username || user.email || `user-${index}`,
+            role: user.role || 'USER' // Role bilgisi backend'den gelmiyor ise default USER
           }));
           
           setTableData(formattedUsers);

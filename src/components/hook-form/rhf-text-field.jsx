@@ -6,6 +6,9 @@ import TextField from '@mui/material/TextField';
 
 export function RHFTextField({ name, helperText, type, ...other }) {
   const { control } = useFormContext();
+  
+  // Extract inputProps from other props to handle autoComplete
+  const { inputProps, ...restOther } = other;
 
   return (
     <Controller
@@ -27,9 +30,10 @@ export function RHFTextField({ name, helperText, type, ...other }) {
           error={!!error}
           helperText={error?.message ?? helperText}
           inputProps={{
-            autoComplete: 'off',
+            autoComplete: inputProps?.autoComplete || 'off',
+            ...inputProps,
           }}
-          {...other}
+          {...restOther}
         />
       )}
     />

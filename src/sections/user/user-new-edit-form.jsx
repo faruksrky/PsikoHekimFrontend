@@ -5,10 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
 
 import Box from '@mui/material/Box';
-import MuiAlert from '@mui/lab/Alert';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import { Snackbar } from '@mui/material';
+import { Snackbar, Alert } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -18,6 +17,7 @@ import { useRouter } from 'src/routes/hooks';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import MenuItem from '@mui/material/MenuItem';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
@@ -34,7 +34,8 @@ export const NewUserSchema = zod.object({
     .min(1, { message: 'Email bilgisi gereklidir!' })
     .email({ message: 'Geçerli bir mail adresi girilmelidir!' }),
   phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
-  password: zod.string().min(6, { message: 'Şifre en az 6 karakter uzunluğunda olmalıdır!' }), 
+  password: zod.string().min(6, { message: 'Şifre en az 6 karakter uzunluğunda olmalıdır!' }),
+  role: zod.string().optional(),
 });
 
 // ----------------------------------------------------------------------
@@ -48,14 +49,15 @@ export function UserNewEditForm({ currentUser }) {
 
   const defaultValues = useMemo(
     () => ({
-      firstName: currentUser?.firstName || '',
-      lastName: currentUser?.lastName || '',
-      email: currentUser?.email || '',
-      phoneNumber: currentUser?.phoneNumber || '',
-      password: currentUser?.password || '',
-      userName: currentUser?.userName || ''
+      firstName: '',
+      lastName: '',
+      email: '',
+      phoneNumber: '',
+      password: '',
+      userName: '',
+      role: 'USER'
     }),
-    [currentUser]
+    []
   );
 
   const methods = useForm({
@@ -87,11 +89,12 @@ export function UserNewEditForm({ currentUser }) {
   const onSubmit = handleSubmit(async (data) => { 
     try {
       await signUp({
-        userName: data.email,
+        userName: data.userName,
         email: data.email,
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
+        role: data.role || 'USER',
       });
   
       setMessage('Kullanıcı başarıyla kaydedildi.');
@@ -142,17 +145,24 @@ export function UserNewEditForm({ currentUser }) {
                 sm: 'repeat(1, 1fr)',
               }}
             >
-              <Field.Text name="userName" label="Kullanıcı Adı"/>
-              <Field.Text name="firstName" label="Ad" />
-              <Field.Text name="lastName" label="Soyad" />
-              <Field.Text name="email" label="Email" />
-              <Field.Phone name="phoneNumber" label="Telefon" />
+              <Field.Text name="userName" label="Kullanıcı Adı" inputProps={{ autoComplete: 'username' }} />
+              <Field.Text name="firstName" label="Ad" inputProps={{ autoComplete: 'given-name' }} />
+              <Field.Text name="lastName" label="Soyad" inputProps={{ autoComplete: 'family-name' }} />
+              <Field.Text name="email" label="Email" inputProps={{ autoComplete: 'email' }} />
+              <Field.Phone name="phoneNumber" label="Telefon Numarası" />
+              <Field.Select name="role" label="Rol" placeholder="Rol seçiniz">
+                <MenuItem value="USER">USER</MenuItem>
+                <MenuItem value="ADMIN">ADMIN</MenuItem>
+              </Field.Select>
               <Field.Text
                 name="password"
                 label="Şifre"
                 placeholder="6+ karakter"
                 type={password.value ? 'text' : 'password'}
                 InputLabelProps={{ shrink: true }}
+                inputProps={{
+                  autoComplete: 'new-password',
+                }}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -177,9 +187,9 @@ export function UserNewEditForm({ currentUser }) {
       </Grid>
     </Form>
     <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-      <MuiAlert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+      <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
         {message}
-      </MuiAlert>
+      </Alert>
     </Snackbar>
     </>
   );
