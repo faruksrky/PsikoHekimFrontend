@@ -196,11 +196,24 @@ export function CalendarView() {
       }
 
       const therapistId = await getTherapistId(userInfo.email);
-      if (therapistId) {
+      console.log('Therapist ID from token:', therapistId);
+      console.log('User email:', userInfo.email);
+      
+      if (!therapistId) {
+        console.error('Therapist ID bulunamadı');
+        setEvents([]);
+        return;
+      }
+      
+      // therapistId'nin object mi yoksa number/string mi olduğunu kontrol et
+      const actualTherapistId = therapistId.therapistId || therapistId;
+      console.log('Actual Therapist ID to use:', actualTherapistId);
+      
+      if (actualTherapistId) {
         let allEvents = [];
         
         // Therapy sessions'ı çek
-        const sessionsResponse = await axiosInstance.get(`/therapy-sessions/getSessions?therapistId=${therapistId.therapistId || therapistId}`, {
+        const sessionsResponse = await axiosInstance.get(`/therapy-sessions/getSessions?therapistId=${actualTherapistId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const sessionsData = sessionsResponse.data;

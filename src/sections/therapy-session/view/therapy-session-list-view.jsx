@@ -114,6 +114,8 @@ export function TherapySessionListView() {
     try {
       setLoading(true);
       const token = sessionStorage.getItem('jwt_access_token');
+      
+      // Backend'e token ile istek at, backend admin/user kontrolü yapsın
       const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.getAll}`, {
         method: 'GET',
         headers: {
@@ -123,7 +125,6 @@ export function TherapySessionListView() {
       });
 
       if (response.status === 404) {
-        // 404 hatası için boş array döndür
         console.log('No therapy sessions found, returning empty list');
         setTableData([]);
         return;
@@ -138,7 +139,6 @@ export function TherapySessionListView() {
     } catch (error) {
       console.error('Error fetching therapy sessions:', error);
       toast('Seanslar yüklenirken bir hata oluştu', { variant: 'error' });
-      // Hata durumunda da boş array set et
       setTableData([]);
     } finally {
       setLoading(false);

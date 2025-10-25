@@ -91,11 +91,11 @@ export function InboxList() {
           setTherapistId(id);
         } else {
           console.error('Therapist ID bulunamadı');
-          toast.error('Terapist bilgisi bulunamadı');
+          // Toast mesajını kaldırdık, UI'da gösterilecek
         }
       } catch (error) {
         console.error('Therapist ID alınırken hata:', error);
-        toast.error('Terapist bilgisi alınırken hata oluştu');
+        // Toast mesajını kaldırdık, UI'da gösterilecek
       }
     };
     
@@ -109,17 +109,21 @@ export function InboxList() {
       return;
     }
     
+    // therapistId'nin object mi yoksa number/string mi olduğunu kontrol et
+    const actualTherapistId = therapistId.therapistId || therapistId;
+    console.log('Inbox - Therapist ID:', actualTherapistId);
+    
     try {
       setIsLoading(true);
       // PsikoHekim backend'ine istek at (port 8083)
       const response = await axiosInstance.get(`${CONFIG.psikoHekimBaseUrl}/process/inbox/pending`, {
-        params: { therapistId },
+        params: { therapistId: actualTherapistId },
       });
       
       setAllData(response.data);
     } catch (error) {
       console.error('Veriler alınırken hata:', error);
-      toast.error('Veriler alınamadı');
+      setAllData([]); // Hata durumunda boş array set et
     } finally {
       setIsLoading(false);
     }
@@ -355,8 +359,22 @@ export function InboxList() {
 
                   <TableNoData 
                     notFound={notFound} 
-                    title="Henüz hiç mesaj bulunmamaktadır"
-                    description="Gelen kutusunda görüntülenecek mesaj bulunmuyor."
+                    title={
+                      !therapistId 
+                        ? "Terapist bilgisi bulunamadı" 
+                        : dataFiltered.length === 0 
+                          ? "Bekleyen kayıt bulunmamaktadır"
+                          : "Sonuç bulunamadı"
+                    }
+                    description={
+                      !therapistId 
+                        ? "Terapist bilgisi alınamadı. Lütfen giriş yapın."
+                        : dataFiltered.length === 0 
+                          ? currentFilters.status === 'pending' 
+                            ? "Şu an için bekleyen bir atama veya işlem bulunmuyor."
+                            : "Bu filtreler için sonuç bulunamadı."
+                          : "Bu filtreler için sonuç bulunamadı."
+                    }
                   />
                 </TableBody>
               </Table>
