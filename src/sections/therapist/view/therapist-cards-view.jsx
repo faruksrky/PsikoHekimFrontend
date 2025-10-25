@@ -26,11 +26,11 @@ export function TherapistCardsView() {
         action={
           <Button
             component={RouterLink}
-            href={paths.dashboard.psychologist.new}
+            href={paths.dashboard.therapist.new}
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            Yeni Therapist
+            Yeni Danışman
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}

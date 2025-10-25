@@ -23,16 +23,16 @@ export function PatientCardsView() {
           { name: 'User', href: paths.dashboard.patient.root },
           { name: 'Cards' },
         ]}
-        action={
-          <Button
-            component={RouterLink}
-            href={paths.dashboard.user.new}
-            variant="contained"
-            startIcon={<Iconify icon="mingcute:add-line" />}
-          >
-            Yeni Danışan
-          </Button>
-        }
+                  action={
+            <Button
+              component={RouterLink}
+              href={paths.dashboard.patient.new}
+              variant="contained"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+            >
+              Yeni Danışan
+            </Button>
+          }
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
