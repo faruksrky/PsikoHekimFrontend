@@ -1,0 +1,4 @@
+import com_psikohekim.psikohekim_appt.mapper.TherapySessionMapper;
+import com_psikohekim.psikohekim_appt.model.TherapySession;
+import com_psikohekim.psikohekim_appt.model.Therapist;
+import com_psikohekim.psikohekim_appt.model.TherapistPatient;

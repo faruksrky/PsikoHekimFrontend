@@ -35,7 +35,7 @@ export function TherapistDetailsView() {
     try {
       setLoading(true);
       const token = sessionStorage.getItem('jwt_access_token');
-      
+
       const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapist/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -108,29 +108,29 @@ export function TherapistDetailsView() {
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
           <Card sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="h4" sx={{ 
-              bgcolor: 'primary.main', 
-              color: 'white', 
-              borderRadius: '50%', 
-              width: 120, 
-              height: 120, 
-              display: 'flex', 
-              alignItems: 'center', 
+            <Typography variant="h4" sx={{
+              bgcolor: 'primary.main',
+              color: 'white',
+              borderRadius: '50%',
+              width: 120,
+              height: 120,
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center',
               mx: 'auto',
               mb: 2
             }}>
               {therapist.therapistFirstName?.[0]}{therapist.therapistLastName?.[0]}
             </Typography>
-            
+
             <Typography variant="h5" gutterBottom>
               {therapist.therapistFirstName} {therapist.therapistLastName}
             </Typography>
-            
+
             <Typography variant="body2" color="text.secondary" gutterBottom>
               {therapist.therapistType}
             </Typography>
-            
+
             <Chip
               label={`${therapist.therapistRating}/100`}
               color="primary"
@@ -144,7 +144,7 @@ export function TherapistDetailsView() {
             <Typography variant="h6" gutterBottom>
               Kişisel Bilgiler
             </Typography>
-            
+
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
@@ -154,7 +154,7 @@ export function TherapistDetailsView() {
                   {therapist.therapistEmail}
                 </Typography>
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
                   Telefon
@@ -163,7 +163,7 @@ export function TherapistDetailsView() {
                   {therapist.therapistPhoneNumber}
                 </Typography>
               </Grid>
-              
+
               <Grid item xs={12}>
                 <Typography variant="body2" color="text.secondary">
                   Adres
@@ -179,7 +179,7 @@ export function TherapistDetailsView() {
             <Typography variant="h6" gutterBottom>
               Uzmanlık Alanları
             </Typography>
-            
+
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
               {therapist.therapistSpecializationAreas?.map((area, index) => (
                 <Chip key={index} label={area} variant="outlined" />
@@ -191,7 +191,7 @@ export function TherapistDetailsView() {
             <Typography variant="h6" gutterBottom>
               Eğitim ve Deneyim
             </Typography>
-            
+
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
@@ -201,7 +201,7 @@ export function TherapistDetailsView() {
                   {therapist.therapistYearsOfExperience}
                 </Typography>
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
                   Üniversite
@@ -210,7 +210,7 @@ export function TherapistDetailsView() {
                   {therapist.therapistUniversity}
                 </Typography>
               </Grid>
-              
+
               <Grid item xs={12}>
                 <Typography variant="body2" color="text.secondary">
                   Eğitim
@@ -219,7 +219,7 @@ export function TherapistDetailsView() {
                   {therapist.therapistEducation}
                 </Typography>
               </Grid>
-              
+
               <Grid item xs={12}>
                 <Typography variant="body2" color="text.secondary">
                   Sertifikalar
@@ -228,7 +228,7 @@ export function TherapistDetailsView() {
                   {therapist.therapistCertifications}
                 </Typography>
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
                   Seans Ücreti

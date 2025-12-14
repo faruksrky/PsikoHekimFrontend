@@ -221,6 +221,12 @@ export function TherapistListView() {
         />,
         <GridActionsCellItem
           showInMenu
+          icon={<Iconify icon="solar:users-group-rounded-bold" />}
+          label="Danışanlarını Göster"
+          onClick={() => router.push(paths.dashboard.therapist.patients(params.id))}
+        />,
+        <GridActionsCellItem
+          showInMenu
           icon={<Iconify icon="solar:trash-bin-trash-bold" />}
           label="Sil"
           onClick={() => handleDeleteRow(params.id)}
@@ -347,12 +353,12 @@ export function TherapistListView() {
               onRowSelectionModelChange={(newSelectionModel) => setSelectedRowIds(newSelectionModel)}
               slots={{
                 toolbar: CustomToolbarCallback,
-                noRowsOverlay: () => <EmptyContent 
-                  title="Henüz hiç danışman kaydı bulunmamaktadır" 
+                noRowsOverlay: () => <EmptyContent
+                  title="Henüz hiç danışman kaydı bulunmamaktadır"
                   description="Yeni danışman eklemek için 'Yeni Danışman' butonunu kullanabilirsiniz."
                 />,
-                noResultsOverlay: () => <EmptyContent 
-                  title="Arama kriterlerinize uygun danışman bulunamadı" 
+                noResultsOverlay: () => <EmptyContent
+                  title="Arama kriterlerinize uygun danışman bulunamadı"
                   description="Farklı arama terimleri deneyebilir veya filtreleri temizleyebilirsiniz."
                 />,
               }}
