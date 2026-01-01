@@ -1,0 +1,13 @@
+# Cloudflare Pages Headers Configuration
+# Bu dosya Cloudflare Pages tarafından otomatik olarak kullanılır
+
+# Tüm sayfalar için CORS header'ları (frontend'in kendi kaynakları için)
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# API istekleri için (frontend'den giden istekler için değil, gelen istekler için)
+# Not: Bu dosya sadece frontend'in kendi header'larını ayarlar
+# Backend servislerinin (Keycloak) CORS ayarlarını backend'de yapmanız gerekir
+

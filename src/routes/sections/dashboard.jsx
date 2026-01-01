@@ -38,6 +38,7 @@ const TherapySessionAnalyticsView = lazy(() => import('src/sections/therapy-sess
 
 const OverviewAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics'));
 const CalendarView = lazy(() => import('src/pages/dashboard/calendar/calendar'));
+const FinancePage = lazy(() => import('src/pages/dashboard/finance/list'));
 
 // ----------------------------------------------------------------------
 
@@ -261,6 +262,14 @@ export const dashboardRoutes = [
         element: (
           <ProtectedRoute requiredRole="USER">
             <OverviewAnalyticsPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'finance',
+        element: (
+          <ProtectedRoute requiredRole="ADMIN">
+            <FinancePage />
           </ProtectedRoute>
         )
       },

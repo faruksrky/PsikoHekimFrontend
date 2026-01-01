@@ -111,5 +111,8 @@ export const paths = {
     group: {
       root: `${ROOTS.DASHBOARD}/group`,
     },
+    finance: {
+      root: `${ROOTS.DASHBOARD}/finance`,
+    },
   },
 };

@@ -60,6 +60,18 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Request interceptor for Keycloak instance - CORS için özel header'lar
+axiosInstanceKeycloak.interceptors.request.use(
+  (config) => {
+    // CORS için gerekli header'ları ekle (eğer tarayıcı izin verirse)
+    if (typeof window !== 'undefined') {
+      config.headers['X-Requested-With'] = 'XMLHttpRequest';
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Response interceptor for main instance
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -70,6 +82,15 @@ axiosInstance.interceptors.response.use(
 axiosInstanceKeycloak.interceptors.response.use(
   (response) => response,
   (error) => {
+    // CORS hatasını tespit et
+    const isCorsError = 
+      !error.response && 
+      error.message && 
+      (error.message.includes('CORS') || 
+       error.message.includes('Network Error') ||
+       error.code === 'ERR_NETWORK' ||
+       error.code === 'ERR_FAILED');
+    
     // Preserve the original error structure but add better logging
     console.error('Keycloak API Error Details:', {
       status: error.response?.status,
@@ -80,8 +101,22 @@ axiosInstanceKeycloak.interceptors.response.use(
       baseURL: error.config?.baseURL,
       fullURL: `${error.config?.baseURL || ''}${error.config?.url || ''}`,
       headers: error.config?.headers,
-      requestData: error.config?.data
+      requestData: error.config?.data,
+      isCorsError,
+      errorCode: error.code,
+      errorMessage: error.message
     });
+    
+    // CORS hatası için özel mesaj ekle
+    if (isCorsError) {
+      error.isCorsError = true;
+      error.corsMessage = 'CORS Hatası: Backend servisi CORS başlıklarını göndermiyor. Sunucu yöneticisi ile iletişime geçin.';
+      console.error('🚫 CORS ERROR DETECTED:', {
+        origin: window.location.origin,
+        target: `${error.config?.baseURL || ''}${error.config?.url || ''}`,
+        message: 'Backend CORS ayarları eksik. Keycloak servisinde CORS yapılandırması yapılmalı.'
+      });
+    }
     
     // Return the original error to preserve error handling in calling functions
     return Promise.reject(error);

@@ -91,7 +91,17 @@ export const signInWithPassword = async ({ username, password }) => {
         } else {
           throw new Error('Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.');
         }
-      } else if (error.request) {
+      } else if (error.request || error.isCorsError) {
+        // CORS hatasını özel olarak handle et
+        if (error.isCorsError || error.message?.includes('CORS') || error.code === 'ERR_NETWORK' || error.code === 'ERR_FAILED') {
+          console.error('CORS Error detected:', {
+            origin: window.location.origin,
+            target: `${axiosInstanceKeycloak.defaults.baseURL}/keycloak/getToken`,
+            errorCode: error.code,
+            errorMessage: error.message
+          });
+          throw new Error('CORS Hatası: Sunucu erişime izin vermiyor. Lütfen backend yöneticisi ile iletişime geçin. (CORS policy hatası)');
+        }
         console.error('Network error:', error.request);
         throw new Error('Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.');
       } else {

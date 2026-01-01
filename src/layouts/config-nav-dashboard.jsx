@@ -107,9 +107,10 @@ export const navData = [
       },
 
       { title: 'Analytics', path: paths.dashboard.analytics, icon: ICONS.analytics, requiredRole: 'USER' },
-      
+      { title: 'Finans', path: paths.dashboard.finance.root, icon: ICONS.banking, requiredRole: 'ADMIN' },
+
     ],
-    
+
   },
-  
+
 ];
