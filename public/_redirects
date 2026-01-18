@@ -1,3 +1,6 @@
 # Cloudflare Pages SPA Routing
-# Tüm sayfaları index.html'e yönlendir (SPA routing için)
-/*    /index.html   200
+# Static dosyaları hariç tut, diğer tüm path'leri index.html'e yönlendir
+/assets/* /assets/:splat 200
+/fonts/* /fonts/:splat 200
+/logo/* /logo/:splat 200
+/* /index.html 200
