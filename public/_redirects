@@ -1,0 +1,3 @@
+# Cloudflare Pages SPA Routing
+# Tüm sayfaları index.html'e yönlendir (SPA routing için)
+/*    /index.html   200
