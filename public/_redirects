@@ -1,9 +1,0 @@
-# Cloudflare Pages SPA Routing
-# Static dosyaları serve et, diğer tüm path'leri index.html'e yönlendir
-# Not: Cloudflare Pages infinite loop'u önlemek için index.html'i hariç tutuyoruz
-/assets/* /assets/:splat 200
-/fonts/* /fonts/:splat 200
-/logo/* /logo/:splat 200
-/favicon.ico /favicon.ico 200
-/index.html /index.html 200
-/* /index.html 200!
