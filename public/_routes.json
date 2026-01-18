@@ -1,5 +1,0 @@
-{
-  "version": 1,
-  "include": ["/*"],
-  "exclude": ["/assets/*", "/fonts/*", "/logo/*", "/*.{js,css,json,ico,png,jpg,jpeg,gif,svg,webp,woff,woff2,ttf,eot}", "/favicon.ico", "/index.html"]
-}
