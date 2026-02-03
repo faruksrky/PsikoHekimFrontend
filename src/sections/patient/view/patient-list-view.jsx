@@ -105,11 +105,16 @@ export function PatientListView() {
 
     // Filtreleme yapılmadıysa tüm verileri göster
     if (!filters.state.patientGender.length && !filters.state.patientCountry.length && !filters.state.assignmentStatus.length) {
-      const transformedPatients = patients.map((patient) => ({
-        ...patient,
-        id: patient.patientId,
-        isAssigned: patient.therapistId && patient.therapistId !== null && patient.therapistId !== undefined && patient.therapistId !== '' && patient.therapistId !== 0,
-      }));
+      const transformedPatients = patients.map((patient) => {
+        const assignmentStatus = patient.assignmentStatus || (patient.therapistId ? 'ASSIGNED' : 'UNASSIGNED');
+        return {
+          ...patient,
+          id: patient.patientId,
+          assignmentStatus,
+          isAssigned: assignmentStatus === 'ASSIGNED',
+          isPending: assignmentStatus === 'PENDING',
+        };
+      });
       
       setTableData(transformedPatients);
       return;
@@ -135,22 +140,28 @@ export function PatientListView() {
           normalizedPatientCountry.includes(patient.patientCountry.toString().toLowerCase()));
 
       // Atama durumu filtresi
+      const assignmentStatus = patient.assignmentStatus || (patient.therapistId ? 'ASSIGNED' : 'UNASSIGNED');
       const matchesAssignmentStatus = !filters.state.assignmentStatus.length || 
         filters.state.assignmentStatus.some(status => {
-          const isAssigned = patient.therapistId && patient.therapistId !== null && patient.therapistId !== undefined && patient.therapistId !== '' && patient.therapistId !== 0;
-          if (status === 'assigned') return isAssigned;
-          if (status === 'unassigned') return !isAssigned;
+          if (status === 'assigned') return assignmentStatus === 'ASSIGNED';
+          if (status === 'pending') return assignmentStatus === 'PENDING';
+          if (status === 'unassigned') return assignmentStatus === 'UNASSIGNED';
           return true;
         });
 
       return matchesType && matchesRating && matchesAssignmentStatus;
     });
 
-    const transformedPatients = filteredPatients.map((patient) => ({
-      ...patient,
-      id: patient.patientId,
-      isAssigned: patient.therapistId && patient.therapistId !== null && patient.therapistId !== undefined && patient.therapistId !== '' && patient.therapistId !== 0,
-    }));
+    const transformedPatients = filteredPatients.map((patient) => {
+      const assignmentStatus = patient.assignmentStatus || (patient.therapistId ? 'ASSIGNED' : 'UNASSIGNED');
+      return {
+        ...patient,
+        id: patient.patientId,
+        assignmentStatus,
+        isAssigned: assignmentStatus === 'ASSIGNED',
+        isPending: assignmentStatus === 'PENDING',
+      };
+    });
 
     setTableData(transformedPatients);
   }, [patients, filters.state.patientGender, filters.state.patientCountry, filters.state.assignmentStatus]);

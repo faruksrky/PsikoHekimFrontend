@@ -14,6 +14,8 @@ import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useAuth } from 'src/hooks/useAuth';
+import { getEmailFromToken, getTherapistId } from 'src/auth/context/jwt/action';
 
 import { CONFIG } from 'src/config-global';
 
@@ -94,9 +96,13 @@ export function TherapySessionListView() {
   const router = useRouter();
   const navigate = useNavigate();
   const confirm = useBoolean();
+  const { isAdmin } = useAuth();
+  const isAdminUser = isAdmin();
   const [tableData, setTableData] = useState([]);
   const [filters, setFilters] = useState(defaultFilters);
   const [loading, setLoading] = useState(true);
+  const [therapistId, setTherapistId] = useState(null);
+  const [priceView, setPriceView] = useState('client');
 
   const canReset = Object.keys(filters).some(
     (key) => filters[key] !== defaultFilters[key]
@@ -114,9 +120,14 @@ export function TherapySessionListView() {
     try {
       setLoading(true);
       const token = sessionStorage.getItem('jwt_access_token');
-      
-      // Backend'e token ile istek at, backend admin/user kontrolü yapsın
-      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.getAll}`, {
+
+      if (!isAdminUser && !therapistId) {
+        setTableData([]);
+        return;
+      }
+
+      const query = !isAdminUser && therapistId ? `?therapistId=${therapistId}` : '';
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.getAll}${query}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -143,7 +154,29 @@ export function TherapySessionListView() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAdminUser, therapistId]);
+
+  useEffect(() => {
+    const resolveTherapistId = async () => {
+      if (isAdminUser) {
+        setTherapistId(null);
+        setPriceView('admin');
+        return;
+      }
+
+      const userInfo = getEmailFromToken();
+      if (!userInfo?.email) {
+        setTherapistId(null);
+        setPriceView('client');
+        return;
+      }
+      const id = await getTherapistId(userInfo.email);
+      setTherapistId(id);
+      setPriceView(id ? 'consultant' : 'client');
+    };
+
+    resolveTherapistId();
+  }, [isAdminUser]);
 
   useEffect(() => {
     fetchTherapySessions();
@@ -297,6 +330,7 @@ export function TherapySessionListView() {
         <TherapySessionTable
           sessions={dataFiltered}
           loading={loading}
+          priceView={priceView}
           onEditRow={handleEditRow}
           onDeleteRow={handleDeleteRow}
           onViewDetails={handleViewRow}

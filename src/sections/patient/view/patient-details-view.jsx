@@ -66,70 +66,49 @@ export function PatientDetailsView() {
       
       setPatient(patientData);
 
-      // Payment bilgilerini getir
+      // Payment + therapist bilgilerini session'lar üzerinden getir
       try {
-        const paymentsResponse = await fetch(`${CONFIG.psikoHekimBaseUrl}/patient/${id}/payments`, {
+        const sessionsResponse = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapy-sessions/patient/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
         
-        if (paymentsResponse.ok) {
-          const paymentsData = await paymentsResponse.json();
-          setPayments(paymentsData.payments || []);
-        } else {
-          // API henüz hazır değilse mock data kullan
-          console.log('Payment API not available, using mock data');
-          setPayments([
-            { amount: 3000, paymentDate: '2024-01-15', status: 'COMPLETED', description: 'İlk seans ödemesi' },
-            { amount: 3000, paymentDate: '2024-01-22', status: 'COMPLETED', description: 'İkinci seans ödemesi' },
-            { amount: 3000, paymentDate: '2024-01-29', status: 'PENDING', description: 'Üçüncü seans ödemesi' },
-            { amount: 3000, paymentDate: '2024-02-05', status: 'COMPLETED', description: 'Dördüncü seans ödemesi' },
-            { amount: 3000, paymentDate: '2024-02-12', status: 'COMPLETED', description: 'Beşinci seans ödemesi' }
-          ]);
-        }
-      } catch (error) {
-        console.log('Payment data not available, using mock data:', error);
-        // Mock data ile test edelim
-        setPayments([
-          { amount: 3000, paymentDate: '2024-01-15', status: 'COMPLETED', description: 'İlk seans ödemesi' },
-          { amount: 3000, paymentDate: '2024-01-22', status: 'COMPLETED', description: 'İkinci seans ödemesi' },
-          { amount: 3000, paymentDate: '2024-01-29', status: 'PENDING', description: 'Üçüncü seans ödemesi' },
-          { amount: 3000, paymentDate: '2024-02-05', status: 'COMPLETED', description: 'Dördüncü seans ödemesi' },
-          { amount: 3000, paymentDate: '2024-02-12', status: 'COMPLETED', description: 'Beşinci seans ödemesi' }
-        ]);
-      }
+        if (sessionsResponse.ok) {
+          const sessions = await sessionsResponse.json();
 
-      // Çalıştığı therapist bilgilerini getir
-      try {
-        const therapistsResponse = await fetch(`${CONFIG.psikoHekimBaseUrl}/patient/${id}/therapists`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (therapistsResponse.ok) {
-          const therapistsData = await therapistsResponse.json();
-          setTherapists(therapistsData.therapists || []);
+          const paymentRows = (Array.isArray(sessions) ? sessions : []).map((session, index) => ({
+            amount: Number(session.sessionFee || 0),
+            paymentDate: session.scheduledDate || session.createdAt,
+            status: session.paymentStatus || 'PENDING',
+            description: `Seans #${session.sessionId || index + 1}`,
+          }));
+
+          setPayments(paymentRows);
+
+          const therapistMap = new Map();
+          (Array.isArray(sessions) ? sessions : []).forEach((session) => {
+            const therapist = session.therapist;
+            if (!therapist) return;
+            const key = therapist.therapistId ?? therapist.therapistEmail ?? `${therapist.therapistFirstName}-${therapist.therapistLastName}`;
+            if (!therapistMap.has(key)) {
+              therapistMap.set(key, {
+                therapistFirstName: therapist.therapistFirstName,
+                therapistLastName: therapist.therapistLastName,
+              });
+            }
+          });
+
+          setTherapists(Array.from(therapistMap.values()));
         } else {
-          // API henüz hazır değilse mock data kullan
-          console.log('Therapist API not available, using mock data');
-          setTherapists([
-            { therapistFirstName: 'Dr. Ahmet', therapistLastName: 'Yılmaz' },
-            { therapistFirstName: 'Dr. Ayşe', therapistLastName: 'Kaya' },
-            { therapistFirstName: 'Dr. Mehmet', therapistLastName: 'Demir' }
-          ]);
+          setPayments([]);
+          setTherapists([]);
         }
       } catch (error) {
-        console.log('Therapist data not available, using mock data:', error);
-        // Mock data ile test edelim
-        setTherapists([
-          { therapistFirstName: 'Dr. Ahmet', therapistLastName: 'Yılmaz' },
-          { therapistFirstName: 'Dr. Ayşe', therapistLastName: 'Kaya' },
-          { therapistFirstName: 'Dr. Mehmet', therapistLastName: 'Demir' }
-        ]);
+        console.log('Session data not available:', error);
+        setPayments([]);
+        setTherapists([]);
       }
 
     } catch (error) {

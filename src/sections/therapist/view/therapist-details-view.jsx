@@ -18,16 +18,19 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { CONFIG } from 'src/config-global';
+import { useAuth } from 'src/hooks/useAuth';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { getCurrencySymbol } from '../therapist-new-edit-form';
 
 // ----------------------------------------------------------------------
 
 export function TherapistDetailsView() {
   const router = useRouter();
   const { id } = useParams();
+  const { isAdmin } = useAuth();
   const [therapist, setTherapist] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +39,12 @@ export function TherapistDetailsView() {
       setLoading(true);
       const token = sessionStorage.getItem('jwt_access_token');
 
-      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapist/${id}`, {
+      // Backend Long ID bekliyor, doğru endpoint'i kullan
+      const endpoint = CONFIG.therapistDetailsUrl 
+        ? `${CONFIG.psikoHekimBaseUrl}${CONFIG.therapistDetailsUrl}?therapistId=${id}`
+        : `${CONFIG.psikoHekimBaseUrl}/therapist/${id}`;
+
+      const response = await fetch(endpoint, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -44,7 +52,9 @@ export function TherapistDetailsView() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch therapist details');
+        const errorText = await response.text();
+        console.error('Backend error response:', errorText);
+        throw new Error(`Failed to fetch therapist details: ${response.status}`);
       }
 
       const data = await response.json();
@@ -229,14 +239,31 @@ export function TherapistDetailsView() {
                 </Typography>
               </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Seans Ücreti
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  ₺{therapist.therapistAppointmentFee?.toLocaleString()}
-                </Typography>
-              </Grid>
+              {isAdmin() && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="body2" color="text.secondary">
+                      Randevu Ücreti
+                    </Typography>
+                    <Typography variant="body1" gutterBottom>
+                      {getCurrencySymbol(therapist.therapistAppointmentFeeCurrency || 'TRY')}
+                      {therapist.therapistAppointmentFee?.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Grid>
+
+                  {therapist.therapistConsultantFee && (
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Danışman Ücreti
+                      </Typography>
+                      <Typography variant="body1" gutterBottom>
+                        {getCurrencySymbol(therapist.therapistConsultantFeeCurrency || 'TRY')}
+                        {therapist.therapistConsultantFee?.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </Typography>
+                    </Grid>
+                  )}
+                </>
+              )}
             </Grid>
           </Card>
         </Grid>

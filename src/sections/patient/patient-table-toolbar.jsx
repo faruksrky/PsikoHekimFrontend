@@ -95,7 +95,13 @@ export function PatientTableToolbar({ filters, options }) {
           onClose={handleFilterAssignmentStatus}
           input={<OutlinedInput label="Danışman Atama Durumu: " />}
           renderValue={(selected) => selected.map((value) => 
-            value === 'assigned' ? 'Atanmış' : value === 'unassigned' ? 'Atanmamış' : value
+            value === 'assigned'
+              ? 'Atanmış'
+              : value === 'pending'
+                ? 'Onay Bekleniyor'
+                : value === 'unassigned'
+                  ? 'Atanmamış'
+                  : value
           ).join(', ')}
           inputProps={{ id: 'patient-filter-assignmentStatus-select-label' }}
           sx={{ textTransform: 'capitalize' }}
@@ -115,6 +121,14 @@ export function PatientTableToolbar({ filters, options }) {
               checked={local.state.assignmentStatus.includes('unassigned')}
             />
             Atanmamış
+          </MenuItem>
+          <MenuItem value="pending">
+            <Checkbox
+              disableRipple
+              size="small"
+              checked={local.state.assignmentStatus.includes('pending')}
+            />
+            Onay Bekleniyor
           </MenuItem>
           <MenuItem
             onClick={handleFilterAssignmentStatus}

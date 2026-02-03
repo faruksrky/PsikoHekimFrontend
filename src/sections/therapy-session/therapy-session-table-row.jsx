@@ -15,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 
+import { fCurrency } from 'src/utils/format-number';
 import { fDate, fTime } from 'src/utils/format-time';
 
 import { CONFIG } from 'src/config-global';
@@ -36,6 +37,7 @@ export function TherapySessionTableRow({
   onCancelSession,
   onRescheduleSession,
   onViewDetails,
+  priceView = 'client',
 }) {
   const {
     sessionId,
@@ -232,6 +234,18 @@ export function TherapySessionTableRow({
     }
   };
 
+  const priceInfo = {
+    clientPrice: sessionFee ?? null,
+    consultantEarning: row?.consultantEarning ?? row?.consultantFee ?? null,
+  };
+
+  const platformIncome =
+    priceInfo.clientPrice !== null && priceInfo.consultantEarning !== null
+      ? priceInfo.clientPrice - priceInfo.consultantEarning
+      : null;
+
+  const formatPrice = (value) => (value === null || value === undefined ? '-' : fCurrency(value));
+
   const getSessionFormatLabel = (format) => {
     switch (format) {
       case 'IN_PERSON':
@@ -342,6 +356,42 @@ export function TherapySessionTableRow({
             {getPaymentStatusLabel(paymentStatus)}
           </Label>
         </TableCell>
+
+        {priceView === 'admin' && (
+          <>
+            <TableCell onClick={onViewDetails}>
+              <Typography variant="body2" noWrap>
+                {formatPrice(priceInfo.clientPrice)}
+              </Typography>
+            </TableCell>
+            <TableCell onClick={onViewDetails}>
+              <Typography variant="body2" noWrap>
+                {formatPrice(priceInfo.consultantEarning)}
+              </Typography>
+            </TableCell>
+            <TableCell onClick={onViewDetails}>
+              <Typography variant="body2" noWrap>
+                {formatPrice(platformIncome)}
+              </Typography>
+            </TableCell>
+          </>
+        )}
+
+        {priceView === 'consultant' && (
+          <TableCell onClick={onViewDetails}>
+            <Typography variant="body2" noWrap>
+              {formatPrice(priceInfo.consultantEarning)}
+            </Typography>
+          </TableCell>
+        )}
+
+        {priceView === 'client' && (
+          <TableCell onClick={onViewDetails}>
+            <Typography variant="body2" noWrap>
+              {formatPrice(priceInfo.clientPrice)}
+            </Typography>
+          </TableCell>
+        )}
 
         <TableCell align="right" sx={{ px: 1, whiteSpace: 'nowrap' }}>
           <Tooltip title="Hızlı Aksiyonlar">

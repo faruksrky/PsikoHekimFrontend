@@ -17,6 +17,8 @@ import {
 import { paths } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
+import { useAuth } from 'src/hooks/useAuth';
+import { getEmailFromToken, getTherapistId } from 'src/auth/context/jwt/action';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -31,10 +33,12 @@ import { TherapistPerformanceTable } from '../components/therapist-performance-t
 // ----------------------------------------------------------------------
 
 export function TherapySessionAnalyticsView() {
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [selectedTherapist, setSelectedTherapist] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [therapists, setTherapists] = useState([]);
+  const [therapistId, setTherapistId] = useState(null);
   
   // Analytics Data
   const [generalStats, setGeneralStats] = useState({
@@ -58,7 +62,8 @@ export function TherapySessionAnalyticsView() {
       const token = sessionStorage.getItem('jwt_access_token');
       
       // Fetch all sessions for general stats
-      const sessionsResponse = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.getAll}`, {
+      const query = !isAdmin() && therapistId ? `?therapistId=${therapistId}` : '';
+      const sessionsResponse = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.getAll}${query}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -71,8 +76,8 @@ export function TherapySessionAnalyticsView() {
 
       let sessions = await sessionsResponse.json();
       
-      // Apply filters
-      if (selectedTherapist !== 'all') {
+      // Apply filters (admin only)
+      if (isAdmin() && selectedTherapist !== 'all') {
         sessions = sessions.filter(session => session.therapistId === selectedTherapist);
       }
       
@@ -148,7 +153,26 @@ export function TherapySessionAnalyticsView() {
     } finally {
       setLoading(false);
     }
-  }, [selectedTherapist, selectedPeriod]);
+  }, [isAdmin, therapistId, selectedTherapist, selectedPeriod]);
+
+  useEffect(() => {
+    const resolveTherapistId = async () => {
+      if (isAdmin()) {
+        setTherapistId(null);
+        return;
+      }
+      const userInfo = getEmailFromToken();
+      if (!userInfo?.email) {
+        setTherapistId(null);
+        return;
+      }
+      const id = await getTherapistId(userInfo.email);
+      setTherapistId(id);
+      setSelectedTherapist(id || 'all');
+    };
+
+    resolveTherapistId();
+  }, [isAdmin]);
 
   const fetchTherapistStats = async (token) => {
     try {
@@ -345,6 +369,7 @@ export function TherapySessionAnalyticsView() {
                 value={selectedTherapist}
                 label="Danışman"
                 onChange={(e) => setSelectedTherapist(e.target.value)}
+                disabled={!isAdmin()}
               >
                 <MenuItem value="all">Tüm Danışmanlar</MenuItem>
                 {Array.isArray(therapists) && therapists.map((therapist) => (

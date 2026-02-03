@@ -17,6 +17,8 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useAuth } from 'src/hooks/useAuth';
+import { getEmailFromToken } from 'src/auth/context/jwt/action';
 
 import { fCurrency } from 'src/utils/format-number';
 import { fDate, fTime } from 'src/utils/format-time';
@@ -34,8 +36,14 @@ export function TherapySessionDetailsView() {
   const { id: sessionId } = useParams();
   const router = useRouter();
   const confirm = useBoolean();
+  const { isAdmin } = useAuth();
   const [sessionData, setSessionData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [priceView, setPriceView] = useState('client');
+  const [pricingData, setPricingData] = useState({
+    clientPrice: null,
+    consultantEarning: null,
+  });
 
   const fetchSessionDetails = useCallback(async () => {
     try {
@@ -53,9 +61,52 @@ export function TherapySessionDetailsView() {
     }
   }, [sessionId]);
 
+  const fetchPricing = useCallback(async () => {
+    if (!sessionId) return;
+
+    try {
+      const [clientRes, consultantRes] = await Promise.all([
+        fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.pricing.clientSession}/${sessionId}/price`),
+        fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.pricing.consultantSession}/${sessionId}/earning`)
+      ]);
+
+      const clientPrice = clientRes.ok ? await clientRes.json() : null;
+      const consultantEarning = consultantRes.ok ? await consultantRes.json() : null;
+
+      setPricingData({
+        clientPrice: clientPrice?.sessionPrice ?? null,
+        consultantEarning: consultantEarning?.consultantFee ?? null,
+      });
+    } catch (error) {
+      console.error('Error fetching pricing data:', error);
+    }
+  }, [sessionId]);
+
   useEffect(() => {
     fetchSessionDetails();
   }, [fetchSessionDetails]);
+
+  useEffect(() => {
+    const resolvePriceView = () => {
+      if (isAdmin()) {
+        setPriceView('admin');
+        return;
+      }
+
+      const userInfo = getEmailFromToken();
+      if (userInfo?.therapistId) {
+        setPriceView('consultant');
+      } else {
+        setPriceView('client');
+      }
+    };
+
+    resolvePriceView();
+  }, [isAdmin]);
+
+  useEffect(() => {
+    fetchPricing();
+  }, [fetchPricing]);
 
   const handleEdit = useCallback(() => {
     router.push(paths.dashboard.therapySession.edit(sessionId));
@@ -155,6 +206,15 @@ export function TherapySessionDetailsView() {
       </Container>
     );
   }
+
+  const sessionFeeValue = sessionData?.sessionFee ?? 0;
+  const clientPrice = pricingData.clientPrice ?? sessionFeeValue;
+  const consultantEarning = pricingData.consultantEarning ?? null;
+  const platformIncome =
+    clientPrice !== null && consultantEarning !== null
+      ? clientPrice - consultantEarning
+      : null;
+  const formatPrice = (value) => (value === null || value === undefined ? '-' : fCurrency(value));
 
   return (
     <Container maxWidth="xl">
@@ -312,10 +372,36 @@ export function TherapySessionDetailsView() {
                   </Label>
                 </Stack>
 
-                <Stack spacing={1}>
-                  <Typography variant="subtitle2">Seans Ücreti</Typography>
-                  <Typography variant="body2">{fCurrency(sessionData.sessionFee)}</Typography>
-                </Stack>
+                {priceView === 'admin' && (
+                  <>
+                    <Stack spacing={1}>
+                      <Typography variant="subtitle2">Danışan Ödemesi</Typography>
+                      <Typography variant="body2">{formatPrice(clientPrice)}</Typography>
+                    </Stack>
+                    <Stack spacing={1}>
+                      <Typography variant="subtitle2">Danışman Ücreti</Typography>
+                      <Typography variant="body2">{formatPrice(consultantEarning)}</Typography>
+                    </Stack>
+                    <Stack spacing={1}>
+                      <Typography variant="subtitle2">Platform Geliri</Typography>
+                      <Typography variant="body2">{formatPrice(platformIncome)}</Typography>
+                    </Stack>
+                  </>
+                )}
+
+                {priceView === 'consultant' && (
+                  <Stack spacing={1}>
+                    <Typography variant="subtitle2">Danışman Ücreti</Typography>
+                    <Typography variant="body2">{formatPrice(consultantEarning)}</Typography>
+                  </Stack>
+                )}
+
+                {priceView === 'client' && (
+                  <Stack spacing={1}>
+                    <Typography variant="subtitle2">Danışan Ödemesi</Typography>
+                    <Typography variant="body2">{formatPrice(clientPrice)}</Typography>
+                  </Stack>
+                )}
               </Stack>
             </Grid>
           </Grid>

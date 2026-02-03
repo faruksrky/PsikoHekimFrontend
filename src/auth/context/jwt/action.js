@@ -239,7 +239,25 @@ export const getTherapistId = async (email) => {
     });
     
     if (error.response?.status === 404) {
-      return null;
+      try {
+        const token = sessionStorage.getItem('jwt_access_token');
+        const listResponse = await axiosInstance.get(CONFIG.therapistListUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000
+        });
+
+        const therapists = listResponse.data?.therapists || [];
+        const matched = therapists.find((therapist) =>
+          therapist.therapistEmail?.toLowerCase() === email.toLowerCase()
+        );
+        return matched?.therapistId ?? null;
+      } catch (listError) {
+        console.error('Therapist list fallback failed:', listError);
+        return null;
+      }
     }
     
     if (error.code === 'ERR_NETWORK') {

@@ -21,6 +21,7 @@ import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
+import { useAuth } from 'src/hooks/useAuth';
 
 import { PRODUCT_STOCK_OPTIONS } from 'src/_mock';
 import { useGetTherapists } from 'src/actions/therapist';
@@ -60,6 +61,7 @@ import {
 export function TherapistListView() {
   const confirmRows = useBoolean();
   const router = useRouter();
+  const { isAdmin } = useAuth();
 
   const { therapists, therapistsLoading } = useGetTherapists();
 
@@ -172,13 +174,14 @@ export function TherapistListView() {
       minWidth: 150,
       renderCell: (params) => <RenderCellCertifications params={params} />,
     },
-    {
+    // Ücret kolonu sadece admin görebilir
+    ...(isAdmin() ? [{
       field: 'therapistAppointmentFee',
       headerName: 'Randevu Ücreti',
       flex: 1,
       minWidth: 100,
       renderCell: (params) => <RenderCellAppointmentFee params={params} />,
-    },
+    }] : []),
     {
       field: 'therapistRating',
       headerName: 'Danışman Puanı',

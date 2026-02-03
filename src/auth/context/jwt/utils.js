@@ -5,6 +5,31 @@ import axios from 'src/utils/axios';
 import { STORAGE_KEY } from './constant';
 
 // ----------------------------------------------------------------------
+// Firefox / Strict modda sessionStorage erişim hatalarını yakala
+export function safeSessionStorageGet(key) {
+  try {
+    return typeof window !== 'undefined' ? sessionStorage.getItem(key) : null;
+  } catch (e) {
+    console.warn('sessionStorage erişilemedi (Firefox özel mod / gizli sekme olabilir):', e?.message);
+    return null;
+  }
+}
+export function safeSessionStorageSet(key, value) {
+  try {
+    if (typeof window !== 'undefined') sessionStorage.setItem(key, value);
+  } catch (e) {
+    console.warn('sessionStorage yazılamadı:', e?.message);
+  }
+}
+function safeSessionStorageRemove(key) {
+  try {
+    if (typeof window !== 'undefined') sessionStorage.removeItem(key);
+  } catch (e) {
+    console.warn('sessionStorage temizlenemedi:', e?.message);
+  }
+}
+
+// ----------------------------------------------------------------------
 
 export function jwtDecode(token) {
   try {
@@ -58,7 +83,8 @@ export function tokenExpired(exp) {
   setTimeout(() => {
     try {
       alert('Token expired!');
-      sessionStorage.removeItem(STORAGE_KEY);
+      safeSessionStorageRemove(STORAGE_KEY);
+      safeSessionStorageRemove('user');
       window.location.href = paths.auth.jwt.signIn;
     } catch (error) {
       console.error('Error during token expiration:', error);
@@ -72,8 +98,8 @@ export function tokenExpired(exp) {
 export async function setSession(accessToken, user) {
   try {
     if (accessToken) {
-      sessionStorage.setItem(STORAGE_KEY, accessToken);
-      sessionStorage.setItem('user', JSON.stringify(user));
+      safeSessionStorageSet(STORAGE_KEY, accessToken);
+      safeSessionStorageSet('user', JSON.stringify(user));
 
       axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
@@ -85,8 +111,8 @@ export async function setSession(accessToken, user) {
         throw new Error('Invalid access token!');
       }
     } else {
-      sessionStorage.removeItem(STORAGE_KEY);
-      sessionStorage.removeItem('user');
+      safeSessionStorageRemove(STORAGE_KEY);
+      safeSessionStorageRemove('user');
       delete axios.defaults.headers.common.Authorization;
     }
   } catch (error) {

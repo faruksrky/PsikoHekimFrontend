@@ -5,7 +5,7 @@ import { useSetState } from 'src/hooks/use-set-state';
 
 import { STORAGE_KEY } from './constant';
 import { AuthContext } from '../auth-context';
-import { setSession, isValidToken } from './utils';
+import { setSession, isValidToken, safeSessionStorageGet, safeSessionStorageSet } from './utils';
 
 // ----------------------------------------------------------------------
 
@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
 
   const checkUserSession = useCallback(async () => {
     try {
-      const accessToken = sessionStorage.getItem(STORAGE_KEY);
+      const accessToken = safeSessionStorageGet(STORAGE_KEY);
   
       if (accessToken && isValidToken(accessToken)) {
         const jwtDecodeModule = jwtDecode;
@@ -45,8 +45,8 @@ export function AuthProvider({ children }) {
 
         // Session'ı güncelle
         await setSession(accessToken, user);
-        sessionStorage.setItem('username', user.name);
-        sessionStorage.setItem('email', user.email);
+        safeSessionStorageSet('username', user.name);
+        safeSessionStorageSet('email', user.email);
         setState({ user: { ...user, accessToken }, loading: false });
       } else {
         setState({ user: null, email: null, loading: false });

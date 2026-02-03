@@ -33,12 +33,26 @@ import {
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
+import { useAuth } from 'src/hooks/useAuth';
 
 import { CONFIG } from '../../config-global';
 
 
 // Day.js'i Türkçe olarak ayarla
 dayjs.locale('tr');
+
+// Para birimi seçenekleri
+export const CURRENCY_OPTIONS = [
+  { value: 'TRY', label: 'Türk Lirası (₺)', symbol: '₺' },
+  { value: 'USD', label: 'Amerikan Doları ($)', symbol: '$' },
+  { value: 'EUR', label: 'Euro (€)', symbol: '€' },
+];
+
+// Para birimi sembolünü getir
+export const getCurrencySymbol = (currency) => {
+  const currencyOption = CURRENCY_OPTIONS.find((opt) => opt.value === currency);
+  return currencyOption?.symbol || '₺';
+};
 
 // Schema tanımı (validation için)
 export const NewTherapistSchema = zod.object({
@@ -60,10 +74,14 @@ export const NewTherapistSchema = zod.object({
   therapistUniversity: zod.string().optional(),
   therapistCertifications: zod.string().optional(),
   therapistAppointmentFee: zod.number().min(1, { message: 'Randevu ücret bilgisi gereklidir!' }),
+  therapistAppointmentFeeCurrency: zod.string().optional().default('TRY'),
+  therapistConsultantFee: zod.number().min(0, { message: 'Danışmana ödenecek ücret 0 veya daha fazla olmalıdır!' }).optional(),
+  therapistConsultantFeeCurrency: zod.string().optional().default('TRY'),
 });
 
 export function TherapistNewEditForm({ currentTherapist }) {
   const router = useRouter();
+  const { isAdmin } = useAuth();
 
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
@@ -86,6 +104,9 @@ export function TherapistNewEditForm({ currentTherapist }) {
       therapistUniversity: currentTherapist?.therapistUniversity || '',
       therapistCertifications: currentTherapist?.therapistCertifications || '',
       therapistAppointmentFee: currentTherapist?.therapistAppointmentFee || '',
+      therapistAppointmentFeeCurrency: currentTherapist?.therapistAppointmentFeeCurrency || 'TRY',
+      therapistConsultantFee: currentTherapist?.therapistConsultantFee || '',
+      therapistConsultantFeeCurrency: currentTherapist?.therapistConsultantFeeCurrency || 'TRY',
     }),
     [currentTherapist]
   );
@@ -219,6 +240,17 @@ export function TherapistNewEditForm({ currentTherapist }) {
     },
     [setValue]
   );
+
+  const handleChangeConsultantFee = useCallback(
+    (event) => {
+      setValue(`therapistConsultantFee`, Number(event.target.value));
+    },
+    [setValue]
+  );
+
+  // Para birimi değerlerini izle
+  const appointmentFeeCurrency = watch('therapistAppointmentFeeCurrency');
+  const consultantFeeCurrency = watch('therapistConsultantFeeCurrency');
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="tr">
@@ -454,33 +486,108 @@ export function TherapistNewEditForm({ currentTherapist }) {
                   )}
                 />
 
-                <Controller
-                  name="therapistAppointmentFee"
-                  control={control}
-                  defaultValue={defaultValues.therapistAppointmentFee}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Randevu Ücreti"
-                      placeholder="0.00"
-                      type="number"
-                      onChange={(event) => handleChangePrice(event)}
-                      InputLabelProps={{ shrink: true }}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Box sx={{ typography: 'subtitle2', color: 'text.disabled' }}>₺</Box>
-                          </InputAdornment>
-                        ),
-                        inputProps: {
-                          tabIndex: 12,
-                          step: '0.01',
-                        },
-                      }}
-                      fullWidth
+                {/* Ücret alanları sadece admin görebilir ve düzenleyebilir */}
+                {isAdmin() && (
+                  <>
+                    <Controller
+                      name="therapistAppointmentFeeCurrency"
+                      control={control}
+                      defaultValue={defaultValues.therapistAppointmentFeeCurrency}
+                      render={({ field }) => (
+                        <Field.Select
+                          {...field}
+                          label="Randevu Ücreti Para Birimi"
+                          inputProps={{ tabIndex: 12 }}
+                        >
+                          {CURRENCY_OPTIONS.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </Field.Select>
+                      )}
                     />
-                  )}
-                />
+
+                    <Controller
+                      name="therapistAppointmentFee"
+                      control={control}
+                      defaultValue={defaultValues.therapistAppointmentFee}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Randevu Ücreti"
+                          placeholder="0.00"
+                          type="number"
+                          onChange={(event) => handleChangePrice(event)}
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Box sx={{ typography: 'subtitle2', color: 'text.disabled' }}>
+                                  {getCurrencySymbol(appointmentFeeCurrency)}
+                                </Box>
+                              </InputAdornment>
+                            ),
+                            inputProps: {
+                              tabIndex: 13,
+                              step: '0.01',
+                            },
+                          }}
+                          fullWidth
+                        />
+                      )}
+                    />
+
+                    <Controller
+                      name="therapistConsultantFeeCurrency"
+                      control={control}
+                      defaultValue={defaultValues.therapistConsultantFeeCurrency}
+                      render={({ field }) => (
+                        <Field.Select
+                          {...field}
+                          label="Danışman Ücreti Para Birimi"
+                          inputProps={{ tabIndex: 14 }}
+                        >
+                          {CURRENCY_OPTIONS.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </Field.Select>
+                      )}
+                    />
+
+                    <Controller
+                      name="therapistConsultantFee"
+                      control={control}
+                      defaultValue={defaultValues.therapistConsultantFee}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Danışman Ücreti"
+                          placeholder="0.00"
+                          type="number"
+                          onChange={(event) => handleChangeConsultantFee(event)}
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Box sx={{ typography: 'subtitle2', color: 'text.disabled' }}>
+                                  {getCurrencySymbol(consultantFeeCurrency)}
+                                </Box>
+                              </InputAdornment>
+                            ),
+                            inputProps: {
+                              tabIndex: 15,
+                              step: '0.01',
+                            },
+                          }}
+                          fullWidth
+                        />
+                      )}
+                    />
+                  </>
+                )}
               </Box>
 
               <Stack alignItems="flex-end" sx={{ mt: 1 }}>

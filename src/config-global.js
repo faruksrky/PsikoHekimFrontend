@@ -145,6 +145,11 @@ export const CONFIG = {
     complete: '/therapy-sessions/complete',
     cancel: '/therapy-sessions/cancel',
     reschedule: '/therapy-sessions/reschedule'
+  },
+
+  pricing: {
+    clientSession: '/pricing/client/sessions',
+    consultantSession: '/pricing/consultant/sessions'
   }
 };
  

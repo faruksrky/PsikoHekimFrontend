@@ -24,16 +24,32 @@ import { TherapySessionTableFiltersResult } from './therapy-session-table-filter
 
 // ----------------------------------------------------------------------
 
-const TABLE_HEAD = [
-  { id: 'patient', label: 'Danışan', width: 200 },
-  { id: 'therapist', label: 'Danışman', width: 200 },
-  { id: 'scheduledDate', label: 'Randevu Tarihi', width: 160 },
-  { id: 'status', label: 'Durum', width: 120 },
-  { id: 'sessionType', label: 'Seans Tipi', width: 120 },
-  { id: 'sessionFormat', label: 'Format', width: 100 },
-  { id: 'paymentStatus', label: 'Ödeme', width: 120 },
-  { id: '', width: 88 },
-];
+const getTableHead = (priceView) => {
+  const baseHead = [
+    { id: 'patient', label: 'Danışan', width: 200 },
+    { id: 'therapist', label: 'Danışman', width: 200 },
+    { id: 'scheduledDate', label: 'Randevu Tarihi', width: 160 },
+    { id: 'status', label: 'Durum', width: 120 },
+    { id: 'sessionType', label: 'Seans Tipi', width: 120 },
+    { id: 'sessionFormat', label: 'Format', width: 100 },
+    { id: 'paymentStatus', label: 'Ödeme', width: 120 },
+  ];
+
+  if (priceView === 'admin') {
+    baseHead.push(
+      { id: 'clientPrice', label: 'Danışan Ödemesi', width: 150 },
+      { id: 'consultantEarning', label: 'Danışman Ücreti', width: 150 },
+      { id: 'platformIncome', label: 'Platform Geliri', width: 150 }
+    );
+  } else if (priceView === 'consultant') {
+    baseHead.push({ id: 'consultantEarning', label: 'Danışman Ücreti', width: 140 });
+  } else {
+    baseHead.push({ id: 'clientPrice', label: 'Danışan Ödemesi', width: 140 });
+  }
+
+  baseHead.push({ id: '', width: 88 });
+  return baseHead;
+};
 
 const defaultFilters = {
   name: '',
@@ -50,6 +66,7 @@ const defaultFilters = {
 export function TherapySessionTable({
   sessions = [],
   loading = false,
+  priceView = 'client',
   onEditRow,
   onDeleteRow,
   onCompleteSession,
@@ -137,7 +154,7 @@ export function TherapySessionTable({
               <TableHeadCustom
                 order={table.order}
                 orderBy={table.orderBy}
-                headLabel={TABLE_HEAD}
+                headLabel={getTableHead(priceView)}
                 rowCount={dataFiltered.length}
                 numSelected={table.selected.length}
                 onSort={table.onSort}
@@ -168,6 +185,7 @@ export function TherapySessionTable({
                         onCancelSession={() => onCancelSession?.(row.sessionId)}
                         onRescheduleSession={() => onRescheduleSession?.(row.sessionId)}
                         onViewDetails={() => onViewDetails?.(row.sessionId)}
+                        priceView={priceView}
                       />
                     ))
                 ) : (

@@ -105,13 +105,11 @@ export function InboxList() {
   // Sadece tek API çağrısı
   const fetchAllData = useCallback(async () => {
     if (!therapistId) {
-      console.log('Therapist ID bekleniyor...');
       return;
     }
     
     // therapistId'nin object mi yoksa number/string mi olduğunu kontrol et
     const actualTherapistId = therapistId.therapistId || therapistId;
-    console.log('Inbox - Therapist ID:', actualTherapistId);
     
     try {
       setIsLoading(true);
@@ -145,35 +143,18 @@ export function InboxList() {
   // Action handler
   const handleAction = useCallback(async (processInstanceKey, action) => {
     try {
-      // Backend endpoint'leri test et - farklı URL formatları dene
-      console.log('Backend therapist endpoint çağrısı yapılıyor (inbox-list)');
-      console.log('CONFIG.psikoHekimBaseUrl:', CONFIG.psikoHekimBaseUrl);
-      console.log('processInstanceKey:', processInstanceKey, typeof processInstanceKey);
-      
-      // Token kontrolü
-      const token = sessionStorage.getItem('jwt_access_token');
-      console.log('Token exists:', !!token);
-      
       // Doğru endpoint'i kullan: /process/inbox/action
       const url = `/process/inbox/action`;
-      console.log('Using correct endpoint:', url);
-      console.log('Request data:', {
-        processInstanceKey: parseInt(processInstanceKey, 10),
-        action: action.toUpperCase()
-      });
       
       const response = await axiosInstance.post(url, {
         processInstanceKey: parseInt(processInstanceKey, 10),
         action: action.toUpperCase()
       });
       
-      console.log('Backend Response (inbox-list):', response.data);
-      
       // Listeyi hemen yenile
       await fetchAllData();
       
       // Event dispatch et - Patient list dinleyecek
-      console.log('Dispatching patient list refresh event...');
       window.dispatchEvent(new CustomEvent('patientListRefresh', {
         detail: {
           processInstanceKey: parseInt(processInstanceKey, 10),
@@ -242,12 +223,10 @@ export function InboxList() {
   }, [dataFiltered.length, dataInPage.length, table, allData]);
 
   const onApprove = useCallback((processInstanceKey) => {
-    console.log('onApprove called with:', processInstanceKey, typeof processInstanceKey);
     handleAction(processInstanceKey, 'accepted');
   }, [handleAction]);
 
   const onReject = useCallback((processInstanceKey) => {
-    console.log('onReject called with:', processInstanceKey, typeof processInstanceKey);
     handleAction(processInstanceKey, 'rejected');
   }, [handleAction]);
 

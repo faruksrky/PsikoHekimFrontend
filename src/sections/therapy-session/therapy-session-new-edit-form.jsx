@@ -2,6 +2,7 @@ import * as Yup from 'yup';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import {
   Card,
@@ -20,14 +21,23 @@ import { useRouter } from 'src/routes/hooks';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { CONFIG } from 'src/config-global';
+import { axiosInstanceBpmn } from 'src/utils/axios';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field } from 'src/components/hook-form';
+import { useAuthContext } from 'src/auth/hooks';
+import { useGetPatient } from 'src/actions/patient';
+import { CURRENCY_OPTIONS, getCurrencySymbol } from '../therapist/therapist-new-edit-form';
 
 // ----------------------------------------------------------------------
 
 export function TherapySessionNewEditForm({ currentSession }) {
   const router = useRouter();
+  const location = useLocation();
+  const requestMode = location.state?.mode === 'request';
+  const requestPatientId = location.state?.patientId;
+  const { user } = useAuthContext();
+  const { patient: requestPatient, patientLoading: requestPatientLoading } = useGetPatient(requestPatientId);
 
   const loadingSave = useBoolean();
   const loadingSaveAndSend = useBoolean();
@@ -49,6 +59,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
     sessionType: Yup.string().required('Seans tipi gereklidir'),
     sessionFormat: Yup.string().required('Seans formatı gereklidir'),
     sessionFee: Yup.number().min(0, 'Ücret 0 veya daha fazla olmalıdır').required('Seans ücreti gereklidir'),
+    sessionFeeCurrency: Yup.string().optional().default('TRY'),
     sessionNotes: Yup.string(),
     homeworkAssigned: Yup.string(),
   });
@@ -63,6 +74,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
       sessionType: currentSession?.sessionType || 'INDIVIDUAL',
       sessionFormat: currentSession?.sessionFormat || 'IN_PERSON',
       sessionFee: currentSession?.sessionFee || 500,
+      sessionFeeCurrency: currentSession?.sessionFeeCurrency || 'TRY',
       sessionNotes: currentSession?.sessionNotes || '',
       homeworkAssigned: currentSession?.homeworkAssigned || '',
     }),
@@ -94,6 +106,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
   const [loadingTherapists, setLoadingTherapists] = useState(true);
   const [loadingPatients, setLoadingPatients] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [requestPatientOption, setRequestPatientOption] = useState(null);
 
   useEffect(() => {
     const fetchTherapists = async () => {
@@ -134,6 +147,24 @@ export function TherapySessionNewEditForm({ currentSession }) {
       setAssignedPatients([]);
       // Clear patient selection when therapist is cleared
       setValue('patientId', '');
+      // Clear session fee when therapist is cleared
+      setValue('sessionFee', 500);
+      setValue('sessionFeeCurrency', 'TRY');
+      return;
+    }
+
+    // Otomatik olarak seans ücretini ve para birimini danışmanın ücretinden doldur
+    const selectedTherapist = therapists.find(t => t.therapistId === parseInt(therapistId, 10));
+    if (selectedTherapist && selectedTherapist.therapistConsultantFee) {
+      setValue('sessionFee', selectedTherapist.therapistConsultantFee);
+      setValue('sessionFeeCurrency', selectedTherapist.therapistConsultantFeeCurrency || 'TRY');
+    } else if (selectedTherapist && selectedTherapist.therapistAppointmentFee) {
+      // Eğer consultantFee yoksa, appointmentFee'yi kullan (geriye dönük uyumluluk)
+      setValue('sessionFee', selectedTherapist.therapistAppointmentFee);
+      setValue('sessionFeeCurrency', selectedTherapist.therapistAppointmentFeeCurrency || 'TRY');
+    }
+
+    if (requestMode) {
       return;
     }
 
@@ -161,7 +192,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
     } finally {
       setLoadingPatients(false);
     }
-  }, [setValue]);
+  }, [requestMode, setValue, therapists]);
 
   // Watch therapist change
   const watchedTherapistId = methods.watch('therapistId');
@@ -170,6 +201,16 @@ export function TherapySessionNewEditForm({ currentSession }) {
       handleTherapistChange(watchedTherapistId);
     }
   }, [watchedTherapistId, dataLoaded, handleTherapistChange]);
+
+  useEffect(() => {
+    if (requestMode && requestPatientId) {
+      setValue('patientId', String(requestPatientId));
+      const patientName = requestPatient
+        ? `${requestPatient.patientFirstName} ${requestPatient.patientLastName}`
+        : `#${requestPatientId}`;
+      setRequestPatientOption({ patientId: requestPatientId, patientName });
+    }
+  }, [requestMode, requestPatientId, requestPatient, setValue]);
 
   // Reset form when data is loaded and currentSession changes
   useEffect(() => {
@@ -191,6 +232,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
           sessionType: currentSession.sessionType || 'INDIVIDUAL',
           sessionFormat: currentSession.sessionFormat || 'IN_PERSON',
           sessionFee: currentSession.sessionFee || 500,
+          sessionFeeCurrency: currentSession.sessionFeeCurrency || 'TRY',
           sessionNotes: currentSession.sessionNotes || '',
           homeworkAssigned: currentSession.homeworkAssigned || '',
         });
@@ -214,6 +256,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
           sessionType: currentSession.sessionType || 'INDIVIDUAL',
           sessionFormat: currentSession.sessionFormat || 'IN_PERSON',
           sessionFee: currentSession.sessionFee || 500,
+          sessionFeeCurrency: currentSession.sessionFeeCurrency || 'TRY',
           sessionNotes: currentSession.sessionNotes || '',
           homeworkAssigned: currentSession.homeworkAssigned || '',
         });
@@ -257,6 +300,13 @@ export function TherapySessionNewEditForm({ currentSession }) {
         await updateSession(currentSession.sessionId, data);
         toast.success('Seans başarıyla güncellendi!');
       } else {
+        if (requestMode) {
+          await requestAppointment(data);
+          toast.success('Randevu isteği doktora gönderildi. Onay bekleniyor.');
+          router.push(paths.dashboard.inbox);
+          return;
+        }
+
         // Create new session with WhatsApp/Twilio notification
         await createSessionWithNotification(data);
         toast.success('Seans oluşturuldu! Hasta ve danışmana WhatsApp bildirimi gönderildi. Hasta onayını bekliyoruz...');
@@ -279,6 +329,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
       const requestBody = {
         newScheduledDate: new Date(sessionData.scheduledDate).toISOString().slice(0, 19),
         sessionFee: parseFloat(sessionData.sessionFee) || 0,
+        sessionFeeCurrency: sessionData.sessionFeeCurrency || 'TRY',
         sessionType: sessionData.sessionType || 'INDIVIDUAL',
         sessionFormat: sessionData.sessionFormat || 'IN_PERSON',
         sessionNotes: sessionData.sessionNotes || '',
@@ -320,6 +371,39 @@ export function TherapySessionNewEditForm({ currentSession }) {
     }
   };
 
+  const requestAppointment = async (sessionData) => {
+    const patientId = requestPatientId || sessionData.patientId;
+    if (!patientId) {
+      throw new Error('Hasta bilgisi bulunamadı');
+    }
+    if (!sessionData.therapistId) {
+      throw new Error('Danışman seçimi gereklidir');
+    }
+    if (!sessionData.scheduledDate) {
+      throw new Error('Randevu tarihi gereklidir');
+    }
+
+    const bpmnRequest = {
+      messageName: 'startTherapistAssignmentProcess',
+      variables: {
+        patientId,
+        therapistId: sessionData.therapistId,
+        scheduledDate: new Date(sessionData.scheduledDate).toISOString(),
+        sessionType: sessionData.sessionType,
+        sessionFormat: sessionData.sessionFormat || 'IN_PERSON',
+        processName: 'Randevu Onay Süreci',
+        description: `${requestPatient?.patientFirstName || ''} ${requestPatient?.patientLastName || ''}`.trim()
+          ? `${requestPatient.patientFirstName} ${requestPatient.patientLastName} için randevu isteği`
+          : 'Randevu isteği',
+        startedBy: user?.displayName || 'Sistem',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    await axiosInstanceBpmn.post(CONFIG.bpmn.endpoints.assignTherapist, bpmnRequest);
+  };
+
   const createSessionWithNotification = async (sessionData) => {
     try {
       const token = sessionStorage.getItem('jwt_access_token');
@@ -347,6 +431,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
         assignmentId: assignment.assignmentId,
         scheduledDate: new Date(sessionData.scheduledDate).toISOString().slice(0, 19),
         sessionFee: parseFloat(sessionData.sessionFee) || 0,
+        sessionFeeCurrency: sessionData.sessionFeeCurrency || 'TRY',
         sessionType: sessionData.sessionType || 'REGULAR',
         sessionFormat: sessionData.sessionFormat || 'IN_PERSON',
         notes: sessionData.sessionNotes || '',
@@ -419,6 +504,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
         assignmentId: assignment.assignmentId,
         scheduledDate: new Date(sessionData.scheduledDate).toISOString().slice(0, 19),
         sessionFee: parseFloat(sessionData.sessionFee) || 0,
+        sessionFeeCurrency: sessionData.sessionFeeCurrency || 'TRY',
         sessionType: sessionData.sessionType || 'REGULAR',
         sessionFormat: sessionData.sessionFormat || 'IN_PERSON',
         notes: sessionData.sessionNotes || ''
@@ -515,16 +601,22 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 name="patientId"
                 label="Danışan"
                 placeholder="Danışan seçin"
-                disabled={!watch('therapistId') || loadingPatients}
+                disabled={requestMode || !watch('therapistId') || loadingPatients || requestPatientLoading}
               >
                 <MenuItem value="">
                   <em>Danışan seçin</em>
                 </MenuItem>
-                {Array.isArray(assignedPatients) && assignedPatients.map((patient) => (
-                  <MenuItem key={`patient-${patient.patientId}`} value={patient.patientId}>
-                    {patient.patientName}
+                {requestMode && requestPatientOption ? (
+                  <MenuItem value={requestPatientOption.patientId}>
+                    {requestPatientOption.patientName}
                   </MenuItem>
-                ))}
+                ) : (
+                  Array.isArray(assignedPatients) && assignedPatients.map((patient) => (
+                    <MenuItem key={`patient-${patient.patientId}`} value={patient.patientId}>
+                      {patient.patientName}
+                    </MenuItem>
+                  ))
+                )}
               </Field.Select>
             </Grid>
 
@@ -572,12 +664,30 @@ export function TherapySessionNewEditForm({ currentSession }) {
             </Grid>
 
             <Grid item xs={12} md={6}>
+              <Field.Select
+                name="sessionFeeCurrency"
+                label="Seans Ücreti Para Birimi"
+              >
+                {CURRENCY_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Field.Select>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
               <Field.Text
                 name="sessionFee"
                 label="Seans Ücreti"
                 type="number"
+                helperText={watch('therapistId') ? 'Danışman seçildiğinde otomatik doldurulur' : ''}
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">₺</InputAdornment>,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      {getCurrencySymbol(watch('sessionFeeCurrency') || 'TRY')}
+                    </InputAdornment>
+                  ),
                 }}
               />
             </Grid>

@@ -44,14 +44,20 @@ export function RenderCellReference({ params }) {
 }
 
 export function RenderCellAssignmentStatus({ params }) {
-  const isAssigned = params.row.isAssigned;
+  const assignmentStatus = params.row.assignmentStatus || (params.row.isAssigned ? 'ASSIGNED' : 'UNASSIGNED');
+  const statusConfig = {
+    ASSIGNED: { label: 'Atanmış', color: 'success', variant: 'filled' },
+    PENDING: { label: 'Onay Bekleniyor', color: 'warning', variant: 'filled' },
+    UNASSIGNED: { label: 'Atanmamış', color: 'default', variant: 'outlined' },
+  };
+  const config = statusConfig[assignmentStatus] || statusConfig.UNASSIGNED;
   
   return (
     <Chip
-      label={isAssigned ? 'Atanmış' : 'Atanmamış'}
-      color={isAssigned ? 'success' : 'warning'}
+      label={config.label}
+      color={config.color}
       size="small"
-      variant={isAssigned ? 'filled' : 'outlined'}
+      variant={config.variant}
     />
   );
 }

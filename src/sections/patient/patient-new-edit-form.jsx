@@ -1,7 +1,5 @@
 import 'react-phone-number-input/style.css';
 
-import 'dayjs/locale/tr';
-import dayjs from 'dayjs';
 import { z as zod } from 'zod';
 import { useMemo, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -15,10 +13,9 @@ import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Unstable_Grid2';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { Card, Stack, Alert, Dialog, Button, Snackbar, TextField, Typography, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Card, Stack, Alert, Snackbar, TextField, Typography } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
-import { useRouter } from 'src/routes/hooks';
 
 import { axiosInstancePatient } from 'src/utils/axios';
 import { mutate } from 'swr';
@@ -30,42 +27,12 @@ import { toast } from 'src/components/snackbar';
 import { PaymentMethodSelect } from 'src/components/payment';
 import { Field, schemaHelper } from 'src/components/hook-form';
 
-// Day.js'i Türkçe olarak ayarla
-dayjs.locale('tr');
-
-// Schema tanımı (validation için)
-export const NewPatientSchema = zod.object({
-  patientFirstName: zod.string().min(1, { message: 'Ad bilgisi gereklidir!' }),
-  patientLastName: zod.string().min(1, { message: 'Soyad bilgisi gereklidir!' }),
-  patientEmail: zod.string().email({ message: 'Geçerli bir mail adresi girilmelidir!' }).optional(),
-  patientPhoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
-  patientAddress: zod.string().optional(),
-  patientCountry: schemaHelper.objectOrNull({
-    message: { required_error: 'Ülke bilgisi gereklidir!' },
-  }),
-  patientCity: zod.string().optional(),
-  patientReference: zod.string().optional(),
-  patientGender: zod.string().min(1, { message: 'Cinsiyet bilgisi gereklidir!' }),
-  paymentMethod: zod.string().min(1, { message: 'Ödeme yöntemi bilgisi gereklidir!' }),
-  patientAge: zod.preprocess(
-    (val) => (val === '' ? null : Number(val)),
-    zod.number({
-      required_error: 'Yaş bilgisi gereklidir!',
-      invalid_type_error: 'Yaş bir sayı olmalıdır!'
-    }).min(0, { message: 'Yaş 0\'dan küçük olamaz!' })
-  ),
-});
-
 export function PatientNewEditForm({ currentPatient }) {
-  const router = useRouter();
   const navigate = useNavigate(); 
 
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [severity, setSeverity] = useState('success');
-  const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [processInstanceKey, setProcessInstanceKey] = useState(null);
-  const [patientId, setPatientId] = useState(null);
 
   const defaultValues = useMemo(
     () => ({
@@ -84,6 +51,30 @@ export function PatientNewEditForm({ currentPatient }) {
     [currentPatient]
   );
 
+  const NewPatientSchema = useMemo(() => (
+    zod.object({
+      patientFirstName: zod.string().min(1, { message: 'Ad bilgisi gereklidir!' }),
+      patientLastName: zod.string().min(1, { message: 'Soyad bilgisi gereklidir!' }),
+      patientEmail: zod.string().email({ message: 'Geçerli bir mail adresi girilmelidir!' }).optional(),
+      patientPhoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
+      patientAddress: zod.string().optional(),
+      patientCountry: schemaHelper.objectOrNull({
+        message: { required_error: 'Ülke bilgisi gereklidir!' },
+      }),
+      patientCity: zod.string().optional(),
+      patientReference: zod.string().optional(),
+      patientGender: zod.string().min(1, { message: 'Cinsiyet bilgisi gereklidir!' }),
+      paymentMethod: zod.string().min(1, { message: 'Ödeme yöntemi bilgisi gereklidir!' }),
+      patientAge: zod.preprocess(
+        (val) => (val === '' ? null : Number(val)),
+        zod.number({
+          required_error: 'Yaş bilgisi gereklidir!',
+          invalid_type_error: 'Yaş bir sayı olmalıdır!'
+        }).min(0, { message: 'Yaş 0\'dan küçük olamaz!' })
+      ),
+    })
+  ), []);
+
   const methods = useForm({
     mode: 'onChange',
     resolver: zodResolver(NewPatientSchema),
@@ -92,13 +83,10 @@ export function PatientNewEditForm({ currentPatient }) {
 
   const {
     reset,
-    watch,
     control,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
-
-  const values = watch();
 
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') return;
@@ -146,9 +134,19 @@ export function PatientNewEditForm({ currentPatient }) {
           throw new Error(`Danışan ID alınamadı! API yanıtı: ${JSON.stringify(response.data)}`);
         }
 
-        setPatientId(newPatientId);
-        setShowAssignDialog(true);
-        toast.success("Hasta kaydı yapıldı ve süreç başlatıldı.");
+        toast.success("Hasta kaydı yapıldı. Şimdi randevu için doktor seçin.");
+
+        navigate(paths.dashboard.therapySession.new, {
+          state: {
+            mode: 'request',
+            patientId: newPatientId,
+            patient: {
+              patientFirstName: data.patientFirstName,
+              patientLastName: data.patientLastName,
+              patientId: newPatientId
+            }
+          }
+        });
       }
 
     } catch (error) {
@@ -186,7 +184,7 @@ export function PatientNewEditForm({ currentPatient }) {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="tr">
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Grid container spacing={3}>
             <Grid xs={12} md={12}>
               <Card sx={{ p: 2 }}>
@@ -335,11 +333,11 @@ export function PatientNewEditForm({ currentPatient }) {
                         placeholder="Ödeme yöntemi seçin"
                         error={!!error}
                         helperText={error?.message}
-                        required
                       />
                     )}
                   />
                   <Field.Text name="patientReference" label="Referans" />
+
                 </Box>
 
 
@@ -362,45 +360,6 @@ export function PatientNewEditForm({ currentPatient }) {
           </Alert>
         </Snackbar>
 
-        <Dialog open={showAssignDialog} onClose={() => setShowAssignDialog(false)}>
-          <DialogTitle>Danışman Atama</DialogTitle>
-          <DialogContent>
-            <Stack spacing={2} sx={{ mt: 2 }}>
-              <Typography>
-                Danışan kaydı başarıyla oluşturuldu. Bir danışman atamak ister misiniz?
-              </Typography>
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => {
-              setShowAssignDialog(false);
-              // Form içeriğini temizle
-              reset();
-              // State'leri temizle
-              setPatientId(null);
-              setProcessInstanceKey(null);
-              // Başarı mesajı göster
-              toast.success("Form temizlendi. Yeni hasta kaydı yapabilirsiniz.");
-            }}>Daha Sonra</Button>
-            <Button 
-              variant="contained" 
-              onClick={() => {
-                const url = paths.dashboard.patient.assignTherapist(patientId);
-                navigate(url, { 
-                  state: { 
-                    patient: {
-                      patientFirstName: values.patientFirstName,
-                      patientLastName: values.patientLastName,
-                      patientId
-                    }
-                  }
-                });
-              }}
-            >
-              Danışman Ata
-            </Button>
-          </DialogActions>
-        </Dialog>
       </FormProvider>
     </LocalizationProvider>
   );

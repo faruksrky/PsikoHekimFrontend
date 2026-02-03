@@ -16,11 +16,12 @@ import {
   TableContainer,
   InputAdornment,
   TablePagination,
+  MenuItem,
 } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
 
-import { axiosInstanceBpmn } from 'src/utils/axios';
+import { axiosInstance, axiosInstanceBpmn } from 'src/utils/axios';
 
 import { CONFIG } from 'src/config-global';
 import { useGetTherapists } from 'src/api/therapist';
@@ -68,6 +69,7 @@ export function PatientAssignTherapistView() {
 
     loadTherapists();
   }, [patientId, mutate]);
+
 
   if (!patientId) {
     return (
@@ -124,6 +126,16 @@ export function PatientAssignTherapistView() {
         throw new Error('Danışan bilgileri bulunamadı');
       }
 
+      const existingSessions = await fetchPatientSessions(patientId);
+      if (existingSessions.length > 0) {
+        const confirmed = window.confirm(
+          'Danışman değiştiriliyor. Mevcut randevular iptal edilecektir. Devam edilsin mi?'
+        );
+        if (!confirmed) {
+          return;
+        }
+      }
+
       // BPMN sürecini başlat
       const bpmnRequest = {
         messageName: 'startTherapistAssignmentProcess',
@@ -136,8 +148,8 @@ export function PatientAssignTherapistView() {
           therapistId: selectedTherapist.therapistId,
           therapistFirstName: selectedTherapist.therapistFirstName,
           therapistLastName: selectedTherapist.therapistLastName,
-          processName: 'Danışan Atama İsteği',
-          description: `${currentPatient.patientFirstName} ${currentPatient.patientLastName} isimli danışandan ${selectedTherapist.therapistFirstName} ${selectedTherapist.therapistLastName} için atama isteği gönderildi`,
+          processName: 'Randevu Onay Süreci',
+          description: `${currentPatient.patientFirstName} ${currentPatient.patientLastName} için ${selectedTherapist.therapistFirstName} ${selectedTherapist.therapistLastName} randevu isteği`,
           startedBy: user?.displayName || 'Sistem',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -155,6 +167,17 @@ export function PatientAssignTherapistView() {
     } catch (assignError) {
       console.error('Danışman atama hatası:', assignError);
       toast.error(assignError.message || 'Danışman atanırken bir hata oluştu!');
+    }
+  };
+
+  const fetchPatientSessions = async (patientIdValue) => {
+    try {
+      const response = await axiosInstance.get(`/therapy-sessions/patient/${patientIdValue}`);
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (fetchError) {
+      console.error('Randevular alınırken hata:', fetchError);
+      toast.warning('Randevular kontrol edilemedi, işlem devam ediyor.');
+      return [];
     }
   };
 
@@ -212,6 +235,7 @@ export function PatientAssignTherapistView() {
             sx={{ width: { xs: 1, sm: 260 } }}
           />
         </Stack>
+
 
         <TableContainer sx={{ position: 'relative', overflow: 'unset' }}>
           <Scrollbar>
