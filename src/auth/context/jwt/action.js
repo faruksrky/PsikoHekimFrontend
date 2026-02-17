@@ -232,7 +232,8 @@ export const getTherapistId = async (email) => {
     if (error.response?.status === 404) {
       try {
         const token = sessionStorage.getItem('jwt_access_token');
-        const listResponse = await axiosInstance.get(CONFIG.therapistListUrl, {
+        const listUrl = CONFIG.therapistListUrl || '/therapist/all';
+        const listResponse = await axiosInstance.get(listUrl, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
