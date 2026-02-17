@@ -108,7 +108,11 @@ export function InboxList() {
   // Admin: tüm bekleyen atamalar. Terapist: sadece kendi atamaları.
   const fetchAllData = useCallback(async () => {
     if (!therapistIdResolved) return;
-    if (!isAdmin() && !therapistId) return;
+    if (!isAdmin() && !therapistId) {
+      setIsLoading(false);
+      setAllData([]);
+      return;
+    }
 
     try {
       setIsLoading(true);

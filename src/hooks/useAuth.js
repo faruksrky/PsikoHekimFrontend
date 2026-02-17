@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-
-import { jwtDecode } from 'jwt-decode';
+import { useState, useEffect, useCallback } from 'react';
 
 // ----------------------------------------------------------------------
 
@@ -27,7 +25,7 @@ export function useAuth() {
     setIsLoading(false);
   }, []);
 
-  const hasRole = (requiredRole) => {
+  const hasRole = useCallback((requiredRole) => {
     if (!user) {
       return false;
     }
@@ -47,10 +45,10 @@ export function useAuth() {
     const requiredRoleLevel = roleHierarchy[requiredRole] || 0;
     
     return userRoleLevel >= requiredRoleLevel;
-  };
+  }, [user]);
 
-  const isAdmin = () => hasRole('ADMIN');
-  const isUser = () => hasRole('USER');
+  const isAdmin = useCallback(() => hasRole('ADMIN'), [hasRole]);
+  const isUser = useCallback(() => hasRole('USER'), [hasRole]);
 
   const login = (userData) => {
     setUser(userData);
