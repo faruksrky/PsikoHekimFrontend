@@ -176,8 +176,12 @@ export function TherapySessionAnalyticsView() {
 
   const fetchTherapistStats = async (token) => {
     try {
-      // Fetch therapists first
-      const therapistsResponse = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapist/all`, {
+      // Admin: tüm terapistler. Terapist: sadece kendi kaydı (email ile)
+      const userInfo = getEmailFromToken();
+      const url = isAdmin()
+        ? `${CONFIG.psikoHekimBaseUrl}/therapist/all`
+        : `${CONFIG.psikoHekimBaseUrl}/therapist/all?email=${encodeURIComponent(userInfo?.email || '')}`;
+      const therapistsResponse = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

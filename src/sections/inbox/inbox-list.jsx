@@ -23,6 +23,7 @@ import { mutate } from 'swr';
 import { CONFIG } from 'src/config-global';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { getTherapistId, getEmailFromToken } from 'src/auth/context/jwt/action';
+import { useAuth } from 'src/hooks/useAuth';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -63,9 +64,11 @@ const TABLE_HEAD = [
 export function InboxList() {
   const table = useTable({ defaultOrderBy: 'createdAt' });
   const confirmDialog = useBoolean();
+  const { isAdmin } = useAuth();
   const [allData, setAllData] = useState([]); // Tüm veriler
   const [isLoading, setIsLoading] = useState(true);
   const [therapistId, setTherapistId] = useState(null);
+  const [therapistIdResolved, setTherapistIdResolved] = useState(false);
 
   const filters = useSetState({ 
     name: '', 
@@ -75,57 +78,50 @@ export function InboxList() {
   });
   const { state: currentFilters, setState: updateFilters } = filters;
 
-  // Therapist ID'yi JWT token'dan al
+  // Admin: therapistId gerekmez. Terapist: therapistId gerekir.
   useEffect(() => {
     const loadTherapistId = async () => {
       try {
-        const userInfo = getEmailFromToken();
-        if (!userInfo || !userInfo.email) {
-          console.error('Email bulunamadı');
-          toast.error('Kullanıcı bilgisi alınamadı');
+        if (isAdmin()) {
+          setTherapistId(null);
+          setTherapistIdResolved(true);
           return;
         }
-        
-        const id = await getTherapistId(userInfo.email);
-        if (id) {
-          setTherapistId(id);
-        } else {
-          console.error('Therapist ID bulunamadı');
-          // Toast mesajını kaldırdık, UI'da gösterilecek
+        const userInfo = getEmailFromToken();
+        if (!userInfo || !userInfo.email) {
+          setTherapistId(null);
+          setTherapistIdResolved(true);
+          return;
         }
+        const id = await getTherapistId(userInfo.email);
+        setTherapistId(id ? (id.therapistId || id) : null);
       } catch (error) {
         console.error('Therapist ID alınırken hata:', error);
-        // Toast mesajını kaldırdık, UI'da gösterilecek
+        setTherapistId(null);
+      } finally {
+        setTherapistIdResolved(true);
       }
     };
-    
     loadTherapistId();
-  }, []);
+  }, [isAdmin]);
 
-  // Sadece tek API çağrısı
+  // Admin: tüm bekleyen atamalar. Terapist: sadece kendi atamaları.
   const fetchAllData = useCallback(async () => {
-    if (!therapistId) {
-      return;
-    }
-    
-    // therapistId'nin object mi yoksa number/string mi olduğunu kontrol et
-    const actualTherapistId = therapistId.therapistId || therapistId;
-    
+    if (!therapistIdResolved) return;
+    if (!isAdmin() && !therapistId) return;
+
     try {
       setIsLoading(true);
-      // PsikoHekim backend'ine istek at (port 8083)
-      const response = await axiosInstance.get(`${CONFIG.psikoHekimBaseUrl}/process/inbox/pending`, {
-        params: { therapistId: actualTherapistId },
-      });
-      
+      const params = isAdmin() ? {} : { therapistId };
+      const response = await axiosInstance.get(`${CONFIG.psikoHekimBaseUrl}/process/inbox/pending`, { params });
       setAllData(response.data);
     } catch (error) {
       console.error('Veriler alınırken hata:', error);
-      setAllData([]); // Hata durumunda boş array set et
+      setAllData([]);
     } finally {
       setIsLoading(false);
     }
-  }, [therapistId]);
+  }, [therapistIdResolved, isAdmin, therapistId]);
 
   useEffect(() => {
     fetchAllData();
@@ -339,14 +335,14 @@ export function InboxList() {
                   <TableNoData 
                     notFound={notFound} 
                     title={
-                      !therapistId 
+                      !isAdmin() && !therapistId 
                         ? "Terapist bilgisi bulunamadı" 
                         : dataFiltered.length === 0 
                           ? "Bekleyen kayıt bulunmamaktadır"
                           : "Sonuç bulunamadı"
                     }
                     description={
-                      !therapistId 
+                      !isAdmin() && !therapistId 
                         ? "Terapist bilgisi alınamadı. Lütfen giriş yapın."
                         : dataFiltered.length === 0 
                           ? currentFilters.status === 'pending' 
