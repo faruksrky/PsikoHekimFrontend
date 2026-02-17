@@ -144,9 +144,45 @@ export function TherapySessionAnalyticsView() {
       const revenueTrends = calculateRevenueTrends(sessions);
       setRevenueData(revenueTrends);
 
-      // Fetch therapist statistics
-      await fetchTherapistStats(token);
-
+      // Fetch therapist statistics (admin: all, therapist: own)
+      const userInfoForStats = getEmailFromToken();
+      const statsUrl = isAdmin()
+        ? `${CONFIG.psikoHekimBaseUrl}/therapist/all`
+        : `${CONFIG.psikoHekimBaseUrl}/therapist/all?email=${encodeURIComponent(userInfoForStats?.email || '')}`;
+      const therapistsResponse = await fetch(statsUrl, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+      if (therapistsResponse.ok) {
+        const therapistsData = await therapistsResponse.json();
+        const therapistsArray = therapistsData.therapists || [];
+        if (Array.isArray(therapistsArray)) {
+          setTherapists(therapistsArray);
+          const therapistPerformance = await Promise.all(
+            therapistsArray.map(async (therapist) => {
+              const res = await fetch(
+                `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/therapist/${therapist.therapistId}`,
+                { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
+              );
+              if (!res.ok) return null;
+              const therapistSessions = await res.json();
+              const totalSessions = therapistSessions.length;
+              const completedSessions = therapistSessions.filter(s => s.status === 'COMPLETED').length;
+              const totalRevenue = therapistSessions.filter(s => s.paymentStatus === 'PAID').reduce((sum, s) => sum + (s.sessionFee || 0), 0);
+              return {
+                therapistId: String(therapist.therapistId),
+                therapistName: `${therapist.therapistFirstName} ${therapist.therapistLastName}`,
+                totalSessions,
+                completedSessions,
+                cancelledSessions: therapistSessions.filter(s => s.status === 'CANCELLED').length,
+                completionRate: totalSessions > 0 ? (completedSessions / totalSessions * 100).toFixed(1) : 0,
+                totalRevenue,
+                avgSessionFee: totalSessions > 0 ? (totalRevenue / totalSessions).toFixed(2) : 0,
+              };
+            })
+          );
+          setTherapistStats(therapistPerformance.filter(Boolean));
+        }
+      }
     } catch (error) {
       console.error('Error fetching analytics data:', error);
       toast.error('Analitik veriler yüklenirken hata oluştu');
@@ -173,78 +209,6 @@ export function TherapySessionAnalyticsView() {
 
     resolveTherapistId();
   }, [isAdmin]);
-
-  const fetchTherapistStats = async (token) => {
-    try {
-      // Admin: tüm terapistler. Terapist: sadece kendi kaydı (email ile)
-      const userInfo = getEmailFromToken();
-      const url = isAdmin()
-        ? `${CONFIG.psikoHekimBaseUrl}/therapist/all`
-        : `${CONFIG.psikoHekimBaseUrl}/therapist/all?email=${encodeURIComponent(userInfo?.email || '')}`;
-      const therapistsResponse = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (therapistsResponse.ok) {
-        const therapistsData = await therapistsResponse.json();
-        
-        // Backend returns { "therapists": [...] }
-        const therapistsArray = therapistsData.therapists || [];
-        
-        if (!Array.isArray(therapistsArray)) {
-          console.error('Therapists data is not an array:', therapistsData);
-          setTherapists([]);
-          return;
-        }
-        
-        setTherapists(therapistsArray);
-        
-        // Calculate therapist performance
-        const therapistPerformance = await Promise.all(
-          therapistsArray.map(async (therapist) => {
-            const therapistSessionsResponse = await fetch(
-              `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/therapist/${therapist.therapistId}`,
-              {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json',
-                },
-              }
-            );
-
-            if (therapistSessionsResponse.ok) {
-              const therapistSessions = await therapistSessionsResponse.json();
-              
-              const totalSessions = therapistSessions.length;
-              const completedSessions = therapistSessions.filter(s => s.status === 'COMPLETED').length;
-              const cancelledSessions = therapistSessions.filter(s => s.status === 'CANCELLED').length;
-              const totalRevenue = therapistSessions.filter(s => s.paymentStatus === 'PAID').reduce((sum, s) => sum + (s.sessionFee || 0), 0);
-              
-              return {
-                therapistId: String(therapist.therapistId),
-                therapistName: `${therapist.therapistFirstName} ${therapist.therapistLastName}`,
-                totalSessions,
-                completedSessions,
-                cancelledSessions,
-                completionRate: totalSessions > 0 ? (completedSessions / totalSessions * 100).toFixed(1) : 0,
-                totalRevenue,
-                avgSessionFee: totalSessions > 0 ? (totalRevenue / totalSessions).toFixed(2) : 0,
-              };
-            }
-            
-            return null;
-          })
-        );
-
-        setTherapistStats(therapistPerformance.filter(Boolean));
-      }
-    } catch (error) {
-      console.error('Error fetching therapist stats:', error);
-    }
-  };
 
   const calculateMonthlyTrends = (sessions) => {
     const monthlyTrends = {};
