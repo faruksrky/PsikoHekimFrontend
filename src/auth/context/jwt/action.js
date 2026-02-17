@@ -30,16 +30,7 @@ export const signInWithPassword = async ({ username, password }) => {
         throw new Error('Access Token bulunamadı');
       }
 
-      // Kullanıcı bilgilerini al
-      const userInfoRes = await axiosInstanceKeycloak.get('/keycloak/userInfo', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
-
-      const userInfo = userInfoRes.data;
-      
-      // JWT token'dan role bilgisini çek
+      // JWT token'dan kullanıcı bilgilerini ve role'ü çek (userInfo endpoint 403 döndüğü için JWT kullanıyoruz)
       const decodedToken = jwtDecode(accessToken);
       
       // Önce resource_access.DN.roles'dan kontrol et, yoksa realm_access.roles'a bak
@@ -53,9 +44,9 @@ export const signInWithPassword = async ({ username, password }) => {
       const isAdmin = roles.includes('Admin') || roles.includes('admin') || roles.includes('ADMIN');
       
       const user = {
-        email: userInfo.email,
-        name: userInfo.name,
-        role: isAdmin ? 'admin' : 'user'  // Role'ü ekle
+        email: decodedToken.email || decodedToken.preferred_username,
+        name: decodedToken.name || decodedToken.preferred_username || decodedToken.email,
+        role: isAdmin ? 'admin' : 'user'
       };
 
       setSession(accessToken, user);
