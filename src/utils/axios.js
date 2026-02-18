@@ -13,7 +13,7 @@ export const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-// Keycloak için instance
+// Keycloak projesi - auth.iyihislerapp.com (LoginController, UserController - Keycloak imajı ile ayağa kalkan app)
 export const axiosInstanceKeycloak = axios.create({
   baseURL: CONFIG.keycloakBaseUrl,
   headers: {
@@ -60,13 +60,12 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Request interceptor for Keycloak instance - CORS için özel header'lar
+// Request interceptor for Keycloak instance
 axiosInstanceKeycloak.interceptors.request.use(
   (config) => {
-    // CORS için gerekli header'ları ekle (eğer tarayıcı izin verirse)
-    if (typeof window !== 'undefined') {
-      config.headers['X-Requested-With'] = 'XMLHttpRequest';
-    }
+    const token = typeof window !== 'undefined' && sessionStorage.getItem('jwt_access_token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (typeof window !== 'undefined') config.headers['X-Requested-With'] = 'XMLHttpRequest';
     return config;
   },
   (error) => Promise.reject(error)

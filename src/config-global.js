@@ -20,7 +20,8 @@ export const CONFIG = {
   googleAuthUrl: import.meta.env.VITE_GET_GOOGLE_AUTH_URL ?? '',
   googleCallbackUrl: import.meta.env.VITE_GET_GOOGLE_CALLBACK_URL ?? '',
   googleCalendarEventsUrl: import.meta.env.VITE_GET_GOOGLE_CALENDAR_EVENTS_URL ?? '',
-  keycloakBaseUrl: import.meta.env.VITE_KEYCLOAK_BASE_URL ?? (typeof window !== 'undefined' && !window.location.hostname.includes('localhost') ? 'https://api.iyihislerapp.com' : 'http://localhost:6700'),
+  /** Keycloak projesi - auth.iyihislerapp.com (controller, service, entity - Keycloak imajı ile ayağa kalkan app) */
+  keycloakBaseUrl: import.meta.env.VITE_KEYCLOAK_BASE_URL ?? (typeof window !== 'undefined' && !window.location.hostname.includes('localhost') ? 'https://auth.iyihislerapp.com' : 'http://localhost:8080'),
   keycloakGetTokenUrl: import.meta.env.VITE_KEYCLOAK_GET_TOKEN_URL ?? '',
   keycloakGetUserInfoUrl: import.meta.env.VITE_KEYCLOAK_GET_USER_INFO_URL ?? '',
   keycloakUsersUrl: import.meta.env.VITE_KEYCLOAK_USERS_URL ?? '',

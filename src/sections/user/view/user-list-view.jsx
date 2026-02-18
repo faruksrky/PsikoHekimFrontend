@@ -73,17 +73,12 @@ export function UserListView() {
       try {
         setLoading(true);
         
-        // Keycloak Auth Service'ten kullanıcıları getir (axiosInstanceKeycloak kullan)
-        const keycloakAuthServiceUrl = `/users/list`;
+        // Keycloak projesi UserController - auth.iyihislerapp.com/users/list
+        const keycloakUsersUrl = `/users/list`;
         
-        console.log('Fetching users from Keycloak Auth Service:', keycloakAuthServiceUrl);
+        console.log('Fetching users from Keycloak project:', keycloakUsersUrl);
         
-        const response = await axiosInstanceKeycloak.get(keycloakAuthServiceUrl, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await axiosInstanceKeycloak.get(keycloakUsersUrl);
         
         if (Array.isArray(response.data)) {
           // Keycloak kullanıcı formatını bizim format'a çevir
