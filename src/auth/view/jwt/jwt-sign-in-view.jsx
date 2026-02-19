@@ -46,8 +46,8 @@ export function JwtSignInView() {
   const password = useBoolean();
 
   const defaultValues = {
-    username: 'sinan@gmail.com',
-    password: '123456',
+    username: '',
+    password: '',
   };
 
   const methods = useForm({

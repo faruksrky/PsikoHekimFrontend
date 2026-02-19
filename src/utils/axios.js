@@ -30,6 +30,18 @@ export const axiosInstanceBpmn = axios.create({
   },
 });
 
+// BPMN isteklerine token ekle (403 önlemek için)
+axiosInstanceBpmn.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem('jwt_access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Therapist için instance
 export const axiosInstanceTherapist = axios.create({ 
   baseURL: CONFIG.psikoHekimBaseUrl,
