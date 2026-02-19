@@ -21,7 +21,7 @@ import {
 
 import { paths } from 'src/routes/paths';
 
-import { axiosInstance, axiosInstanceBpmn } from 'src/utils/axios';
+import { axiosInstance } from 'src/utils/axios';
 
 import { CONFIG } from 'src/config-global';
 import { useGetTherapists } from 'src/api/therapist';
@@ -156,7 +156,7 @@ export function PatientAssignTherapistView() {
         },
       };
 
-      const bpmnResponse = await axiosInstanceBpmn.post(CONFIG.bpmn.endpoints.assignTherapist, bpmnRequest);
+      const bpmnResponse = await axiosInstance.post(CONFIG.bpmn.endpoints.assignTherapist, bpmnRequest);
 
       if (!bpmnResponse.data) {
         throw new Error('BPMN süreci başlatılamadı');

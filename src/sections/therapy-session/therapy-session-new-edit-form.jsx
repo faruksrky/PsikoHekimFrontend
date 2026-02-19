@@ -21,7 +21,7 @@ import { useRouter } from 'src/routes/hooks';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { CONFIG } from 'src/config-global';
-import { axiosInstanceBpmn } from 'src/utils/axios';
+import { axiosInstance } from 'src/utils/axios';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field } from 'src/components/hook-form';
@@ -401,7 +401,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
       },
     };
 
-    await axiosInstanceBpmn.post(CONFIG.bpmn.endpoints.assignTherapist, bpmnRequest);
+    await axiosInstance.post(CONFIG.bpmn.endpoints.assignTherapist, bpmnRequest);
   };
 
   const createSessionWithNotification = async (sessionData) => {
