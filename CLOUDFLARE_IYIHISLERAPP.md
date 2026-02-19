@@ -128,9 +128,3 @@ Backend'de `WebConfig.java` zaten `https://*.iyihislerapp.com` içeriyor. `iyihi
 **CORS hatası:** Backend WebConfig'te `iyihislerapp.com` (www'suz) allowed origins'da mı?
 
 **Keycloak redirect:** Valid Redirect URIs'de `https://iyihislerapp.com` var mı?
-
-**auth.iyihislerapp.com/users/list 401:** Kullanıcı listesi endpoint'i yetki hatası veriyorsa:
-- auth projesi (Keycloak wrapper) `/users/list` endpoint'inde JWT doğrulaması yapıyor olmalı
-- İstek `Authorization: Bearer <token>` ile gönderiliyor
-- Backend: Admin rolü veya Keycloak `realm-management` client'ında `view-users` yetkisi gerekiyor olabilir
-- Çözüm: auth projesi UserController/SecurityConfig'te Admin realm rolünü veya `view-users` yetkisini kabul edecek şekilde ayarlayın
