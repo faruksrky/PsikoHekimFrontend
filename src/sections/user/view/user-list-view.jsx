@@ -9,6 +9,7 @@ import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import TableBody from '@mui/material/TableBody';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
@@ -65,6 +66,7 @@ export function UserListView() {
   const confirm = useBoolean();
   const [loading, setLoading] = useState(true);
   const [tableData, setTableData] = useState([]);
+  const [fetchError, setFetchError] = useState(null); // 401, 403, network vb.
   const filters = useSetState({ firstName: '', lastName: '', status: 'all' });
   const accessToken = sessionStorage.getItem(STORAGE_KEY);
 
@@ -72,51 +74,52 @@ export function UserListView() {
     const fetchKeycloakUsers = async () => {
       try {
         setLoading(true);
-        
+        setFetchError(null);
+
         // Keycloak projesi UserController - auth.iyihislerapp.com/users/list
         const keycloakUsersUrl = `/users/list`;
-        
-        console.log('Fetching users from Keycloak project:', keycloakUsersUrl);
-        
+
         const response = await axiosInstanceKeycloak.get(keycloakUsersUrl);
-        
+
         if (Array.isArray(response.data)) {
-          // Keycloak kullanıcı formatını bizim format'a çevir
           const formattedUsers = response.data.map((user, index) => ({
             id: user.id || `user-${index}`,
             firstName: user.firstName || '',
             lastName: user.lastName || '',
             email: user.email || '',
             userName: user.username || user.email || `user-${index}`,
-            role: user.role || 'USER' // Role bilgisi backend'den gelmiyor ise default USER
+            role: user.role || 'USER',
           }));
-          
+
           setTableData(formattedUsers);
-          console.log('Keycloak users loaded:', formattedUsers.length);
         } else {
-          console.warn('Unexpected Keycloak response format:', response.data);
           setTableData([]);
         }
       } catch (error) {
-        console.error('Error fetching Keycloak users:', error);
-        
-        if (error.response?.status === 401) {
-          console.log('Unauthorized access to Keycloak Admin API');
+        const status = error.response?.status;
+
+        if (status === 401) {
+          setFetchError('unauthorized');
           setTableData([]);
-        } else if (error.response?.status === 404) {
-          console.log('Keycloak realm not found');
+        } else if (status === 403) {
+          setFetchError('forbidden');
+          setTableData([]);
+        } else if (status === 404) {
+          setFetchError('not_found');
           setTableData([]);
         } else {
-          console.log('Keycloak API error, using fallback');
+          setFetchError('network');
           setTableData([]);
         }
       } finally {
         setLoading(false);
       }
     };
-    
+
     if (accessToken) {
       fetchKeycloakUsers();
+    } else {
+      setLoading(false);
     }
   }, [accessToken]);
   
@@ -135,6 +138,34 @@ export function UserListView() {
     !!filters.state.firstName || filters.state.lastName;
 
   const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
+
+  const getEmptyMessage = () => {
+    if (fetchError === 'unauthorized') {
+      return {
+        title: 'Yetki hatası (401)',
+        description:
+          "Kullanıcı listesine erişim yetkiniz yok. auth.iyihislerapp.com /users/list endpoint'i Admin rolü veya view-users yetkisi gerektirir. Çıkış yapıp Admin hesabıyla tekrar giriş yapın veya token süresinin dolup dolmadığını kontrol edin.",
+      };
+    }
+    if (fetchError === 'forbidden') {
+      return {
+        title: 'Erişim engellendi (403)',
+        description: 'Bu sayfayı görüntülemek için yetkiniz bulunmuyor.',
+      };
+    }
+    if (fetchError === 'network') {
+      return {
+        title: 'Bağlantı hatası',
+        description: 'Kullanıcı listesi yüklenemedi. auth.iyihislerapp.com erişilebilir mi kontrol edin.',
+      };
+    }
+    return {
+      title: 'Henüz hiç kullanıcı kaydı bulunmamaktadır',
+      description: "Yeni kullanıcı eklemek için 'Yeni Kullanıcı' butonunu kullanabilirsiniz.",
+    };
+  };
+
+  const emptyMsg = getEmptyMessage();
 
   const handleFilterStatus = (_, newValue) => {" "}
   // Rest of the code...
@@ -162,7 +193,25 @@ export function UserListView() {
           sx={{ mb: { xs: 3, md: 5 } }}
         />
 
-        <Card sx={{ width: '100%', overflowX: 'auto', minHeight: '600px' }}>
+        <Card sx={{ width: '100%', overflowX: 'auto', minHeight: '600px', position: 'relative' }}>
+            {loading && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'rgba(255,255,255,0.7)',
+                  zIndex: 1,
+                }}
+              >
+                <CircularProgress />
+              </Box>
+            )}
             <Tabs
               value={filters.state.status}
               onChange={handleFilterStatus}
@@ -272,10 +321,10 @@ export function UserListView() {
                         emptyRows={emptyRows(table.page, table.rowsPerPage, dataFiltered.length)}
                       />
 
-                      <TableNoData 
+                      <TableNoData
                         notFound={notFound}
-                        title="Henüz hiç kullanıcı kaydı bulunmamaktadır"
-                        description="Yeni kullanıcı eklemek için 'Yeni Kullanıcı' butonunu kullanabilirsiniz."
+                        title={emptyMsg.title}
+                        description={emptyMsg.description}
                       />
                     </TableBody>
                   </Table>
