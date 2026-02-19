@@ -60,6 +60,11 @@ export const signInWithPassword = async ({ username, password }) => {
         console.error('Error response:', data);
         
         if (status === 400) {
+          // Backend bazen string döner (örn: "Geçersiz bir kullanıcı adı veya şifre girdiniz")
+          const backendMsg = typeof data === 'string' ? data : data?.message || data?.error_description;
+          if (backendMsg && typeof backendMsg === 'string' && (backendMsg.includes('kullanıcı') || backendMsg.includes('şifre'))) {
+            throw new Error(backendMsg);
+          }
           if (data?.error === 'invalid_grant') {
             if (data?.error_description === 'Account is not fully set up') {
               throw new Error('Hesabınız henüz tam olarak ayarlanmamış. Lütfen sistem yöneticisi ile iletişime geçin.');
@@ -68,9 +73,9 @@ export const signInWithPassword = async ({ username, password }) => {
             } else {
               throw new Error('Giriş bilgileri hatalı. Lütfen kullanıcı adı ve şifrenizi kontrol edin.');
             }
-          } else {
-            throw new Error('Geçersiz istek. Lütfen bilgilerinizi kontrol edin.');
           }
+          if (backendMsg) throw new Error(backendMsg);
+          throw new Error('Geçersiz istek. Lütfen bilgilerinizi kontrol edin.');
         } else if (status === 401) {
           throw new Error('Yetkilendirme hatası. Kullanıcı adı veya şifre hatalı.');
         } else if (status === 403) {
