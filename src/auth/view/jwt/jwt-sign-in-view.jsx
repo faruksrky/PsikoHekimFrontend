@@ -25,8 +25,7 @@ import { signInWithPassword } from '../../context/jwt';
 export const SignInSchema = zod.object({
   username: zod
     .string()
-    .min(1, { message: 'Email bilgisi gereklidir!' })
-    .email({ message: 'Geçerli bir Email adresi girilmelidir!' }),
+    .min(1, { message: 'Kullanıcı adı veya e-posta girilmelidir!' }),
   password: zod
     .string()
     .min(1, { message: 'Şifre bilgisi gereklidir!' })
@@ -84,7 +83,7 @@ export function JwtSignInView() {
 
   const renderForm = (
     <Box gap={3} display="flex" flexDirection="column">
-      <Field.Text name="username" label="Email" InputLabelProps={{ shrink: true }} />
+      <Field.Text name="username" label="Kullanıcı adı veya E-posta" InputLabelProps={{ shrink: true }} />
       <Box gap={1.5} display="flex" flexDirection="column">
         {/* 
         <Link
