@@ -205,18 +205,20 @@ export function InboxList() {
 
   const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
 
+  const getRowId = (row) => row.processId ?? row.processInstanceKey ?? row.id;
+
   const handleDeleteRow = useCallback(
     (id) => {
-      const deleteRow = allData.filter((row) => row.id !== id);
+      const remaining = allData.filter((row) => getRowId(row) !== id);
       toast.success('İstek silindi');
-      setAllData(deleteRow);
+      setAllData(remaining);
       table.onUpdatePageDeleteRow(dataInPage.length);
     },
     [dataInPage.length, table, allData]
   );
 
   const handleDeleteRows = useCallback(() => {
-    const deleteRows = allData.filter((row) => !table.selected.includes(row.id));
+    const deleteRows = allData.filter((row) => !table.selected.includes(getRowId(row)));
     toast.success('Seçilen istekler silindi');
     setAllData(deleteRows);
     table.onUpdatePageDeleteRows(dataInPage.length, dataFiltered.length);
@@ -281,7 +283,7 @@ export function InboxList() {
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  dataFiltered.map((row) => row.id)
+                  dataFiltered.map((row) => getRowId(row))
                 )
               }
               action={
@@ -305,7 +307,7 @@ export function InboxList() {
                   onSelectAllRows={(checked) =>
                     table.onSelectAllRows(
                       checked,
-                      dataFiltered.map((row) => row.id)
+                      dataFiltered.map((row) => getRowId(row))
                     )
                   }
                 />
@@ -320,11 +322,11 @@ export function InboxList() {
                   ) : (
                     dataInPage.map((row, index) => (
                       <InboxTableRow
-                        key={row.processId || `row-${index}`}
+                        key={getRowId(row) || `row-${index}`}
                         row={row}
-                        selected={table.selected.includes(row.processId)}
-                        onSelectRow={() => table.onSelectRow(row.processId)}
-                        onDeleteRow={() => handleDeleteRow(row.processId)}
+                        selected={table.selected.includes(getRowId(row))}
+                        onSelectRow={() => table.onSelectRow(getRowId(row))}
+                        onDeleteRow={() => handleDeleteRow(getRowId(row))}
                         onApprove={onApprove}
                         onReject={onReject}
                       />
