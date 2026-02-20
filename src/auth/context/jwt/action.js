@@ -271,10 +271,12 @@ export const getEmailFromToken = () => {
   if (!token) return null;
   
   const decoded = jwtDecode(token);
-  const isAdmin = decoded.resource_access?.DN?.roles?.includes('Admin');
+  // Keycloak: resource_access.DN.roles veya realm_access.roles
+  const roles = decoded.resource_access?.DN?.roles || decoded.realm_access?.roles || [];
+  const isAdmin = roles.some((r) => ['Admin', 'admin', 'ADMIN'].includes(r));
   
   return {
-    email: decoded.email,
+    email: decoded.email || decoded.preferred_username,
     isAdmin,
     therapistId: decoded.therapistId || decoded.therapist_id || null  // JWT'den therapistId varsa al
   };

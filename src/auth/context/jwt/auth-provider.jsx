@@ -38,8 +38,8 @@ export function AuthProvider({ children }) {
         const isAdmin = roles.includes('Admin') || roles.includes('admin') || roles.includes('ADMIN');
         
         const user = {
-          email: decodedToken.email,
-          name: decodedToken.name,
+          email: decodedToken.email || decodedToken.preferred_username,
+          name: decodedToken.name || decodedToken.preferred_username || decodedToken.email,
           role: isAdmin ? 'admin' : 'user'  // Role'ü token'dan al
         };
 
