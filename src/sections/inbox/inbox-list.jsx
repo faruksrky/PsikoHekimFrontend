@@ -105,7 +105,7 @@ export function InboxList() {
     loadTherapistId();
   }, [isAdmin]);
 
-  // Admin: tüm bekleyen atamalar. Terapist: sadece kendi atamaları.
+  // Admin: tüm akışlar (pending+accepted+rejected). Terapist: sadece kendi bekleyen atamaları.
   const fetchAllData = useCallback(async () => {
     if (!therapistIdResolved) return;
     if (!isAdmin() && !therapistId) {
@@ -116,7 +116,7 @@ export function InboxList() {
 
     try {
       setIsLoading(true);
-      const params = isAdmin() ? {} : { therapistId };
+      const params = isAdmin() ? { status: 'all' } : { therapistId };
       const response = await axiosInstance.get(`${CONFIG.psikoHekimBaseUrl}/process/inbox/pending`, { params });
       setAllData(response.data);
     } catch (error) {
