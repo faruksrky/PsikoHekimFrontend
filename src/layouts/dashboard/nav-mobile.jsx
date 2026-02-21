@@ -43,7 +43,15 @@ export function NavMobile({ data, open, onClose, slots, sx, ...other }) {
       )}
 
       <Scrollbar fillContent>
-        <NavSectionVertical data={data} sx={{ px: 2, flex: '1 1 auto' }} {...other} />
+        <NavSectionVertical
+          data={data}
+          slotProps={{
+            rootItem: { ignoreModalState: true },
+            subItem: { ignoreModalState: true },
+          }}
+          sx={{ px: 2, flex: '1 1 auto' }}
+          {...other}
+        />
         <NavUpgrade />
       </Scrollbar>
 

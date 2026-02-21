@@ -78,9 +78,12 @@ export const NavItem = forwardRef(
       enabledRootRedirect,
     });
 
+    // Mobil Drawer içindeyken ignoreModalState=true - Drawer açıkken root aria-hidden olur, menü tıklanabilir kalmalı
+    const ignoreModalState = slotProps?.ignoreModalState;
+    const shouldDisableForModal = isModalOpen && !ignoreModalState;
+
     const handleFocus = (event) => {
-      // Modal açıkken focus'u engelle
-      if (isModalOpen) {
+      if (shouldDisableForModal) {
         event.preventDefault();
         event.target.blur();
       }
@@ -92,9 +95,9 @@ export const NavItem = forwardRef(
         aria-label={title}
         depth={depth}
         active={active}
-        disabled={disabled || isModalOpen}
+        disabled={disabled || shouldDisableForModal}
         open={open && !active}
-        tabIndex={isModalOpen ? -1 : 0}
+        tabIndex={shouldDisableForModal ? -1 : 0}
         onFocus={handleFocus}
         sx={{
           ...slotProps?.sx,
@@ -104,13 +107,12 @@ export const NavItem = forwardRef(
           [`& .${navSectionClasses.item.caption}`]: slotProps?.caption,
           [`& .${navSectionClasses.item.info}`]: slotProps?.info,
           [`& .${navSectionClasses.item.arrow}`]: slotProps?.arrow,
-          // Modal açıkken pointer events'ı disable et
-          ...(isModalOpen && {
+          ...(shouldDisableForModal && {
             pointerEvents: 'none',
             opacity: 0.6
           })
         }}
-        className={stateClasses({ open: open && !active, active, disabled: disabled || isModalOpen })}
+        className={stateClasses({ open: open && !active, active, disabled: disabled || shouldDisableForModal })}
         {...navItem.baseProps}
         {...other}
       >
