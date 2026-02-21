@@ -168,6 +168,36 @@ export function TherapySessionDetailsView() {
     router.push(paths.dashboard.therapySession.reschedule(sessionId));
   }, [router, sessionId]);
 
+  const handleApprove = useCallback(async () => {
+    try {
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.approve}/${sessionId}`);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Onay başarısız');
+      }
+      toast('Seans başarıyla onaylandı', { variant: 'success' });
+      fetchSessionDetails();
+    } catch (error) {
+      console.error('Error approving session:', error);
+      toast(error.message || 'Seans onaylanırken bir hata oluştu', { variant: 'error' });
+    }
+  }, [sessionId, fetchSessionDetails]);
+
+  const handleReject = useCallback(async () => {
+    try {
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.reject}/${sessionId}`);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Red başarısız');
+      }
+      toast('Seans reddedildi', { variant: 'success' });
+      fetchSessionDetails();
+    } catch (error) {
+      console.error('Error rejecting session:', error);
+      toast(error.message || 'Seans reddedilirken bir hata oluştu', { variant: 'error' });
+    }
+  }, [sessionId, fetchSessionDetails]);
+
   const handleDelete = useCallback(async () => {
     try {
       const token = sessionStorage.getItem('jwt_access_token');
@@ -227,6 +257,26 @@ export function TherapySessionDetailsView() {
         ]}
         action={
           <Stack direction="row" spacing={1}>
+            {sessionData.status === 'PENDING_APPROVAL' && isAdmin() && (
+              <>
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={handleApprove}
+                  startIcon={<Iconify icon="solar:check-circle-bold" />}
+                >
+                  Hasta Adına Onayla
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleReject}
+                  startIcon={<Iconify icon="solar:close-circle-bold" />}
+                >
+                  Reddet
+                </Button>
+              </>
+            )}
             <Button
               variant="outlined"
               color="inherit"
@@ -343,12 +393,14 @@ export function TherapySessionDetailsView() {
                   <Label
                     variant="soft"
                     color={
+                      (sessionData.status === 'PENDING_APPROVAL' && 'warning') ||
                       (sessionData.status === 'SCHEDULED' && 'info') ||
                       (sessionData.status === 'COMPLETED' && 'success') ||
                       (sessionData.status === 'CANCELLED' && 'error') ||
                       'default'
                     }
                   >
+                    {sessionData.status === 'PENDING_APPROVAL' && 'Hasta Onayı Bekliyor'}
                     {sessionData.status === 'SCHEDULED' && 'Planlandı'}
                     {sessionData.status === 'COMPLETED' && 'Tamamlandı'}
                     {sessionData.status === 'CANCELLED' && 'İptal Edildi'}

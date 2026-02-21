@@ -15,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 
+import { toast } from 'sonner';
 import { fCurrency } from 'src/utils/format-number';
 import { fDate, fTime } from 'src/utils/format-time';
 
@@ -36,6 +37,8 @@ export function TherapySessionTableRow({
   onCompleteSession,
   onCancelSession,
   onRescheduleSession,
+  onApproveSession,
+  onRejectSession,
   onViewDetails,
   priceView = 'client',
 }) {
@@ -130,6 +133,36 @@ export function TherapySessionTableRow({
     onRescheduleSession?.();
   }, [onRescheduleSession]);
 
+  const handleApproveSession = useCallback(async () => {
+    try {
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.approve}/${sessionId}`);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Onay başarısız');
+      }
+      toast.success('Seans onaylandı');
+      onApproveSession?.();
+    } catch (error) {
+      console.error('Error approving session:', error);
+      toast.error(error.message || 'Seans onaylanamadı');
+    }
+  }, [sessionId, onApproveSession]);
+
+  const handleRejectSession = useCallback(async () => {
+    try {
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.reject}/${sessionId}`);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Red başarısız');
+      }
+      toast.success('Seans reddedildi');
+      onRejectSession?.();
+    } catch (error) {
+      console.error('Error rejecting session:', error);
+      toast.error(error.message || 'Seans reddedilemedi');
+    }
+  }, [sessionId, onRejectSession]);
+
   const handleDeleteSession = useCallback(async () => {
     try {
       const token = sessionStorage.getItem('jwt_access_token');
@@ -153,6 +186,8 @@ export function TherapySessionTableRow({
 
   const getStatusColor = (sessionStatus) => {
     switch (sessionStatus) {
+      case 'PENDING_APPROVAL':
+        return 'warning';
       case 'COMPLETED':
         return 'success';
       case 'SCHEDULED':
@@ -172,6 +207,8 @@ export function TherapySessionTableRow({
 
   const getStatusLabel = (sessionStatus) => {
     switch (sessionStatus) {
+      case 'PENDING_APPROVAL':
+        return 'Hasta Onayı Bekliyor';
       case 'COMPLETED':
         return 'Tamamlandı';
       case 'SCHEDULED':
@@ -419,6 +456,28 @@ export function TherapySessionTableRow({
           Detaylar
         </MenuItem>
 
+        {status === 'PENDING_APPROVAL' && priceView === 'admin' && (
+          <>
+            <MenuItem
+              onClick={() => {
+                handleApproveSession();
+                popover.onClose();
+              }}
+            >
+              <Iconify icon="solar:check-circle-bold" sx={{ color: 'success.main', mr: 1 }} />
+              Hasta Adına Onayla
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleRejectSession();
+                popover.onClose();
+              }}
+            >
+              <Iconify icon="solar:close-circle-bold" sx={{ color: 'error.main', mr: 1 }} />
+              Reddet
+            </MenuItem>
+          </>
+        )}
         <MenuItem
           onClick={() => {
             onEditRow();

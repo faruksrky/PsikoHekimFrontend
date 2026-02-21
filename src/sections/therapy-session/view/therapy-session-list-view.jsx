@@ -29,6 +29,7 @@ import { TherapySessionTable } from '../therapy-session-table';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Tümü' },
+  { value: 'PENDING_APPROVAL', label: 'Hasta Onayı Bekliyor' },
   { value: 'SCHEDULED', label: 'Planlandı' },
   { value: 'COMPLETED', label: 'Tamamlandı' },
   { value: 'CANCELLED', label: 'İptal Edildi' },
@@ -294,6 +295,14 @@ export function TherapySessionListView() {
     [router]
   );
 
+  const handleApproveSession = useCallback(() => {
+    fetchTherapySessions();
+  }, [fetchTherapySessions]);
+
+  const handleRejectSession = useCallback(() => {
+    fetchTherapySessions();
+  }, [fetchTherapySessions]);
+
   return (
     <Container maxWidth="xl">
       <CustomBreadcrumbs
@@ -332,6 +341,8 @@ export function TherapySessionListView() {
           loading={loading}
           priceView={priceView}
           onEditRow={handleEditRow}
+          onApproveSession={handleApproveSession}
+          onRejectSession={handleRejectSession}
           onDeleteRow={handleDeleteRow}
           onViewDetails={handleViewRow}
           onCompleteSession={handleCompleteSession}

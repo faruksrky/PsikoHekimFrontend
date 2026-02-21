@@ -72,6 +72,8 @@ export function TherapySessionTable({
   onCompleteSession,
   onCancelSession,
   onRescheduleSession,
+  onApproveSession,
+  onRejectSession,
   onViewDetails,
 }) {
   const table = useTable();
@@ -184,6 +186,8 @@ export function TherapySessionTable({
                         onCompleteSession={() => onCompleteSession?.(row.sessionId)}
                         onCancelSession={() => onCancelSession?.(row.sessionId)}
                         onRescheduleSession={() => onRescheduleSession?.(row.sessionId)}
+                        onApproveSession={onApproveSession}
+                        onRejectSession={onRejectSession}
                         onViewDetails={() => onViewDetails?.(row.sessionId)}
                         priceView={priceView}
                       />

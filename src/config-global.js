@@ -145,7 +145,9 @@ export const CONFIG = {
     assignments: '/therapist-patient/assignments',
     complete: '/therapy-sessions/complete',
     cancel: '/therapy-sessions/cancel',
-    reschedule: '/therapy-sessions/reschedule'
+    reschedule: '/therapy-sessions/reschedule',
+    approve: '/therapy-sessions/approve',
+    reject: '/therapy-sessions/reject'
   },
 
   pricing: {
