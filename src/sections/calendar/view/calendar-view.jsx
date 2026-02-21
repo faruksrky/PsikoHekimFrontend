@@ -190,86 +190,73 @@ export function CalendarView() {
         return;
       }
 
+      let sessionsUrl = '/therapy-sessions/getSessions';
       if (userInfo.isAdmin) {
-        setEvents([]);
-        return;
-      }
-
-      const therapistId = await getTherapistId(userInfo.email);
-      console.log('Therapist ID from token:', therapistId);
-      console.log('User email:', userInfo.email);
-      
-      if (!therapistId) {
-        console.error('Therapist ID bulunamadı');
-        setEvents([]);
-        return;
-      }
-      
-      // therapistId'nin object mi yoksa number/string mi olduğunu kontrol et
-      const actualTherapistId = therapistId.therapistId || therapistId;
-      console.log('Actual Therapist ID to use:', actualTherapistId);
-      
-      if (actualTherapistId) {
-        let allEvents = [];
-        
-        // Therapy sessions'ı çek
-        const sessionsResponse = await axiosInstance.get(`/therapy-sessions/getSessions?therapistId=${actualTherapistId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const sessionsData = sessionsResponse.data;
-        
-        if (sessionsData && Array.isArray(sessionsData) && sessionsData.length > 0) {
-          const formattedSessions = sessionsData.map((session) => {
-            // Tarihleri güvenli şekilde parse et
-            let startDate;
-            let endDate;
-            try {
-              startDate = session.scheduledDate ? new Date(session.scheduledDate) : new Date();
-              endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 saat süre
-              
-              // Geçersiz tarih kontrolü
-              if (Number.isNaN(startDate.getTime())) {
-                startDate = new Date();
-              }
-              if (Number.isNaN(endDate.getTime())) {
-                endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-              }
-            } catch (error) {
-              console.warn('Tarih parse hatası:', error);
-              startDate = new Date();
-              endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-            }
-            
-            return {
-              id: `session_${session.sessionId}`,
-              title: session.patient ? `${session.patient.patientName} ${session.patient.patientSurname}` : 'Seans',
-              extendedProps: {
-                sessionId: session.sessionId,
-                assignmentId: session.assignmentId,
-                patientId: session.patientId,
-                therapistId: session.therapistId,
-                sessionType: session.sessionType,
-                sessionFormat: session.sessionFormat,
-                status: session.status,
-                sessionFee: session.sessionFee,
-                notes: session.notes || '',
-                patient: session.patient,
-                therapist: session.therapist,
-                type: 'session'
-              },
-              start: startDate,
-              end: endDate,
-              backgroundColor: getSessionStatusColor(session.status),
-              borderColor: getSessionStatusColor(session.status),
-              textColor: '#FFFFFF',
-              display: 'block'
-            };
-          });
-          allEvents = [...allEvents, ...formattedSessions];
+        // Admin: therapistId vermeden tüm seansları getir
+        sessionsUrl = '/therapy-sessions/getSessions';
+      } else {
+        const therapistId = await getTherapistId(userInfo.email);
+        if (!therapistId) {
+          console.error('Therapist ID bulunamadı');
+          setEvents([]);
+          return;
         }
-
-        setEvents(allEvents);
+        const actualTherapistId = therapistId.therapistId || therapistId;
+        sessionsUrl = `/therapy-sessions/getSessions?therapistId=${actualTherapistId}`;
       }
+
+      let allEvents = [];
+      const sessionsResponse = await axiosInstance.get(sessionsUrl, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const sessionsData = sessionsResponse.data;
+      
+      if (sessionsData && Array.isArray(sessionsData) && sessionsData.length > 0) {
+        const formattedSessions = sessionsData.map((session) => {
+          let startDate;
+          let endDate;
+          try {
+            startDate = session.scheduledDate ? new Date(session.scheduledDate) : new Date();
+            endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 saat süre
+            if (Number.isNaN(startDate.getTime())) startDate = new Date();
+            if (Number.isNaN(endDate.getTime())) endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+          } catch (error) {
+            console.warn('Tarih parse hatası:', error);
+            startDate = new Date();
+            endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+          }
+          const patientName = session.patient ? `${session.patient.patientFirstName || ''} ${session.patient.patientLastName || ''}`.trim() || 'Seans' : 'Seans';
+          const therapistName = session.therapist ? `${session.therapist.therapistFirstName || ''} ${session.therapist.therapistLastName || ''}`.trim() : '';
+          const title = userInfo.isAdmin && therapistName ? `${patientName} (${therapistName})` : patientName;
+          return {
+            id: `session_${session.sessionId}`,
+            title,
+            extendedProps: {
+              sessionId: session.sessionId,
+              assignmentId: session.assignmentId,
+              patientId: session.patientId,
+              therapistId: session.therapistId,
+              sessionType: session.sessionType,
+              sessionFormat: session.sessionFormat,
+              status: session.status,
+              sessionFee: session.sessionFee,
+              notes: session.notes || '',
+              patient: session.patient,
+              therapist: session.therapist,
+              type: 'session'
+            },
+            start: startDate,
+            end: endDate,
+            backgroundColor: getSessionStatusColor(session.status),
+            borderColor: getSessionStatusColor(session.status),
+            textColor: '#FFFFFF',
+            display: 'block'
+          };
+        });
+        allEvents = [...allEvents, ...formattedSessions];
+      }
+
+      setEvents(allEvents);
       
     } catch (error) {
       console.error('Etkinlikler yüklenirken hata:', error);
