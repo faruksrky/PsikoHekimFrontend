@@ -5,13 +5,13 @@ import { Box } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
-export function SessionTrendChart({ data }) {
+export function SessionTrendChart({ data, showRevenue = true }) {
   const chartData = data.map((item) => ({
     name: item.month,
     Toplam: item.total,
     Tamamlanan: item.completed,
     İptal: item.cancelled,
-    Gelir: item.revenue / 1000, // Convert to thousands for better display
+    ...(showRevenue && { Gelir: item.revenue / 1000 }),
   }));
 
   return (
@@ -21,7 +21,7 @@ export function SessionTrendChart({ data }) {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis yAxisId="left" />
-          <YAxis yAxisId="right" orientation="right" />
+          {showRevenue && <YAxis yAxisId="right" orientation="right" />}
           <Tooltip />
           <Legend />
           <Line
@@ -45,14 +45,16 @@ export function SessionTrendChart({ data }) {
             stroke="#ff7300"
             strokeWidth={2}
           />
-          <Line
-            yAxisId="right"
-            type="monotone"
-            dataKey="Gelir"
-            stroke="#8884d8"
-            strokeWidth={2}
-            strokeDasharray="5 5"
-          />
+          {showRevenue && (
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="Gelir"
+              stroke="#8884d8"
+              strokeWidth={2}
+              strokeDasharray="5 5"
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </Box>

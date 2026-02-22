@@ -15,7 +15,7 @@ export function useEvent(events, selectEventId, selectedRange, openForm, openCal
           ? event.extendedProps.status.toUpperCase() 
           : 'CONFIRMED';
         
-        // Event'i form için hazırla
+        // Event'i form için hazırla (CalendarForm sessionId, patientId, sessionFee kullanır)
         return {
           id: event.id,
           title: event.title,
@@ -26,7 +26,13 @@ export function useEvent(events, selectEventId, selectedRange, openForm, openCal
           color: event.backgroundColor || event.extendedProps?.color || '#1890FF',
           start: event.start,
           end: event.end,
-          therapistId: event.extendedProps?.therapistId
+          therapistId: event.extendedProps?.therapistId,
+          sessionId: event.extendedProps?.sessionId,
+          patientId: event.extendedProps?.patientId,
+          sessionFee: event.extendedProps?.sessionFee,
+          sessionType: event.extendedProps?.sessionType,
+          sessionFormat: event.extendedProps?.sessionFormat,
+          notes: event.extendedProps?.notes,
         };
       }
       

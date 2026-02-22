@@ -22,6 +22,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { Form, Field } from 'src/components/hook-form';
 
 import { getTherapistId, getEmailFromToken } from 'src/auth/context/jwt/action';
+import { useAuth } from 'src/hooks/useAuth';
 
 // ----------------------------------------------------------------------
 
@@ -39,6 +40,7 @@ export const EventSchema = zod.object({
 // ----------------------------------------------------------------------
 
 export function CalendarForm({ currentEvent, colorOptions, onClose }) {
+  const { isAdmin } = useAuth();
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(false);
   const [therapistId, setTherapistId] = useState(null);
@@ -260,8 +262,10 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
             <MenuItem value="PHONE">Telefon</MenuItem>
           </Field.Select>
 
-          {/* Seans Ücreti */}
-          <Field.Text name="sessionFee" label="Seans Ücreti (TL)" type="number" />
+          {/* Seans Ücreti - sadece admin görür/düzenler */}
+          {isAdmin() && (
+            <Field.Text name="sessionFee" label="Seans Ücreti (TL)" type="number" />
+          )}
 
           {/* Notlar */}
           <Field.Text name="notes" label="Notlar" multiline rows={3} />

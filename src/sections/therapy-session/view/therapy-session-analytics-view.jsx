@@ -403,38 +403,44 @@ export function TherapySessionAnalyticsView() {
         </Grid>
       </Grid>
 
-      {/* Revenue Cards */}
+      {/* Revenue Cards - danışman seans ücreti görmez, sadece admin */}
+      {isAdmin() && (
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <AnalyticsCard
+              title="Toplam Gelir"
+              value={`₺${generalStats.totalRevenue.toLocaleString()}`}
+              icon="solar:money-bag-bold"
+              color="success"
+              trend={+8.3}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <AnalyticsCard
+              title="Bekleyen Ödeme"
+              value={`₺${generalStats.pendingRevenue.toLocaleString()}`}
+              icon="solar:wallet-bold"
+              color="warning"
+              trend={+3.7}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <AnalyticsCard
+              title="Ortalama Seans Ücreti"
+              value={`₺${generalStats.totalSessions > 0 ? (generalStats.totalRevenue / generalStats.totalSessions).toFixed(2) : 0}`}
+              icon="solar:chart-2-bold"
+              color="info"
+              trend={+2.4}
+            />
+          </Grid>
+
+        </Grid>
+      )}
+
+      {/* Tamamlanma Oranı - herkes görür */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <AnalyticsCard
-            title="Toplam Gelir"
-            value={`₺${generalStats.totalRevenue.toLocaleString()}`}
-            icon="solar:money-bag-bold"
-            color="success"
-            trend={+8.3}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <AnalyticsCard
-            title="Bekleyen Ödeme"
-            value={`₺${generalStats.pendingRevenue.toLocaleString()}`}
-            icon="solar:wallet-bold"
-            color="warning"
-            trend={+3.7}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <AnalyticsCard
-            title="Ortalama Seans Ücreti"
-            value={`₺${generalStats.totalSessions > 0 ? (generalStats.totalRevenue / generalStats.totalSessions).toFixed(2) : 0}`}
-            icon="solar:chart-2-bold"
-            color="info"
-            trend={+2.4}
-          />
-        </Grid>
-
         <Grid item xs={12} sm={6} md={3}>
           <AnalyticsCard
             title="Tamamlanma Oranı"
@@ -454,7 +460,7 @@ export function TherapySessionAnalyticsView() {
               <Typography variant="h6">Seans Trendi</Typography>
             </Box>
             <Box sx={{ p: 3, pt: 1 }}>
-              <SessionTrendChart data={monthlyData} />
+              <SessionTrendChart data={monthlyData} showRevenue={isAdmin()} />
             </Box>
           </Card>
         </Grid>
@@ -471,21 +477,23 @@ export function TherapySessionAnalyticsView() {
         </Grid>
       </Grid>
 
-      {/* Revenue Chart */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12}>
-          <Card>
-            <Box sx={{ p: 3, pb: 1 }}>
-              <Typography variant="h6">Gelir Analizi</Typography>
-            </Box>
-            <Box sx={{ p: 3, pt: 1 }}>
-              <RevenueChart data={revenueData} />
-            </Box>
-          </Card>
+      {/* Revenue Chart - sadece admin (seans ücreti) */}
+      {isAdmin() && (
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12}>
+            <Card>
+              <Box sx={{ p: 3, pb: 1 }}>
+                <Typography variant="h6">Gelir Analizi</Typography>
+              </Box>
+              <Box sx={{ p: 3, pt: 1 }}>
+                <RevenueChart data={revenueData} />
+              </Box>
+            </Card>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
 
-      {/* Therapist Performance Table */}
+      {/* Therapist Performance Table - gelir kolonları sadece admin */}
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Card>
@@ -493,7 +501,7 @@ export function TherapySessionAnalyticsView() {
               <Typography variant="h6">Danışman Performansı</Typography>
             </Box>
             <Box sx={{ p: 3, pt: 1 }}>
-              <TherapistPerformanceTable data={therapistStats} />
+              <TherapistPerformanceTable data={therapistStats} showRevenue={isAdmin()} />
             </Box>
           </Card>
         </Grid>

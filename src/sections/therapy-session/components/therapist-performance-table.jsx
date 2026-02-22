@@ -14,7 +14,7 @@ import {
 
 // ----------------------------------------------------------------------
 
-export function TherapistPerformanceTable({ data }) {
+export function TherapistPerformanceTable({ data, showRevenue = true }) {
   if (!data || data.length === 0) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -35,8 +35,12 @@ export function TherapistPerformanceTable({ data }) {
             <TableCell align="right">Tamamlanan</TableCell>
             <TableCell align="right">İptal Edilen</TableCell>
             <TableCell align="right">Tamamlanma Oranı (%)</TableCell>
-            <TableCell align="right">Toplam Gelir (₺)</TableCell>
-            <TableCell align="right">Ortalama Ücret (₺)</TableCell>
+            {showRevenue && (
+              <>
+                <TableCell align="right">Toplam Gelir (₺)</TableCell>
+                <TableCell align="right">Ortalama Ücret (₺)</TableCell>
+              </>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -51,12 +55,16 @@ export function TherapistPerformanceTable({ data }) {
               <TableCell align="right">{therapist.completedSessions}</TableCell>
               <TableCell align="right">{therapist.cancelledSessions}</TableCell>
               <TableCell align="right">{therapist.completionRate}%</TableCell>
-              <TableCell align="right">
-                {parseFloat(therapist.totalRevenue).toLocaleString()}
-              </TableCell>
-              <TableCell align="right">
-                {parseFloat(therapist.avgSessionFee).toLocaleString()}
-              </TableCell>
+              {showRevenue && (
+                <>
+                  <TableCell align="right">
+                    {parseFloat(therapist.totalRevenue).toLocaleString()}
+                  </TableCell>
+                  <TableCell align="right">
+                    {parseFloat(therapist.avgSessionFee).toLocaleString()}
+                  </TableCell>
+                </>
+              )}
             </TableRow>
           ))}
         </TableBody>
@@ -66,6 +74,7 @@ export function TherapistPerformanceTable({ data }) {
 }
 
 TherapistPerformanceTable.propTypes = {
+  showRevenue: PropTypes.bool,
   data: PropTypes.arrayOf(
     PropTypes.shape({
       therapistId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
