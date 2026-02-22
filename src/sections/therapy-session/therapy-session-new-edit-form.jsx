@@ -26,6 +26,7 @@ import { axiosInstance } from 'src/utils/axios';
 import { toast } from 'src/components/snackbar';
 import { Form, Field } from 'src/components/hook-form';
 import { useAuthContext } from 'src/auth/hooks';
+import { useAuth } from 'src/hooks/useAuth';
 import { useGetPatient } from 'src/actions/patient';
 import { CURRENCY_OPTIONS, getCurrencySymbol } from '../therapist/therapist-new-edit-form';
 
@@ -37,6 +38,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
   const requestMode = location.state?.mode === 'request';
   const requestPatientId = location.state?.patientId;
   const { user } = useAuthContext();
+  const { isAdmin } = useAuth();
   const { patient: requestPatient, patientLoading: requestPatientLoading } = useGetPatient(requestPatientId);
 
   const loadingSave = useBoolean();
@@ -386,22 +388,27 @@ export function TherapySessionNewEditForm({ currentSession }) {
     const bpmnRequest = {
       messageName: 'startTherapistAssignmentProcess',
       variables: {
-        patientId,
-        therapistId: sessionData.therapistId,
+        patientId: String(patientId),
+        therapistId: String(sessionData.therapistId),
         scheduledDate: new Date(sessionData.scheduledDate).toISOString(),
-        sessionType: sessionData.sessionType,
+        sessionType: sessionData.sessionType || 'REGULAR',
         sessionFormat: sessionData.sessionFormat || 'IN_PERSON',
         processName: 'Randevu Onay Süreci',
         description: `${requestPatient?.patientFirstName || ''} ${requestPatient?.patientLastName || ''}`.trim()
           ? `${requestPatient.patientFirstName} ${requestPatient.patientLastName} için randevu isteği`
           : 'Randevu isteği',
-        startedBy: user?.displayName || 'Sistem',
+        startedBy: user?.displayName || user?.name || 'Sistem',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
     };
 
-    await axiosInstance.post(CONFIG.bpmn.endpoints.assignTherapist, bpmnRequest);
+    try {
+      await axiosInstance.post(CONFIG.bpmn.endpoints.assignTherapist, bpmnRequest);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message;
+      throw new Error(msg || 'Randevu isteği gönderilemedi');
+    }
   };
 
   const createSessionWithNotification = async (sessionData) => {
@@ -663,34 +670,38 @@ export function TherapySessionNewEditForm({ currentSession }) {
               </Field.Select>
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <Field.Select
-                name="sessionFeeCurrency"
-                label="Seans Ücreti Para Birimi"
-              >
-                {CURRENCY_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Field.Select>
-            </Grid>
+            {isAdmin() && (
+              <>
+                <Grid item xs={12} md={6}>
+                  <Field.Select
+                    name="sessionFeeCurrency"
+                    label="Seans Ücreti Para Birimi"
+                  >
+                    {CURRENCY_OPTIONS.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Field.Select>
+                </Grid>
 
-            <Grid item xs={12} md={6}>
-              <Field.Text
-                name="sessionFee"
-                label="Seans Ücreti"
-                type="number"
-                helperText={watch('therapistId') ? 'Danışman seçildiğinde otomatik doldurulur' : ''}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      {getCurrencySymbol(watch('sessionFeeCurrency') || 'TRY')}
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
+                <Grid item xs={12} md={6}>
+                  <Field.Text
+                    name="sessionFee"
+                    label="Seans Ücreti"
+                    type="number"
+                    helperText={watch('therapistId') ? 'Danışman seçildiğinde otomatik doldurulur' : ''}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          {getCurrencySymbol(watch('sessionFeeCurrency') || 'TRY')}
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+              </>
+            )}
 
             <Grid item xs={12}>
               <Field.Text
