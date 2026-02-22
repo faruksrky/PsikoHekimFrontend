@@ -278,7 +278,7 @@ function IncomeTable({ sessions, loading }) {
                         <TableCell>Danışan</TableCell>
                         <TableCell>Danışman</TableCell>
                         <TableCell>Seans Tipi</TableCell>
-                        <TableCell>Tutar</TableCell>
+                        <TableCell>Seans Tutarı</TableCell>
                         <TableCell>Durum</TableCell>
                     </TableRow>
                 </TableHead>
@@ -306,7 +306,7 @@ function IncomeTable({ sessions, loading }) {
                                         : '-'}
                                 </TableCell>
                                 <TableCell>{row.sessionType || '-'}</TableCell>
-                                <TableCell>{fCurrency(row.sessionFee)}</TableCell>
+                                <TableCell>{fCurrency(row.clientPrice ?? row.sessionFee)}</TableCell>
                                 <TableCell>
                                     <Label color="success">Ödendi</Label>
                                 </TableCell>
