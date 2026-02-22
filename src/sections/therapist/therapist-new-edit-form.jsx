@@ -164,17 +164,29 @@ export function TherapistNewEditForm({ currentTherapist }) {
       }
 
       console.log('API isteği gönderiliyor...');
-      // Danışmanı kaydet
-      const response = await axios.post(CONFIG.addTherapistUrl, {
+      const payload = {
         ...data,
         therapistPhoneNumber: data.therapistPhoneNumber.trim(),
         therapistYearsOfExperience: data.therapistYearsOfExperience.toUpperCase()
-      });
+      };
+
+      let response;
+      if (currentTherapist?.therapistId) {
+        // Güncelleme - PUT /therapist/{id}
+        response = await axios.put(
+          `/therapist/${currentTherapist.therapistId}`,
+          payload
+        );
+      } else {
+        // Yeni ekleme
+        const addUrl = CONFIG.addTherapistUrl || '/therapist/addTherapist';
+        response = await axios.post(addUrl, payload);
+      }
 
       console.log('API yanıtı:', response.data);
       
       if (response.status === 200 || response.status === 201) {
-        setMessage('Danışman başarıyla kaydedildi.');
+        setMessage(currentTherapist ? 'Değişiklikler başarıyla kaydedildi.' : 'Danışman başarıyla kaydedildi.');
         setSeverity('success');
         setOpen(true);
         reset();
