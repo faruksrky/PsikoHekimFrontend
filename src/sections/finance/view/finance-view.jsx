@@ -28,12 +28,10 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { toast } from 'sonner';
 import tr from 'date-fns/locale/tr';
 
-import { useSnackbar } from 'src/components/snackbar';
-
 export function FinanceView() {
-    const { enqueueSnackbar } = useSnackbar();
     const [currentTab, setCurrentTab] = useState('income');
     const [loading, setLoading] = useState(true);
     const [sessions, setSessions] = useState([]);
@@ -82,11 +80,11 @@ export function FinanceView() {
             setTherapistExpenses(data.therapistExpenses || []);
         } catch (error) {
             console.error('Finans verileri yüklenirken hata:', error);
-            enqueueSnackbar('Finans verileri yüklenemedi', { variant: 'error' });
+            toast.error('Finans verileri yüklenemedi');
         } finally {
             setLoading(false);
         }
-    }, [selectedDate, enqueueSnackbar]);
+    }, [selectedDate]);
 
     useEffect(() => {
         fetchFinanceData();
@@ -115,16 +113,16 @@ export function FinanceView() {
                     throw new Error('Ödeme işaretlenemedi');
                 }
 
-                enqueueSnackbar('Ödeme başarıyla işaretlendi', { variant: 'success' });
+                toast.success('Ödeme başarıyla işaretlendi');
                 fetchFinanceData();
             } catch (error) {
                 console.error('Ödeme işaretlenirken hata:', error);
-                enqueueSnackbar('Ödeme işaretlenemedi', { variant: 'error' });
+                toast.error('Ödeme işaretlenemedi');
             } finally {
                 setMarkingPaid(null);
             }
         },
-        [selectedDate, fetchFinanceData, enqueueSnackbar]
+        [selectedDate, fetchFinanceData]
     );
 
     const handleChangeTab = (event, newValue) => {
