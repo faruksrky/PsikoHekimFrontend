@@ -39,10 +39,8 @@ export function TherapistDetailsView() {
       setLoading(true);
       const token = sessionStorage.getItem('jwt_access_token');
 
-      // Backend Long ID bekliyor, doğru endpoint'i kullan
-      const endpoint = CONFIG.therapistDetailsUrl 
-        ? `${CONFIG.psikoHekimBaseUrl}${CONFIG.therapistDetailsUrl}?therapistId=${id}`
-        : `${CONFIG.psikoHekimBaseUrl}/therapist/${id}`;
+      // Backend GET /therapist/{therapistId}
+      const endpoint = `${CONFIG.psikoHekimBaseUrl}/therapist/${id}`;
 
       const response = await fetch(endpoint, {
         headers: {
