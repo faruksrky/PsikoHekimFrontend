@@ -39,6 +39,7 @@ export function TherapySessionTableRow({
   onRescheduleSession,
   onApproveSession,
   onRejectSession,
+  onMarkPaymentReceived,
   onViewDetails,
   priceView = 'client',
 }) {
@@ -162,6 +163,34 @@ export function TherapySessionTableRow({
       toast.error(error.message || 'Seans reddedilemedi');
     }
   }, [sessionId, onRejectSession]);
+
+  const handleMarkPaymentReceived = useCallback(async () => {
+    try {
+      const token = sessionStorage.getItem('jwt_access_token');
+      const response = await fetch(
+        `${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.updatePayment}/${sessionId}/payment`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            paymentStatus: 'PAID',
+            paymentMethod: 'NAKIT',
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Ödeme güncellenemedi');
+      }
+      toast.success('Ödeme alındı olarak işaretlendi');
+      onMarkPaymentReceived?.();
+    } catch (error) {
+      console.error('Error marking payment:', error);
+      toast.error(error.message || 'Ödeme güncellenemedi');
+    }
+  }, [sessionId, onMarkPaymentReceived]);
 
   const handleDeleteSession = useCallback(async () => {
     try {
@@ -499,6 +528,18 @@ export function TherapySessionTableRow({
           <Iconify icon="solar:check-circle-bold" />
           Tamamla
         </MenuItem>
+
+        {status === 'COMPLETED' && paymentStatus === 'PENDING' && priceView === 'admin' && (
+          <MenuItem
+            onClick={() => {
+              handleMarkPaymentReceived();
+              popover.onClose();
+            }}
+          >
+            <Iconify icon="solar:wallet-money-bold" sx={{ color: 'success.main', mr: 1 }} />
+            Ödeme Alındı
+          </MenuItem>
+        )}
 
         <MenuItem
           onClick={() => {

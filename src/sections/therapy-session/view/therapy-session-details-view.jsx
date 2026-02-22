@@ -198,6 +198,34 @@ export function TherapySessionDetailsView() {
     }
   }, [sessionId, fetchSessionDetails]);
 
+  const handleMarkPaymentReceived = useCallback(async () => {
+    try {
+      const token = sessionStorage.getItem('jwt_access_token');
+      const response = await fetch(
+        `${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.updatePayment}/${sessionId}/payment`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            paymentStatus: 'PAID',
+            paymentMethod: 'NAKIT',
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Ödeme güncellenemedi');
+      }
+      toast('Ödeme alındı olarak işaretlendi', { variant: 'success' });
+      fetchSessionDetails();
+    } catch (error) {
+      console.error('Error marking payment:', error);
+      toast('Ödeme güncellenemedi', { variant: 'error' });
+    }
+  }, [sessionId, fetchSessionDetails]);
+
   const handleDelete = useCallback(async () => {
     try {
       const token = sessionStorage.getItem('jwt_access_token');
@@ -296,6 +324,19 @@ export function TherapySessionDetailsView() {
             >
               Tamamla
             </Button>
+
+            {sessionData.status === 'COMPLETED' &&
+              sessionData.paymentStatus === 'PENDING' &&
+              isAdmin() && (
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={handleMarkPaymentReceived}
+                  startIcon={<Iconify icon="solar:wallet-money-bold" />}
+                >
+                  Ödeme Alındı
+                </Button>
+              )}
 
             <Button
               variant="outlined"

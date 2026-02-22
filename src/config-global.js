@@ -141,6 +141,7 @@ export const CONFIG = {
     getAll: '/therapy-sessions/getSessions',
     details: '/therapy-sessions/getSession',
     update: '/therapy-sessions/updateSession',
+    updatePayment: '/therapy-sessions',
     delete: '/therapy-sessions/deleteSession',
     assignments: '/therapist-patient/assignments',
     complete: '/therapy-sessions/complete',

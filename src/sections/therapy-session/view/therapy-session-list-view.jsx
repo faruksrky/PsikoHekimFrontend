@@ -303,6 +303,10 @@ export function TherapySessionListView() {
     fetchTherapySessions();
   }, [fetchTherapySessions]);
 
+  const handleMarkPaymentReceived = useCallback(() => {
+    fetchTherapySessions();
+  }, [fetchTherapySessions]);
+
   return (
     <Container maxWidth="xl">
       <CustomBreadcrumbs
@@ -348,6 +352,7 @@ export function TherapySessionListView() {
           onCompleteSession={handleCompleteSession}
           onCancelSession={handleCancelSession}
           onRescheduleSession={handleRescheduleSession}
+          onMarkPaymentReceived={handleMarkPaymentReceived}
         />
       </Card>
     </Container>
