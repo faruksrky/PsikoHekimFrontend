@@ -4,6 +4,7 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -24,37 +25,45 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-// ----------------------------------------------------------------------
-
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import tr from 'date-fns/locale/tr';
 
+import { useSnackbar } from 'src/components/snackbar';
+
 export function FinanceView() {
+    const { enqueueSnackbar } = useSnackbar();
     const [currentTab, setCurrentTab] = useState('income');
     const [loading, setLoading] = useState(true);
     const [sessions, setSessions] = useState([]);
-    const [selectedDate, setSelectedDate] = useState(new Date()); // Varsayılan: Bugün (Mevcut Ay)
+    const [selectedDate, setSelectedDate] = useState(new Date());
     const [summary, setSummary] = useState({
         totalIncome: 0,
         totalExpense: 0,
+        totalPaid: 0,
+        totalPending: 0,
         totalProfit: 0,
     });
     const [therapistExpenses, setTherapistExpenses] = useState([]);
+    const [markingPaid, setMarkingPaid] = useState(null);
 
     const fetchFinanceData = useCallback(async () => {
         try {
             setLoading(true);
             const token = sessionStorage.getItem('jwt_access_token');
+            const month = selectedDate.getMonth() + 1;
+            const year = selectedDate.getFullYear();
 
-            const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.getAll}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
+            const response = await fetch(
+                `${CONFIG.psikoHekimBaseUrl}${CONFIG.finance.monthlySummary}?year=${year}&month=${month}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
 
             if (!response.ok) {
                 throw new Error('Veri çekilemedi');
@@ -62,74 +71,61 @@ export function FinanceView() {
 
             const data = await response.json();
 
-            // Seçilen ay ve yıla göre filtrele
-            const selectedMonth = selectedDate.getMonth();
-            const selectedYear = selectedDate.getFullYear();
-
-            // Sadece tamamlanmış ve ödenmiş seansları filtrele
-            // Not: Gerçek senaryoda paymentStatus === 'PAID' kontrolü de yapılmalı
-            // Ancak mock veride veya mevcut durumda status === 'COMPLETED' yeterli olabilir
-            const completedSessions = data.filter(session => {
-                const sessionDate = new Date(session.scheduledDate);
-                return (
-                    session.status === 'COMPLETED' &&
-                    sessionDate.getMonth() === selectedMonth &&
-                    sessionDate.getFullYear() === selectedYear
-                );
-            });
-
-            let totalIncome = 0;
-            let totalExpense = 0;
-            const therapistMap = {};
-
-            completedSessions.forEach(session => {
-                const fee = session.sessionFee || 0;
-                const expense = fee * 0.80; // %80 Danışman Hakedişi
-
-                totalIncome += fee;
-                totalExpense += expense;
-
-                // Danışman bazlı hesaplama
-                const therapistId = session.therapist?.id || 'unknown';
-                const therapistName = session.therapist
-                    ? `${session.therapist.therapistFirstName} ${session.therapist.therapistLastName}`
-                    : 'Bilinmeyen Danışman';
-
-                if (!therapistMap[therapistId]) {
-                    therapistMap[therapistId] = {
-                        id: therapistId,
-                        name: therapistName,
-                        totalSessions: 0,
-                        totalAmount: 0,
-                        commission: 0,
-                        netPayment: 0,
-                    };
-                }
-
-                therapistMap[therapistId].totalSessions += 1;
-                therapistMap[therapistId].totalAmount += fee;
-                therapistMap[therapistId].commission += expense;
-                therapistMap[therapistId].netPayment += expense;
-            });
-
-            setSessions(completedSessions);
+            setSessions(data.sessions || []);
             setSummary({
-                totalIncome,
-                totalExpense,
-                totalProfit: totalIncome - totalExpense,
+                totalIncome: Number(data.totalIncome) || 0,
+                totalExpense: Number(data.totalExpense) || 0,
+                totalPaid: Number(data.totalPaid) || 0,
+                totalPending: Number(data.totalPending) || 0,
+                totalProfit: Number(data.totalProfit) || 0,
             });
-            setTherapistExpenses(Object.values(therapistMap));
-
+            setTherapistExpenses(data.therapistExpenses || []);
         } catch (error) {
             console.error('Finans verileri yüklenirken hata:', error);
+            enqueueSnackbar('Finans verileri yüklenemedi', { variant: 'error' });
         } finally {
             setLoading(false);
         }
-    }, [selectedDate]);
+    }, [selectedDate, enqueueSnackbar]);
 
     useEffect(() => {
         fetchFinanceData();
-    }, [fetchFinanceData, selectedDate]);
+    }, [fetchFinanceData]);
+
+    const handleMarkTherapistPaid = useCallback(
+        async (therapistId) => {
+            try {
+                setMarkingPaid(therapistId);
+                const token = sessionStorage.getItem('jwt_access_token');
+                const month = selectedDate.getMonth() + 1;
+                const year = selectedDate.getFullYear();
+
+                const response = await fetch(
+                    `${CONFIG.psikoHekimBaseUrl}${CONFIG.finance.markTherapistPaid}?therapistId=${therapistId}&year=${year}&month=${month}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Ödeme işaretlenemedi');
+                }
+
+                enqueueSnackbar('Ödeme başarıyla işaretlendi', { variant: 'success' });
+                fetchFinanceData();
+            } catch (error) {
+                console.error('Ödeme işaretlenirken hata:', error);
+                enqueueSnackbar('Ödeme işaretlenemedi', { variant: 'error' });
+            } finally {
+                setMarkingPaid(null);
+            }
+        },
+        [selectedDate, fetchFinanceData, enqueueSnackbar]
+    );
 
     const handleChangeTab = (event, newValue) => {
         setCurrentTab(newValue);
@@ -152,16 +148,14 @@ export function FinanceView() {
                         views={['year', 'month']}
                         label="Ay ve Yıl Seçin"
                         value={selectedDate}
-                        onChange={(newValue) => {
-                            setSelectedDate(newValue);
-                        }}
+                        onChange={(newValue) => setSelectedDate(newValue)}
                         slotProps={{ textField: { size: 'small' } }}
                     />
                 </LocalizationProvider>
             </Stack>
 
             <Grid container spacing={3} sx={{ mb: 5 }}>
-                <Grid xs={12} md={4}>
+                <Grid xs={12} sm={6} md={2.4}>
                     <SummaryCard
                         title="Toplam Ciro"
                         total={summary.totalIncome}
@@ -169,22 +163,36 @@ export function FinanceView() {
                         color="primary"
                     />
                 </Grid>
-
-                <Grid xs={12} md={4}>
+                <Grid xs={12} sm={6} md={2.4}>
                     <SummaryCard
-                        title="Toplam Hakediş (Gider)"
+                        title="Toplam Hakediş"
                         total={summary.totalExpense}
                         icon="solar:hand-money-bold"
                         color="warning"
                     />
                 </Grid>
-
-                <Grid xs={12} md={4}>
+                <Grid xs={12} sm={6} md={2.4}>
                     <SummaryCard
-                        title="Toplam Kar"
+                        title="Ödenen"
+                        total={summary.totalPaid}
+                        icon="solar:check-circle-bold"
+                        color="success"
+                    />
+                </Grid>
+                <Grid xs={12} sm={6} md={2.4}>
+                    <SummaryCard
+                        title="Bekleyen"
+                        total={summary.totalPending}
+                        icon="solar:clock-circle-bold"
+                        color="error"
+                    />
+                </Grid>
+                <Grid xs={12} sm={6} md={2.4}>
+                    <SummaryCard
+                        title="Kar"
                         total={summary.totalProfit}
                         icon="solar:chart-square-bold"
-                        color="success"
+                        color="info"
                     />
                 </Grid>
             </Grid>
@@ -215,7 +223,13 @@ export function FinanceView() {
                 )}
 
                 {currentTab === 'expense' && (
-                    <ExpenseTable therapists={therapistExpenses} loading={loading} />
+                    <ExpenseTable
+                        therapists={therapistExpenses}
+                        loading={loading}
+                        selectedDate={selectedDate}
+                        onMarkPaid={handleMarkTherapistPaid}
+                        markingPaid={markingPaid}
+                    />
                 )}
             </Card>
         </Container>
@@ -237,7 +251,6 @@ function SummaryCard({ title, total, icon, color }) {
                 </Typography>
                 <Typography variant="h3">{fCurrency(total)}</Typography>
             </Box>
-
             <Box
                 sx={{
                     width: 64,
@@ -285,12 +298,16 @@ function IncomeTable({ sessions, loading }) {
                             <TableRow key={row.sessionId}>
                                 <TableCell>{fDate(row.scheduledDate)}</TableCell>
                                 <TableCell>
-                                    {row.patient ? `${row.patient.patientFirstName} ${row.patient.patientLastName}` : '-'}
+                                    {row.patient
+                                        ? `${row.patient.patientFirstName} ${row.patient.patientLastName}`
+                                        : '-'}
                                 </TableCell>
                                 <TableCell>
-                                    {row.therapist ? `${row.therapist.therapistFirstName} ${row.therapist.therapistLastName}` : '-'}
+                                    {row.therapist
+                                        ? `${row.therapist.therapistFirstName} ${row.therapist.therapistLastName}`
+                                        : '-'}
                                 </TableCell>
-                                <TableCell>{row.sessionType}</TableCell>
+                                <TableCell>{row.sessionType || '-'}</TableCell>
                                 <TableCell>{fCurrency(row.sessionFee)}</TableCell>
                                 <TableCell>
                                     <Label color="success">Ödendi</Label>
@@ -304,42 +321,78 @@ function IncomeTable({ sessions, loading }) {
     );
 }
 
-function ExpenseTable({ therapists, loading }) {
+function ExpenseTable({ therapists, loading, selectedDate, onMarkPaid, markingPaid }) {
+    const getStatusLabel = (status) => {
+        if (status === 'FULLY_PAID') return { text: 'Ödendi', color: 'success' };
+        if (status === 'PARTIAL') return { text: 'Kısmi Ödendi', color: 'warning' };
+        return { text: 'Bekliyor', color: 'error' };
+    };
+
     return (
         <Scrollbar>
             <Table sx={{ minWidth: 800 }}>
                 <TableHead>
                     <TableRow>
                         <TableCell>Danışman</TableCell>
-                        <TableCell>Toplam Seans</TableCell>
-                        <TableCell>Toplam Ciro</TableCell>
-                        <TableCell>Hakediş Oranı</TableCell>
-                        <TableCell>Ödenecek Tutar</TableCell>
+                        <TableCell>Seans</TableCell>
+                        <TableCell>Toplam Hakediş</TableCell>
+                        <TableCell>Ödenen</TableCell>
+                        <TableCell>Bekleyen</TableCell>
                         <TableCell>Durum</TableCell>
+                        <TableCell align="right">İşlem</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={6} align="center">Yükleniyor...</TableCell>
+                            <TableCell colSpan={7} align="center">Yükleniyor...</TableCell>
                         </TableRow>
                     ) : therapists.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={6} align="center">Veri bulunamadı</TableCell>
+                            <TableCell colSpan={7} align="center">Veri bulunamadı</TableCell>
                         </TableRow>
                     ) : (
-                        therapists.map((row) => (
-                            <TableRow key={row.id}>
-                                <TableCell>{row.name}</TableCell>
-                                <TableCell>{row.totalSessions}</TableCell>
-                                <TableCell>{fCurrency(row.totalAmount)}</TableCell>
-                                <TableCell>%80</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>{fCurrency(row.netPayment)}</TableCell>
-                                <TableCell>
-                                    <Label color="warning">Ödeme Bekliyor</Label>
-                                </TableCell>
-                            </TableRow>
-                        ))
+                        therapists.map((row) => {
+                            const statusInfo = getStatusLabel(row.status);
+                            const hasPending = row.pendingAmount > 0;
+                            const isMarking = markingPaid === row.therapistId;
+
+                            return (
+                                <TableRow key={row.therapistId}>
+                                    <TableCell>{row.therapistName}</TableCell>
+                                    <TableCell>{row.sessionCount}</TableCell>
+                                    <TableCell>{fCurrency(row.totalEarning)}</TableCell>
+                                    <TableCell sx={{ color: 'success.main' }}>
+                                        {fCurrency(row.paidAmount)}
+                                    </TableCell>
+                                    <TableCell sx={{ color: hasPending ? 'error.main' : 'text.secondary' }}>
+                                        {fCurrency(row.pendingAmount)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Label color={statusInfo.color}>{statusInfo.text}</Label>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {hasPending && (
+                                            <Button
+                                                size="small"
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={() => onMarkPaid(row.therapistId)}
+                                                disabled={isMarking}
+                                                startIcon={
+                                                    <Iconify
+                                                        icon={isMarking ? 'eos-icons:loading' : 'solar:check-circle-bold'}
+                                                        width={18}
+                                                    />
+                                                }
+                                            >
+                                                {isMarking ? 'İşleniyor...' : 'Ödeme Yap'}
+                                            </Button>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })
                     )}
                 </TableBody>
             </Table>

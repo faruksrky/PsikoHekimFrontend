@@ -153,6 +153,11 @@ export const CONFIG = {
   pricing: {
     clientSession: '/pricing/client/sessions',
     consultantSession: '/pricing/consultant/sessions'
+  },
+
+  finance: {
+    monthlySummary: '/finance/monthly-summary',
+    markTherapistPaid: '/finance/mark-therapist-paid'
   }
 };
  
