@@ -268,7 +268,7 @@ export const dashboardRoutes = [
       {
         path: 'finance',
         element: (
-          <ProtectedRoute requiredRole="ADMIN">
+          <ProtectedRoute requiredRole="USER">
             <FinancePage />
           </ProtectedRoute>
         )

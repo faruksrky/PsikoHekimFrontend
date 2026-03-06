@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import { useAuth } from 'src/hooks/useAuth';
+import { getEmailFromToken, getTherapistId } from 'src/auth/context/jwt/action';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Stack from '@mui/material/Stack';
@@ -32,10 +34,12 @@ import { toast } from 'sonner';
 import tr from 'date-fns/locale/tr';
 
 export function FinanceView() {
+    const { isAdmin } = useAuth();
     const [currentTab, setCurrentTab] = useState('income');
     const [loading, setLoading] = useState(true);
     const [sessions, setSessions] = useState([]);
     const [selectedDate, setSelectedDate] = useState(new Date());
+    const [therapistId, setTherapistId] = useState(null);
     const [summary, setSummary] = useState({
         totalIncome: 0,
         totalExpense: 0,
@@ -46,15 +50,27 @@ export function FinanceView() {
     const [therapistExpenses, setTherapistExpenses] = useState([]);
     const [markingPaid, setMarkingPaid] = useState(null);
 
+    useEffect(() => {
+        if (!isAdmin()) {
+            const userInfo = getEmailFromToken();
+            if (userInfo?.email) {
+                getTherapistId(userInfo.email).then((id) => setTherapistId(id));
+            }
+        }
+    }, [isAdmin]);
+
     const fetchFinanceData = useCallback(async () => {
         try {
             setLoading(true);
             const token = sessionStorage.getItem('jwt_access_token');
             const month = selectedDate.getMonth() + 1;
             const year = selectedDate.getFullYear();
+            const url = isAdmin()
+                ? `${CONFIG.psikoHekimBaseUrl}${CONFIG.finance.monthlySummary}?year=${year}&month=${month}`
+                : `${CONFIG.psikoHekimBaseUrl}${CONFIG.finance.monthlySummary}?year=${year}&month=${month}${therapistId ? `&therapistId=${therapistId}` : ''}`;
 
             const response = await fetch(
-                `${CONFIG.psikoHekimBaseUrl}${CONFIG.finance.monthlySummary}?year=${year}&month=${month}`,
+                url,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -84,11 +100,13 @@ export function FinanceView() {
         } finally {
             setLoading(false);
         }
-    }, [selectedDate]);
+    }, [selectedDate, isAdmin, therapistId]);
 
     useEffect(() => {
-        fetchFinanceData();
-    }, [fetchFinanceData]);
+        if (isAdmin() || therapistId !== null) {
+            fetchFinanceData();
+        }
+    }, [fetchFinanceData, isAdmin, therapistId]);
 
     const handleMarkTherapistPaid = useCallback(
         async (therapistId) => {
@@ -153,15 +171,17 @@ export function FinanceView() {
             </Stack>
 
             <Grid container spacing={3} sx={{ mb: 5 }}>
-                <Grid xs={12} sm={6} md={2.4}>
-                    <SummaryCard
-                        title="Toplam Ciro"
-                        total={summary.totalIncome}
-                        icon="solar:wallet-money-bold"
-                        color="primary"
-                    />
-                </Grid>
-                <Grid xs={12} sm={6} md={2.4}>
+                {isAdmin() && (
+                    <Grid xs={12} sm={6} md={2.4}>
+                        <SummaryCard
+                            title="Toplam Ciro"
+                            total={summary.totalIncome}
+                            icon="solar:wallet-money-bold"
+                            color="primary"
+                        />
+                    </Grid>
+                )}
+                <Grid xs={12} sm={6} md={isAdmin() ? 2.4 : 4}>
                     <SummaryCard
                         title="Toplam Hakediş"
                         total={summary.totalExpense}
@@ -169,7 +189,7 @@ export function FinanceView() {
                         color="warning"
                     />
                 </Grid>
-                <Grid xs={12} sm={6} md={2.4}>
+                <Grid xs={12} sm={6} md={isAdmin() ? 2.4 : 4}>
                     <SummaryCard
                         title="Ödenen"
                         total={summary.totalPaid}
@@ -177,7 +197,7 @@ export function FinanceView() {
                         color="success"
                     />
                 </Grid>
-                <Grid xs={12} sm={6} md={2.4}>
+                <Grid xs={12} sm={6} md={isAdmin() ? 2.4 : 4}>
                     <SummaryCard
                         title="Bekleyen"
                         total={summary.totalPending}
@@ -185,42 +205,53 @@ export function FinanceView() {
                         color="error"
                     />
                 </Grid>
-                <Grid xs={12} sm={6} md={2.4}>
-                    <SummaryCard
-                        title="Kar"
-                        total={summary.totalProfit}
-                        icon="solar:chart-square-bold"
-                        color="info"
-                    />
-                </Grid>
+                {isAdmin() && (
+                    <Grid xs={12} sm={6} md={2.4}>
+                        <SummaryCard
+                            title="Kar"
+                            total={summary.totalProfit}
+                            icon="solar:chart-square-bold"
+                            color="info"
+                        />
+                    </Grid>
+                )}
             </Grid>
 
             <Card>
-                <Tabs
-                    value={currentTab}
-                    onChange={handleChangeTab}
-                    sx={{
-                        px: 2.5,
-                        boxShadow: (theme) => `inset 0 -2px 0 0 ${theme.palette.grey[500_08]}`,
-                    }}
-                >
-                    <Tab
-                        value="income"
-                        label="Gelirler (Seans Listesi)"
-                        icon={<Iconify icon="solar:bill-list-bold" width={24} />}
-                    />
-                    <Tab
-                        value="expense"
-                        label="Giderler (Danışman Hakedişleri)"
-                        icon={<Iconify icon="solar:user-id-bold" width={24} />}
-                    />
-                </Tabs>
-
-                {currentTab === 'income' && (
-                    <IncomeTable sessions={sessions} loading={loading} />
+                {isAdmin() ? (
+                    <Tabs
+                        value={currentTab}
+                        onChange={handleChangeTab}
+                        sx={{
+                            px: 2.5,
+                            boxShadow: (theme) => `inset 0 -2px 0 0 ${theme.palette.grey[500_08]}`,
+                        }}
+                    >
+                        <Tab
+                            value="income"
+                            label="Gelirler (Seans Listesi)"
+                            icon={<Iconify icon="solar:bill-list-bold" width={24} />}
+                        />
+                        <Tab
+                            value="expense"
+                            label="Giderler (Danışman Hakedişleri)"
+                            icon={<Iconify icon="solar:user-id-bold" width={24} />}
+                        />
+                    </Tabs>
+                ) : (
+                    <Box sx={{ px: 2.5, pt: 2 }}>
+                        <Typography variant="h6">Seans Listesi</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Danışan, seans, tutar ve ödeme durumu
+                        </Typography>
+                    </Box>
                 )}
 
-                {currentTab === 'expense' && (
+                {currentTab === 'income' && (
+                    <IncomeTable sessions={sessions} loading={loading} isAdmin={isAdmin()} />
+                )}
+
+                {isAdmin() && currentTab === 'expense' && (
                     <ExpenseTable
                         therapists={therapistExpenses}
                         loading={loading}
@@ -268,7 +299,14 @@ function SummaryCard({ title, total, icon, color }) {
     );
 }
 
-function IncomeTable({ sessions, loading }) {
+function getPayoutStatusLabel(status) {
+    if (status === 'PAID') return { text: 'Ödendi', color: 'success' };
+    if (status === 'READY') return { text: 'Ödeme Bekliyor', color: 'warning' };
+    return { text: 'Bekliyor', color: 'default' };
+}
+
+function IncomeTable({ sessions, loading, isAdmin }) {
+    const cols = isAdmin ? 6 : 5;
     return (
         <Scrollbar>
             <Table sx={{ minWidth: 800 }}>
@@ -276,42 +314,56 @@ function IncomeTable({ sessions, loading }) {
                     <TableRow>
                         <TableCell>Tarih</TableCell>
                         <TableCell>Danışan</TableCell>
-                        <TableCell>Danışman</TableCell>
+                        {isAdmin && <TableCell>Danışman</TableCell>}
                         <TableCell>Seans Tipi</TableCell>
-                        <TableCell>Seans Tutarı</TableCell>
+                        <TableCell>{isAdmin ? 'Seans Tutarı' : 'Tutar'}</TableCell>
                         <TableCell>Durum</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={6} align="center">Yükleniyor...</TableCell>
+                            <TableCell colSpan={cols} align="center">Yükleniyor...</TableCell>
                         </TableRow>
                     ) : sessions.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={6} align="center">Veri bulunamadı</TableCell>
+                            <TableCell colSpan={cols} align="center">Veri bulunamadı</TableCell>
                         </TableRow>
                     ) : (
-                        sessions.map((row) => (
-                            <TableRow key={row.sessionId}>
-                                <TableCell>{fDate(row.scheduledDate)}</TableCell>
-                                <TableCell>
-                                    {row.patient
-                                        ? `${row.patient.patientFirstName} ${row.patient.patientLastName}`
-                                        : '-'}
-                                </TableCell>
-                                <TableCell>
-                                    {row.therapist
-                                        ? `${row.therapist.therapistFirstName} ${row.therapist.therapistLastName}`
-                                        : '-'}
-                                </TableCell>
-                                <TableCell>{row.sessionType || '-'}</TableCell>
-                                <TableCell>{fCurrency(row.clientPrice ?? row.sessionFee)}</TableCell>
-                                <TableCell>
-                                    <Label color="success">Ödendi</Label>
-                                </TableCell>
-                            </TableRow>
-                        ))
+                        sessions.map((row) => {
+                            const payoutInfo = !isAdmin && row.consultantPayoutStatus
+                                ? getPayoutStatusLabel(row.consultantPayoutStatus)
+                                : null;
+                            const amount = isAdmin
+                                ? (row.clientPrice ?? row.sessionFee)
+                                : (row.consultantFee ?? row.sessionFee);
+                            return (
+                                <TableRow key={row.sessionId}>
+                                    <TableCell>{fDate(row.scheduledDate)}</TableCell>
+                                    <TableCell>
+                                        {row.patient
+                                            ? `${row.patient.patientFirstName} ${row.patient.patientLastName}`
+                                            : '-'}
+                                    </TableCell>
+                                    {isAdmin && (
+                                        <TableCell>
+                                            {row.therapist
+                                                ? `${row.therapist.therapistFirstName} ${row.therapist.therapistLastName}`
+                                                : '-'}
+                                        </TableCell>
+                                    )}
+                                    <TableCell>{row.sessionType || '-'}</TableCell>
+                                    <TableCell>{fCurrency(amount)}</TableCell>
+                                    <TableCell>
+                                        {payoutInfo ? (
+                                            <Label color={payoutInfo.color}>{payoutInfo.text}</Label>
+                                        ) : (
+                                            <Label color="success">Ödendi</Label>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })
                     )}
                 </TableBody>
             </Table>

@@ -91,6 +91,7 @@ export const navData = [
           { title: 'Seans Listesi', path: paths.dashboard.therapySession.list, requiredRole: 'USER' },
           { title: 'Yeni Seans', path: paths.dashboard.therapySession.new, requiredRole: 'USER' },
           { title: 'Analitik', path: paths.dashboard.therapySession.analytics, requiredRole: 'USER' },
+          { title: 'Finans', path: paths.dashboard.finance.root, requiredRole: 'USER' },
         ],
       },
 
@@ -107,7 +108,6 @@ export const navData = [
       },
 
       { title: 'Analytics', path: paths.dashboard.analytics, icon: ICONS.analytics, requiredRole: 'USER' },
-      { title: 'Finans', path: paths.dashboard.finance.root, icon: ICONS.banking, requiredRole: 'ADMIN' },
 
     ],
 
