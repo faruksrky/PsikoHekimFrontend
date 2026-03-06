@@ -27,6 +27,7 @@ import { toast } from 'src/components/snackbar';
 import { Form, Field } from 'src/components/hook-form';
 import { useAuthContext } from 'src/auth/hooks';
 import { useAuth } from 'src/hooks/useAuth';
+import { getEmailFromToken } from 'src/auth/context/jwt/action';
 import { useGetPatient } from 'src/actions/patient';
 import { CURRENCY_OPTIONS, getCurrencySymbol } from '../therapist/therapist-new-edit-form';
 
@@ -115,8 +116,13 @@ export function TherapySessionNewEditForm({ currentSession }) {
       setLoadingTherapists(true);
       try {
         const token = sessionStorage.getItem('jwt_access_token');
-        
-        const response = await fetch(`${CONFIG.therapistListUrl}`, {
+        // Admin: tüm danışmanlar. Danışman (user): sadece kendisi
+        const userInfo = getEmailFromToken();
+        const url = isAdmin()
+          ? CONFIG.therapistListUrl
+          : `${CONFIG.therapistListUrl}?email=${encodeURIComponent(userInfo?.email || '')}`;
+
+        const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -124,7 +130,12 @@ export function TherapySessionNewEditForm({ currentSession }) {
         
         if (response.ok) {
           const data = await response.json();
-          setTherapists(data.therapists || []);
+          const list = data.therapists || [];
+          setTherapists(list);
+          // Danışman ise tek seçenek kendisi - otomatik seç
+          if (!isAdmin() && list.length === 1) {
+            setValue('therapistId', String(list[0].therapistId));
+          }
         } else {
           console.error('Failed to fetch therapists, status:', response.status);
           const errorText = await response.text();
@@ -142,7 +153,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
     };
 
     fetchTherapists();
-  }, []);
+  }, [isAdmin, setValue]);
 
   const handleTherapistChange = useCallback(async (therapistId) => {
     if (!therapistId || therapistId === '') {
@@ -590,7 +601,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
                   setValue('therapistId', e.target.value);
                   handleTherapistChange(e.target.value);
                 }}
-                disabled={loadingTherapists}
+                disabled={loadingTherapists || (!isAdmin() && therapists.length === 1)}
               >
                 <MenuItem value="">
                   <em>Danışman seçin</em>
