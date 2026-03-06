@@ -32,7 +32,7 @@ export const EventSchema = zod.object({
     message: 'Geçerli bir tarih ve saat seçiniz!'
   }),
   sessionType: zod.enum(['INITIAL', 'REGULAR', 'FOLLOWUP', 'FINAL']).default('REGULAR'),
-  sessionFormat: zod.enum(['IN_PERSON', 'ONLINE', 'PHONE']).default('IN_PERSON'),
+  sessionFormat: zod.enum(['IN_PERSON', 'ONLINE']).default('IN_PERSON'),
   sessionFee: zod.number().min(0).optional(),
   notes: zod.string().optional().default(''),
 });
@@ -259,7 +259,6 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
           <Field.Select name="sessionFormat" label="Seans Formatı">
             <MenuItem value="IN_PERSON">Yüz Yüze</MenuItem>
             <MenuItem value="ONLINE">Online</MenuItem>
-            <MenuItem value="PHONE">Telefon</MenuItem>
           </Field.Select>
 
           {/* Seans Ücreti - sadece admin görür/düzenler */}

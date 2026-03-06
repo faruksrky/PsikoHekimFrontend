@@ -177,7 +177,7 @@ export function TherapistListView() {
     // Ücret kolonu sadece admin görebilir
     ...(isAdmin() ? [{
       field: 'therapistAppointmentFee',
-      headerName: 'Randevu Ücreti',
+      headerName: 'Seans Ücreti',
       flex: 1,
       minWidth: 100,
       renderCell: (params) => <RenderCellAppointmentFee params={params} />,

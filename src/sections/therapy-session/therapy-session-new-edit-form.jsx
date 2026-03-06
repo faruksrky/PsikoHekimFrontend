@@ -166,15 +166,15 @@ export function TherapySessionNewEditForm({ currentSession }) {
       return;
     }
 
-    // Otomatik olarak seans ücretini ve para birimini danışmanın ücretinden doldur
+    // Seans ücreti = danışan ödemesi (therapistAppointmentFee), danışman ücreti değil
     const selectedTherapist = therapists.find(t => t.therapistId === parseInt(therapistId, 10));
-    if (selectedTherapist && selectedTherapist.therapistConsultantFee) {
-      setValue('sessionFee', selectedTherapist.therapistConsultantFee);
-      setValue('sessionFeeCurrency', selectedTherapist.therapistConsultantFeeCurrency || 'TRY');
-    } else if (selectedTherapist && selectedTherapist.therapistAppointmentFee) {
-      // Eğer consultantFee yoksa, appointmentFee'yi kullan (geriye dönük uyumluluk)
+    if (selectedTherapist && selectedTherapist.therapistAppointmentFee) {
       setValue('sessionFee', selectedTherapist.therapistAppointmentFee);
       setValue('sessionFeeCurrency', selectedTherapist.therapistAppointmentFeeCurrency || 'TRY');
+    } else if (selectedTherapist && selectedTherapist.therapistConsultantFee) {
+      // Geriye dönük uyumluluk: appointmentFee yoksa consultantFee kullan
+      setValue('sessionFee', selectedTherapist.therapistConsultantFee);
+      setValue('sessionFeeCurrency', selectedTherapist.therapistConsultantFeeCurrency || 'TRY');
     }
 
     if (requestMode) {
@@ -287,7 +287,6 @@ export function TherapySessionNewEditForm({ currentSession }) {
   const sessionFormatOptions = [
     { value: 'IN_PERSON', label: 'Yüz Yüze' },
     { value: 'ONLINE', label: 'Online' },
-    { value: 'PHONE', label: 'Telefon' },
   ];
 
   const handleSaveAsDraft = handleSubmit(async (data) => {
