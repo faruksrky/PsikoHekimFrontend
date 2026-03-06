@@ -109,15 +109,15 @@ export function FinanceView() {
     }, [fetchFinanceData, isAdmin, therapistId]);
 
     const handleMarkTherapistPaid = useCallback(
-        async (therapistId) => {
+        async (tid) => {
             try {
-                setMarkingPaid(therapistId);
+                setMarkingPaid(tid);
                 const token = sessionStorage.getItem('jwt_access_token');
                 const month = selectedDate.getMonth() + 1;
                 const year = selectedDate.getFullYear();
 
                 const response = await fetch(
-                    `${CONFIG.psikoHekimBaseUrl}${CONFIG.finance.markTherapistPaid}?therapistId=${therapistId}&year=${year}&month=${month}`,
+                    `${CONFIG.psikoHekimBaseUrl}${CONFIG.finance.markTherapistPaid}?therapistId=${tid}&year=${year}&month=${month}`,
                     {
                         method: 'POST',
                         headers: {
