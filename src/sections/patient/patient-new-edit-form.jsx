@@ -55,7 +55,10 @@ export function PatientNewEditForm({ currentPatient }) {
     zod.object({
       patientFirstName: zod.string().min(1, { message: 'Ad bilgisi gereklidir!' }),
       patientLastName: zod.string().min(1, { message: 'Soyad bilgisi gereklidir!' }),
-      patientEmail: zod.string().email({ message: 'Geçerli bir mail adresi girilmelidir!' }).optional(),
+      patientEmail: zod.union([
+        zod.string().email({ message: 'Geçerli bir mail adresi girilmelidir!' }),
+        zod.literal(''),
+      ]).optional(),
       patientPhoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
       patientAddress: zod.string().optional(),
       patientCountry: schemaHelper.objectOrNull({
@@ -293,11 +296,11 @@ export function PatientNewEditForm({ currentPatient }) {
                   <Controller
                     name="patientEmail"
                     control={control}
-                    defaultValue={defaultValues.email}
+                    defaultValue={defaultValues.patientEmail}
                     render={({ field }) => (
                       <TextField
                         {...field}
-                        label="E-Posta"
+                        label="E-Posta (Opsiyonel)"
                         variant="outlined"
                         fullWidth
                         inputProps={{ tabIndex: 6 }}
