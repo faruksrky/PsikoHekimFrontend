@@ -25,6 +25,7 @@ import { useAuth } from 'src/hooks/useAuth';
 
 import { PRODUCT_STOCK_OPTIONS } from 'src/_mock';
 import { useGetTherapists } from 'src/actions/therapist';
+import { axiosInstance } from 'src/utils/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { THERAPIST_TYPE_OPTIONS, THERAPIST_RATING_OPTIONS } from 'src/_mock/_therapist';
 
@@ -63,7 +64,7 @@ export function TherapistListView() {
   const router = useRouter();
   const { isAdmin } = useAuth();
 
-  const { therapists, therapistsLoading } = useGetTherapists();
+  const { therapists, therapistsLoading, mutateTherapists } = useGetTherapists();
 
   const filters = useSetState({ therapistType: [], therapistRating: [] });
 
@@ -89,12 +90,17 @@ export function TherapistListView() {
   );
 
   const handleDeleteRow = useCallback(
-    (id) => {
-      const deleteRow = tableData.filter((row) => row.id !== id);
-      setTableData(deleteRow);
-      toast.success('Danışman başarıyla silindi!');
+    async (id) => {
+      try {
+        await axiosInstance.delete(`/therapist/${id}`);
+        toast.success('Danışman başarıyla silindi!');
+        mutateTherapists();
+      } catch (error) {
+        console.error('Danışman silinirken hata:', error);
+        toast.error(error.response?.data?.message || 'Danışman silinirken bir hata oluştu.');
+      }
     },
-    [tableData]
+    [mutateTherapists]
   );
 
   const columns = [
@@ -293,13 +299,19 @@ export function TherapistListView() {
 
   const dataFiltered = applyFilter({ inputData: tableData, filters: filters.state });
 
-  const handleDeleteRows = useCallback(() => {
-    const deleteRows = tableData.filter((row) => !selectedRowIds.includes(row.id));
-
-    toast.success(`${selectedRowIds.length} danışman başarıyla silindi!`);
-
-    setTableData(deleteRows);
-  }, [selectedRowIds, tableData]);
+  const handleDeleteRows = useCallback(async () => {
+    try {
+      await Promise.all(
+        selectedRowIds.map((id) => axiosInstance.delete(`/therapist/${id}`))
+      );
+      toast.success(`${selectedRowIds.length} danışman başarıyla silindi!`);
+      setSelectedRowIds([]);
+      mutateTherapists();
+    } catch (error) {
+      console.error('Danışmanlar silinirken hata:', error);
+      toast.error(error.response?.data?.message || 'Danışmanlar silinirken bir hata oluştu.');
+    }
+  }, [selectedRowIds, mutateTherapists]);
 
   const CustomToolbarCallback = useCallback(
     () => (
@@ -393,8 +405,8 @@ export function TherapistListView() {
           <Button
             variant="contained"
             color="error"
-            onClick={() => {
-              handleDeleteRows();
+            onClick={async () => {
+              await handleDeleteRows();
               confirmRows.onFalse();
             }}
           >

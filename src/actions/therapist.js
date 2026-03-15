@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 
 import { fetcher, endpoints, fetcherTherapist } from 'src/utils/axios';
 
@@ -17,12 +17,14 @@ const swrOptions = {
 
 export function useGetTherapists() {
 
-  const { data, isLoading, error, isValidating } = useSWR(
+  const { data, isLoading, error, isValidating, mutate } = useSWR(
     CONFIG.therapistListUrl,
     fetcherTherapist,
     swrOptions
   );
-  
+
+  const mutateTherapists = useCallback(() => mutate(), [mutate]);
+
   const memoizedValue = useMemo(
     () => ({
       therapists: data?.therapists || [],
@@ -30,8 +32,9 @@ export function useGetTherapists() {
       therapistsError: error,
       therapistsValidating: isValidating,
       therapistsEmpty: !isLoading && !data?.therapists.length,
+      mutateTherapists,
     }),
-    [data?.therapists, error, isLoading, isValidating]
+    [data?.therapists, error, isLoading, isValidating, mutateTherapists]
   );
 
   return memoizedValue;
