@@ -26,7 +26,6 @@ import { axiosInstance } from 'src/utils/axios';
 import { toast } from 'src/components/snackbar';
 import { Form, Field } from 'src/components/hook-form';
 import { useAuthContext } from 'src/auth/hooks';
-import { useAuth } from 'src/hooks/useAuth';
 import { getEmailFromToken } from 'src/auth/context/jwt/action';
 import { useGetPatient } from 'src/actions/patient';
 import { CURRENCY_OPTIONS, getCurrencySymbol } from '../therapist/therapist-new-edit-form';
@@ -39,7 +38,8 @@ export function TherapySessionNewEditForm({ currentSession }) {
   const requestMode = location.state?.mode === 'request';
   const requestPatientId = location.state?.patientId;
   const { user } = useAuthContext();
-  const { isAdmin } = useAuth();
+  // Admin kontrolü: useAuthContext user.role kullan (AuthProvider kaynağı) - hasta oluşturma sonrası randevu ekranında tüm danışmanlar gelsin
+  const isAdminUser = user?.role === 'admin' || user?.role === 'ADMIN';
   const { patient: requestPatient, patientLoading: requestPatientLoading } = useGetPatient(requestPatientId);
 
   const loadingSave = useBoolean();
@@ -116,9 +116,9 @@ export function TherapySessionNewEditForm({ currentSession }) {
       setLoadingTherapists(true);
       try {
         const token = sessionStorage.getItem('jwt_access_token');
-        // Admin: tüm danışmanlar. Danışman (user): sadece kendisi
+        // Admin: tüm danışmanlar. Danışman (user): sadece kendisi (hasta oluşturma sonrası randevu ekranında Admin tüm danışmanları görmeli)
         const userInfo = getEmailFromToken();
-        const url = isAdmin()
+        const url = isAdminUser
           ? CONFIG.therapistListUrl
           : `${CONFIG.therapistListUrl}?email=${encodeURIComponent(userInfo?.email || '')}`;
 
@@ -133,7 +133,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
           const list = data.therapists || [];
           setTherapists(list);
           // Danışman ise tek seçenek kendisi - otomatik seç
-          if (!isAdmin() && list.length === 1) {
+          if (!isAdminUser && list.length === 1) {
             setValue('therapistId', String(list[0].therapistId));
           }
         } else {
@@ -153,7 +153,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
     };
 
     fetchTherapists();
-  }, [isAdmin, setValue]);
+  }, [isAdminUser, setValue]);
 
   const handleTherapistChange = useCallback(async (therapistId) => {
     if (!therapistId || therapistId === '') {
@@ -600,7 +600,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
                   setValue('therapistId', e.target.value);
                   handleTherapistChange(e.target.value);
                 }}
-                disabled={loadingTherapists || (!isAdmin() && therapists.length === 1)}
+                disabled={loadingTherapists || (!isAdminUser && therapists.length === 1)}
               >
                 <MenuItem value="">
                   <em>Danışman seçin</em>
@@ -680,7 +680,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
               </Field.Select>
             </Grid>
 
-            {isAdmin() && (
+            {isAdminUser && (
               <>
                 <Grid item xs={12} md={6}>
                   <Field.Select
