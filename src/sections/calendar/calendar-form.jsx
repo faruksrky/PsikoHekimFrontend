@@ -9,6 +9,7 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
@@ -27,7 +28,7 @@ import { useAuth } from 'src/hooks/useAuth';
 // ----------------------------------------------------------------------
 
 export const EventSchema = zod.object({
-  patientId: zod.string().min(1, { message: 'Hasta seçimi gereklidir!' }),
+  patientId: zod.string().optional(),
   scheduledDate: zod.any().refine((val) => val && dayjs(val).isValid(), {
     message: 'Geçerli bir tarih ve saat seçiniz!'
   }),
@@ -67,6 +68,20 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   } = methods;
 
   const values = watch();
+
+  // currentEvent değiştiğinde formu güncelle (düzenleme modunda)
+  useEffect(() => {
+    if (currentEvent) {
+      reset({
+        patientId: currentEvent.patientId ? String(currentEvent.patientId) : '',
+        scheduledDate: currentEvent.scheduledDate || currentEvent.start ? dayjs(currentEvent.scheduledDate || currentEvent.start) : undefined,
+        sessionType: currentEvent.sessionType || 'REGULAR',
+        sessionFormat: currentEvent.sessionFormat || 'IN_PERSON',
+        sessionFee: currentEvent.sessionFee || '',
+        notes: currentEvent.notes || '',
+      });
+    }
+  }, [currentEvent, reset]);
 
   // Therapist ID'yi al ve hasta listesini çek
   useEffect(() => {
@@ -118,21 +133,37 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   };
 
   const onSubmit = handleSubmit(async (data) => {
-    
-    if (!therapistId) {
-      toast.error('Terapist bilgisi bulunamadı');
-      return;
-    }
+    let assignmentId;
 
-    // patientId'yi number'a çevir ve assignmentId'yi bul
-    const patientId = Number(data.patientId);
-    const selectedPatient = patients.find(p => p.patientId === patientId);
-    const assignmentId = selectedPatient?.assignmentId;
-    
-    
-    if (!assignmentId) {
-      toast.error('Hasta ataması bulunamadı');
-      return;
+    if (currentEvent?.sessionId) {
+      // Düzenleme: assignmentId mevcut session'dan alınır (hasta değiştirilemez)
+      const token = sessionStorage.getItem('jwt_access_token');
+      const sessionRes = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapy-sessions/getSession/${currentEvent.sessionId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!sessionRes.ok) {
+        toast.error('Randevu bilgisi alınamadı');
+        return;
+      }
+      const sessionDataRes = await sessionRes.json();
+      assignmentId = sessionDataRes.assignmentId;
+    } else {
+      // Yeni randevu: hasta seçimi gerekli
+      if (!therapistId) {
+        toast.error('Terapist bilgisi bulunamadı');
+        return;
+      }
+      const patientId = Number(data.patientId);
+      if (!patientId) {
+        toast.error('Hasta seçimi gereklidir');
+        return;
+      }
+      const selectedPatient = patients.find(p => p.patientId === patientId);
+      assignmentId = selectedPatient?.assignmentId;
+      if (!assignmentId) {
+        toast.error('Hasta ataması bulunamadı');
+        return;
+      }
     }
 
     const sessionData = {
@@ -210,28 +241,38 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     <Form methods={methods} onSubmit={onSubmit}>
       <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>
         <Stack spacing={3}>
-          {/* Hasta Seçimi */}
-          <Field.Select 
-            name="patientId" 
-            label="Hasta Seçimi"
-            disabled={loadingPatients}
-            InputProps={{
-              endAdornment: loadingPatients ? <CircularProgress size={20} /> : null
-            }}
-          >
-            {patients.length === 0 ? (
-              <MenuItem disabled value="">
-                {loadingPatients ? 'Hastalar yükleniyor...' : 'Hasta bulunamadı'}
-              </MenuItem>
-            ) : (
-              patients.map((patient, index) => (
-                <MenuItem key={patient.patientId || `patient-${index}`} value={String(patient.patientId)}>
-                  {patient.patientName}
+          {/* Düzenleme: Hasta zaten randevuda - sadece göster. Yeni randevu: Hasta seç */}
+          {currentEvent?.sessionId ? (
+            <TextField
+              label="Hasta"
+              value={currentEvent?.patientName || currentEvent?.title || '—'}
+              fullWidth
+              disabled
+              helperText="Randevu düzenlenirken hasta değiştirilemez"
+              InputProps={{ readOnly: true }}
+            />
+          ) : (
+            <Field.Select
+              name="patientId"
+              label="Hasta Seçimi"
+              disabled={loadingPatients}
+              InputProps={{
+                endAdornment: loadingPatients ? <CircularProgress size={20} /> : null
+              }}
+            >
+              {patients.length === 0 ? (
+                <MenuItem disabled value="">
+                  {loadingPatients ? 'Hastalar yükleniyor...' : 'Hasta bulunamadı'}
                 </MenuItem>
-              ))
-            )}
-          </Field.Select>
-
+              ) : (
+                patients.map((patient, index) => (
+                  <MenuItem key={patient.patientId || `patient-${index}`} value={String(patient.patientId)}>
+                    {patient.patientName}
+                  </MenuItem>
+                ))
+              )}
+            </Field.Select>
+          )}
 
           {/* Randevu Tarihi ve Saati */}
           <Field.MobileDateTimePicker 

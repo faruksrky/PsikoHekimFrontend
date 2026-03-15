@@ -451,10 +451,7 @@ export function CalendarView() {
                       overflow: 'hidden',
                       textOverflow: 'ellipsis'
                     }}>
-                      {extendedProps.patient ? 
-                        `${extendedProps.patient.patientFirstName} ${extendedProps.patient.patientLastName}` : 
-                        event.title
-                      }
+                      {event.title}
                     </div>
                   </div>
                 );

@@ -16,6 +16,11 @@ export function useEvent(events, selectEventId, selectedRange, openForm, openCal
           : 'CONFIRMED';
         
         // Event'i form için hazırla (CalendarForm sessionId, patientId, sessionFee kullanır)
+        const patient = event.extendedProps?.patient;
+        const patientName = patient
+          ? `${patient.patientFirstName || ''} ${patient.patientLastName || ''}`.trim()
+          : event.title;
+
         return {
           id: event.id,
           title: event.title,
@@ -29,10 +34,13 @@ export function useEvent(events, selectEventId, selectedRange, openForm, openCal
           therapistId: event.extendedProps?.therapistId,
           sessionId: event.extendedProps?.sessionId,
           patientId: event.extendedProps?.patientId,
+          patientName,
+          patient,
           sessionFee: event.extendedProps?.sessionFee,
           sessionType: event.extendedProps?.sessionType,
           sessionFormat: event.extendedProps?.sessionFormat,
           notes: event.extendedProps?.notes,
+          scheduledDate: event.start,
         };
       }
       
