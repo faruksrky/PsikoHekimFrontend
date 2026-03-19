@@ -31,7 +31,7 @@ export function TherapistPerformanceTable({ data, showRevenue = true }) {
         <TableHead>
           <TableRow>
             <TableCell>Danışman</TableCell>
-            <TableCell align="right">Toplam Seans</TableCell>
+            <TableCell align="right">Toplam Görüşme</TableCell>
             <TableCell align="right">Tamamlanan</TableCell>
             <TableCell align="right">İptal Edilen</TableCell>
             <TableCell align="right">Tamamlanma Oranı (%)</TableCell>

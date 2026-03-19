@@ -12,11 +12,11 @@ export function TherapySessionCreateView() {
   return (
     <Container maxWidth="lg">
       <CustomBreadcrumbs
-        heading="Yeni Seans Oluştur"
+        heading="Yeni Görüşme Oluştur"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Seansları', href: paths.dashboard.therapySession.root },
-          { name: 'Yeni Seans' },
+          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
+          { name: 'Yeni Görüşme' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />

@@ -30,7 +30,7 @@ const getTableHead = (priceView) => {
     { id: 'therapist', label: 'Danışman', width: 200 },
     { id: 'scheduledDate', label: 'Randevu Tarihi', width: 160 },
     { id: 'status', label: 'Durum', width: 120 },
-    { id: 'sessionType', label: 'Seans Tipi', width: 120 },
+    { id: 'sessionType', label: 'Görüşme Tipi', width: 120 },
     { id: 'sessionFormat', label: 'Format', width: 100 },
     { id: 'paymentStatus', label: 'Ödeme', width: 120 },
   ];
@@ -197,8 +197,8 @@ export function TherapySessionTable({
                 ) : (
                   <TableNoData 
                     notFound 
-                    title="Henüz hiç terapi seansı bulunmamaktadır"
-                    description="Yeni seans oluşturmak için 'Yeni Seans' butonunu kullanabilirsiniz."
+                    title="Henüz hiç terapi görüşmesi bulunmamaktadır"
+                    description="Yeni görüşme oluşturmak için 'Yeni Görüşme' butonunu kullanabilirsiniz."
                   />
                 )}
 

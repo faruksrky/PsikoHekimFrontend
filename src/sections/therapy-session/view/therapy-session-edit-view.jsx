@@ -24,7 +24,7 @@ export function TherapySessionEditView() {
   useEffect(() => {
     const fetchSession = async () => {
       if (!id) {
-        toast.error('Seans ID bulunamadı');
+        toast.error('Görüşme ID bulunamadı');
         router.push(paths.dashboard.therapySession.list);
         return;
       }
@@ -49,7 +49,7 @@ export function TherapySessionEditView() {
         setCurrentSession(data);
       } catch (error) {
         console.error('Error fetching therapy session:', error);
-        toast.error('Seans yüklenirken bir hata oluştu');
+        toast.error('Görüşme yüklenirken bir hata oluştu');
         router.push(paths.dashboard.therapySession.list);
       } finally {
         setLoading(false);
@@ -60,17 +60,17 @@ export function TherapySessionEditView() {
   }, [id, router]);
 
   const handleSuccess = () => {
-    toast.success('Seans başarıyla güncellendi!');
+    toast.success('Görüşme başarıyla güncellendi!');
     router.push(paths.dashboard.therapySession.list);
   };
 
   return (
     <Container maxWidth="lg">
       <CustomBreadcrumbs
-        heading="Seans Bilgilerini Güncelle"
+        heading="Görüşme Bilgilerini Güncelle"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Seansları', href: paths.dashboard.therapySession.root },
+          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
           { name: 'Bilgi Güncelle' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
@@ -84,7 +84,7 @@ export function TherapySessionEditView() {
           onSuccess={handleSuccess}
         />
       ) : (
-        <div>Seans bulunamadı</div>
+        <div>Görüşme bulunamadı</div>
       )}
     </Container>
   );

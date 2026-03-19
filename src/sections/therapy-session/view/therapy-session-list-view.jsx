@@ -150,7 +150,7 @@ export function TherapySessionListView() {
       setTableData(data);
     } catch (error) {
       console.error('Error fetching therapy sessions:', error);
-      toast('Seanslar yüklenirken bir hata oluştu', { variant: 'error' });
+      toast('Görüşmeler yüklenirken bir hata oluştu', { variant: 'error' });
       setTableData([]);
     } finally {
       setLoading(false);
@@ -212,11 +212,11 @@ export function TherapySessionListView() {
         throw new Error('Failed to delete session');
       }
 
-      toast('Seans başarıyla silindi', { variant: 'success' });
+      toast('Görüşme başarıyla silindi', { variant: 'success' });
       fetchTherapySessions();
     } catch (error) {
       console.error('Error deleting session:', error);
-      toast('Seans silinirken bir hata oluştu', { variant: 'error' });
+      toast('Görüşme silinirken bir hata oluştu', { variant: 'error' });
     }
   }, [fetchTherapySessions]);
 
@@ -239,11 +239,11 @@ export function TherapySessionListView() {
         throw new Error('Failed to complete session');
       }
 
-      toast('Seans başarıyla tamamlandı', { variant: 'success' });
+      toast('Görüşme başarıyla tamamlandı', { variant: 'success' });
       fetchTherapySessions();
     } catch (error) {
       console.error('Error completing session:', error);
-      toast('Seans tamamlanırken bir hata oluştu', { variant: 'error' });
+      toast('Görüşme tamamlanırken bir hata oluştu', { variant: 'error' });
     }
   }, [fetchTherapySessions]);
 
@@ -266,11 +266,11 @@ export function TherapySessionListView() {
         throw new Error('Failed to cancel session');
       }
 
-      toast('Seans başarıyla iptal edildi', { variant: 'success' });
+      toast('Görüşme başarıyla iptal edildi', { variant: 'success' });
       fetchTherapySessions();
     } catch (error) {
       console.error('Error cancelling session:', error);
-      toast('Seans iptal edilirken bir hata oluştu', { variant: 'error' });
+      toast('Görüşme iptal edilirken bir hata oluştu', { variant: 'error' });
     }
   }, [fetchTherapySessions]);
 
@@ -310,11 +310,11 @@ export function TherapySessionListView() {
   return (
     <Container maxWidth="xl">
       <CustomBreadcrumbs
-        heading="Terapi Seansları"
+        heading="Terapi Görüşmeleri"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Seansları', href: paths.dashboard.therapySession.root },
-          { name: 'Seans Listesi' },
+          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
+          { name: 'Görüşme Listesi' },
         ]}
         action={
           <Stack direction="row" spacing={2}>
@@ -324,7 +324,7 @@ export function TherapySessionListView() {
               variant="outlined"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
-              Yeni Seans
+              Yeni Görüşme
             </Button>
             <Button
               component={RouterLink}

@@ -288,23 +288,23 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
             }}
           />
 
-          {/* Seans Türü */}
-          <Field.Select name="sessionType" label="Seans Türü">
-            <MenuItem value="INITIAL">İlk Seans</MenuItem>
-            <MenuItem value="REGULAR">Normal Seans</MenuItem>
-            <MenuItem value="FOLLOWUP">Takip Seansı</MenuItem>
-            <MenuItem value="FINAL">Son Seans</MenuItem>
+          {/* Görüşme Türü */}
+          <Field.Select name="sessionType" label="Görüşme Türü">
+            <MenuItem value="INITIAL">İlk Görüşme</MenuItem>
+            <MenuItem value="REGULAR">Normal Görüşme</MenuItem>
+            <MenuItem value="FOLLOWUP">Takip Görüşmesi</MenuItem>
+            <MenuItem value="FINAL">Son Görüşme</MenuItem>
           </Field.Select>
 
-          {/* Seans Formatı */}
-          <Field.Select name="sessionFormat" label="Seans Formatı">
+          {/* Görüşme Formatı */}
+          <Field.Select name="sessionFormat" label="Görüşme Formatı">
             <MenuItem value="IN_PERSON">Yüz Yüze</MenuItem>
             <MenuItem value="ONLINE">Online</MenuItem>
           </Field.Select>
 
-          {/* Seans Ücreti - sadece admin görür/düzenler */}
+          {/* Görüşme Ücreti - sadece admin görür/düzenler */}
           {isAdmin() && (
-            <Field.Text name="sessionFee" label="Seans Ücreti (TL)" type="number" />
+            <Field.Text name="sessionFee" label="Görüşme Ücreti (TL)" type="number" />
           )}
 
           {/* Notlar */}

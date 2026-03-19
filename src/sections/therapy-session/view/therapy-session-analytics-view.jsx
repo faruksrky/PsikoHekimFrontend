@@ -309,10 +309,10 @@ export function TherapySessionAnalyticsView() {
   return (
     <Container maxWidth="xl">
       <CustomBreadcrumbs
-        heading="Seans Analitikleri"
+        heading="Görüşme Analitikleri"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Seansları', href: paths.dashboard.therapySession.root },
+          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
           { name: 'Analitikler' },
         ]}
         action={
@@ -364,7 +364,7 @@ export function TherapySessionAnalyticsView() {
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <AnalyticsCard
-            title="Toplam Seans"
+            title="Toplam Görüşme"
             value={generalStats.totalSessions}
             icon="solar:calendar-bold"
             color="primary"
@@ -403,7 +403,7 @@ export function TherapySessionAnalyticsView() {
         </Grid>
       </Grid>
 
-      {/* Revenue Cards - danışman seans ücreti görmez, sadece admin */}
+      {/* Revenue Cards - danışman görüşme ücreti görmez, sadece admin */}
       {isAdmin() && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={6} md={3}>
@@ -428,7 +428,7 @@ export function TherapySessionAnalyticsView() {
 
           <Grid item xs={12} sm={6} md={3}>
             <AnalyticsCard
-              title="Ortalama Seans Ücreti"
+              title="Ortalama Görüşme Ücreti"
               value={`₺${generalStats.totalSessions > 0 ? (generalStats.totalRevenue / generalStats.totalSessions).toFixed(2) : 0}`}
               icon="solar:chart-2-bold"
               color="info"
@@ -457,7 +457,7 @@ export function TherapySessionAnalyticsView() {
         <Grid item xs={12} md={8}>
           <Card>
             <Box sx={{ p: 3, pb: 1 }}>
-              <Typography variant="h6">Seans Trendi</Typography>
+              <Typography variant="h6">Görüşme Trendi</Typography>
             </Box>
             <Box sx={{ p: 3, pt: 1 }}>
               <SessionTrendChart data={monthlyData} showRevenue={isAdmin()} />
@@ -468,7 +468,7 @@ export function TherapySessionAnalyticsView() {
         <Grid item xs={12} md={4}>
           <Card>
             <Box sx={{ p: 3, pb: 1 }}>
-              <Typography variant="h6">Seans Durumları</Typography>
+              <Typography variant="h6">Görüşme Durumları</Typography>
             </Box>
             <Box sx={{ p: 3, pt: 1 }}>
               <SessionStatusChart data={statusData} />
@@ -477,7 +477,7 @@ export function TherapySessionAnalyticsView() {
         </Grid>
       </Grid>
 
-      {/* Revenue Chart - sadece admin (seans ücreti) */}
+      {/* Revenue Chart - sadece admin (görüşme ücreti) */}
       {isAdmin() && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12}>

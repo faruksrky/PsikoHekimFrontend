@@ -102,7 +102,7 @@ export function TherapySessionTableFiltersResult({
         )}
 
         {filters.sessionType !== 'all' && (
-          <Block label="Seans Tipi:">
+          <Block label="Görüşme Tipi:">
             <Chip
               size="small"
               label={getSessionTypeLabel(filters.sessionType)}

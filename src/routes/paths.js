@@ -58,6 +58,10 @@ export const paths = {
       demo: {
         edit: `${ROOTS.DASHBOARD}/user/${MOCK_ID}/edit`,
       },
+      changePassword: `${ROOTS.DASHBOARD}/account/change-password`,
+    },
+    account: {
+      changePassword: `${ROOTS.DASHBOARD}/account/change-password`,
     },
 
     patient: {
@@ -65,6 +69,7 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/patient/new`,
       list: `${ROOTS.DASHBOARD}/patient/list`,
       details: (id) => `${ROOTS.DASHBOARD}/patient/${id}/details`,
+      journal: (id) => `${ROOTS.DASHBOARD}/patient/${id}/journal`,
       payments: (id) => `${ROOTS.DASHBOARD}/patient/${id}/payments`,
       assignTherapist: (patientId) =>
         `${ROOTS.DASHBOARD}/patient/${patientId}/assign-therapist`,

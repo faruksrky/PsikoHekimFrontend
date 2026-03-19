@@ -73,7 +73,7 @@ export const NewTherapistSchema = zod.object({
   therapistAddress: zod.string().optional(),
   therapistUniversity: zod.string().optional(),
   therapistCertifications: zod.string().optional(),
-  therapistAppointmentFee: zod.number().min(1, { message: 'Seans ücret bilgisi gereklidir!' }),
+  therapistAppointmentFee: zod.number().min(1, { message: 'Görüşme ücret bilgisi gereklidir!' }),
   therapistAppointmentFeeCurrency: zod.string().optional().default('TRY'),
   therapistConsultantFee: zod.number().min(0, { message: 'Danışmana ödenecek ücret 0 veya daha fazla olmalıdır!' }).optional(),
   therapistConsultantFeeCurrency: zod.string().optional().default('TRY'),
@@ -508,7 +508,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       render={({ field }) => (
                         <Field.Select
                           {...field}
-                          label="Seans Ücreti Para Birimi"
+                          label="Görüşme Ücreti Para Birimi"
                           inputProps={{ tabIndex: 12 }}
                         >
                           {CURRENCY_OPTIONS.map((option) => (
@@ -527,7 +527,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Seans Ücreti"
+                          label="Görüşme Ücreti"
                           placeholder="0.00"
                           type="number"
                           onChange={(event) => handleChangePrice(event)}

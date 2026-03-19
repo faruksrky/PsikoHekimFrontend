@@ -82,7 +82,7 @@ export function PatientDetailsView() {
             amount: Number(session.sessionFee || 0),
             paymentDate: session.scheduledDate || session.createdAt,
             status: session.paymentStatus || 'PENDING',
-            description: `Seans #${session.sessionId || index + 1}`,
+            description: `Görüşme #${session.sessionId || index + 1}`,
           }));
 
           setPayments(paymentRows);
@@ -173,6 +173,13 @@ export function PatientDetailsView() {
         ]}
         action={
           <Stack direction="row" spacing={2}>
+            <Button
+              variant="contained"
+              onClick={() => router.push(paths.dashboard.patient.journal(id))}
+              startIcon={<Iconify icon="solar:document-text-bold" />}
+            >
+              Görüşme Defteri
+            </Button>
             <Button
               variant="outlined"
               onClick={handleEdit}
@@ -507,7 +514,7 @@ export function PatientDetailsView() {
                               />
                             </TableCell>
                             <TableCell>
-                              {payment.description || 'Seans ödemesi'}
+                              {payment.description || 'Görüşme ödemesi'}
                             </TableCell>
                           </TableRow>
                         ))}

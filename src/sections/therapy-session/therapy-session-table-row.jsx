@@ -141,11 +141,11 @@ export function TherapySessionTableRow({
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Onay başarısız');
       }
-      toast.success('Seans onaylandı');
+      toast.success('Görüşme onaylandı');
       onApproveSession?.();
     } catch (error) {
       console.error('Error approving session:', error);
-      toast.error(error.message || 'Seans onaylanamadı');
+      toast.error(error.message || 'Görüşme onaylanamadı');
     }
   }, [sessionId, onApproveSession]);
 
@@ -156,11 +156,11 @@ export function TherapySessionTableRow({
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Red başarısız');
       }
-      toast.success('Seans reddedildi');
+      toast.success('Görüşme reddedildi');
       onRejectSession?.();
     } catch (error) {
       console.error('Error rejecting session:', error);
-      toast.error(error.message || 'Seans reddedilemedi');
+      toast.error(error.message || 'Görüşme reddedilemedi');
     }
   }, [sessionId, onRejectSession]);
 
@@ -578,8 +578,8 @@ export function TherapySessionTableRow({
       <ConfirmDialog
         open={openConfirm}
         onClose={handleCloseConfirm}
-        title="Seansı Sil"
-        content="Bu seansı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+        title="Görüşmeyi Sil"
+        content="Bu görüşmeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
         action={
           <Button
             variant="contained"

@@ -83,13 +83,13 @@ export const navData = [
       },
 
       {
-        title: 'Terapi Seansları',
+        title: 'Terapi Görüşmeleri',
         path: paths.dashboard.therapySession.root,
         icon: ICONS.therapySession,
         requiredRole: 'USER', // USER ve üzeri görebilir
         children: [
-          { title: 'Seans Listesi', path: paths.dashboard.therapySession.list, requiredRole: 'USER' },
-          { title: 'Yeni Seans', path: paths.dashboard.therapySession.new, requiredRole: 'USER' },
+          { title: 'Görüşme Listesi', path: paths.dashboard.therapySession.list, requiredRole: 'USER' },
+          { title: 'Yeni Görüşme', path: paths.dashboard.therapySession.new, requiredRole: 'USER' },
           { title: 'Analitik', path: paths.dashboard.therapySession.analytics, requiredRole: 'USER' },
           { title: 'Finans', path: paths.dashboard.finance.root, requiredRole: 'USER' },
         ],
@@ -103,7 +103,7 @@ export const navData = [
         children: [
           { title: 'Liste', path: paths.dashboard.user.list, requiredRole: 'ADMIN' },
           { title: 'Yeni Kullanıcı', path: paths.dashboard.user.new, requiredRole: 'ADMIN' },
-          { title: 'Bilgi Güncelle', path: paths.dashboard.user.demo.edit, requiredRole: 'ADMIN' },
+          { title: 'Şifre Güncelle', path: paths.dashboard.account.changePassword, requiredRole: 'USER' },
         ],
       },
 

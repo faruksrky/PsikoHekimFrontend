@@ -113,11 +113,11 @@ export function TherapySessionTableToolbar({
           </FormControl>
 
           <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel>Seans Tipi</InputLabel>
+            <InputLabel>Görüşme Tipi</InputLabel>
             <Select
               value={filters.sessionType}
               onChange={handleFilterSessionType}
-              label="Seans Tipi"
+              label="Görüşme Tipi"
             >
               <MenuItem value="all">Tümü</MenuItem>
               <MenuItem value="INDIVIDUAL">Bireysel</MenuItem>

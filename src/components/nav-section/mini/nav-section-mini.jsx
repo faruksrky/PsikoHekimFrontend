@@ -1,6 +1,8 @@
 import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
 
+import { useAuth } from 'src/hooks/useAuth';
+
 import { NavList } from './nav-list';
 import { NavUl, NavLi } from '../styles';
 import { navSectionClasses } from '../classes';
@@ -17,16 +19,37 @@ export function NavSectionMini({
   cssVars: overridesVars,
 }) {
   const theme = useTheme();
+  const { hasRole } = useAuth();
 
   const cssVars = {
     ...navSectionCssVars.mini(theme),
     ...overridesVars,
   };
 
+  // USER için sadece yetkili menü öğelerini göster (NavSectionVertical ile aynı filtreleme)
+  const filteredData = data.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      if (!item.requiredRole) return true;
+      return hasRole(item.requiredRole);
+    }).map((item) => {
+      if (item.children) {
+        return {
+          ...item,
+          children: item.children.filter((child) => {
+            if (!child.requiredRole) return true;
+            return hasRole(child.requiredRole);
+          })
+        };
+      }
+      return item;
+    })
+  })).filter((group) => group.items.length > 0);
+
   return (
     <Stack component="nav" className={navSectionClasses.mini.root} sx={{ ...cssVars, ...sx }}>
       <NavUl sx={{ flex: '1 1 auto', gap: 'var(--nav-item-gap)' }}>
-        {data.map((group) => (
+        {filteredData.map((group) => (
           <Group
             key={group.subheader ?? group.items[0].title}
             render={render}

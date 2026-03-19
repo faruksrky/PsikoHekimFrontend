@@ -142,37 +142,43 @@ export function InboxList() {
 
   // Action handler
   const handleAction = useCallback(async (processInstanceKey, action) => {
+    const pkNum = typeof processInstanceKey === 'number'
+      ? processInstanceKey
+      : parseInt(processInstanceKey, 10);
+    if (Number.isNaN(pkNum) || pkNum <= 0) {
+      toast.error('Geçersiz işlem kimliği');
+      return;
+    }
+
     try {
-      // Doğru endpoint'i kullan: /process/inbox/action
       const url = `/process/inbox/action`;
-      
       const response = await axiosInstance.post(url, {
-        processInstanceKey: parseInt(processInstanceKey, 10),
+        processInstanceKey: pkNum,
         action: action.toUpperCase()
       });
-      
-      // Listeyi hemen yenile
+
       await fetchAllData();
-      
-      // Event dispatch et - Patient list dinleyecek
+
       window.dispatchEvent(new CustomEvent('patientListRefresh', {
         detail: {
-          processInstanceKey: parseInt(processInstanceKey, 10),
+          processInstanceKey: pkNum,
           action: action.toUpperCase(),
           timestamp: new Date().toISOString()
         }
       }));
-      
-      // Başarı mesajı
+
       if (action.toUpperCase() === 'REJECTED') {
         toast.success('Akış reddedildi - İşlem sonlandırıldı');
       } else {
         toast.success('Akış onaylandı - İşlem tamamlandı');
       }
-      
     } catch (error) {
       console.error('İşlem sırasında hata:', error);
-      toast.error('İşlem başarısız');
+      const errMsg = error.response?.data?.message
+        || (typeof error.response?.data === 'string' ? error.response.data : null)
+        || error.message
+        || 'İşlem başarısız';
+      toast.error(errMsg);
     }
   }, [fetchAllData]);
 

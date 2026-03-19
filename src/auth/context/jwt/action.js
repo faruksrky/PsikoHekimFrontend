@@ -167,7 +167,33 @@ export const signOut = async () => {
 };
 
 /** **************************************
- * Update password
+ * Change password (giriş yapmış kullanıcı için)
+ *************************************** */
+export const changePassword = async ({ currentPassword, newPassword }) => {
+  try {
+    const res = await axiosInstanceKeycloak.post('/keycloak/change-password', {
+      currentPassword,
+      newPassword,
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error during password change:', error);
+    const data = error.response?.data;
+    if (typeof data === 'string') {
+      throw new Error(data);
+    }
+    if (data?.message) {
+      throw new Error(data.message);
+    }
+    if (error.response?.status === 400) {
+      throw new Error('Mevcut şifre hatalı.');
+    }
+    throw error;
+  }
+};
+
+/** **************************************
+ * Update password (şifremi unuttum - confirmation code ile)
  *************************************** */
 export const updatePassword = async ({ username, confirmationCode, newPassword }) => {
   try {

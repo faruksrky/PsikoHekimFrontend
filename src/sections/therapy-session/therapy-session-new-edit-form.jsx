@@ -51,7 +51,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
     scheduledDate: Yup.date()
       .required('Randevu tarihi gereklidir')
       .test('future-date', 'Randevu tarihi en az 2 saat sonra olmalıdır', (value) => {
-        // Sadece yeni seans oluştururken tarih kontrolü yap
+        // Sadece yeni görüşme oluştururken tarih kontrolü yap
         if (currentSession) return true; // Güncelleme sırasında kontrol etme
         
         if (!value) return false;
@@ -59,9 +59,9 @@ export function TherapySessionNewEditForm({ currentSession }) {
         const minDate = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 saat sonra
         return value > minDate;
       }),
-    sessionType: Yup.string().required('Seans tipi gereklidir'),
-    sessionFormat: Yup.string().required('Seans formatı gereklidir'),
-    sessionFee: Yup.number().min(0, 'Ücret 0 veya daha fazla olmalıdır').required('Seans ücreti gereklidir'),
+    sessionType: Yup.string().required('Görüşme tipi gereklidir'),
+    sessionFormat: Yup.string().required('Görüşme formatı gereklidir'),
+    sessionFee: Yup.number().min(0, 'Ücret 0 veya daha fazla olmalıdır').required('Görüşme ücreti gereklidir'),
     sessionFeeCurrency: Yup.string().optional().default('TRY'),
     sessionNotes: Yup.string(),
     homeworkAssigned: Yup.string(),
@@ -166,7 +166,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
       return;
     }
 
-    // Seans ücreti = danışan ödemesi (therapistAppointmentFee), danışman ücreti değil
+    // Görüşme ücreti = danışan ödemesi (therapistAppointmentFee), danışman ücreti değil
     const selectedTherapist = therapists.find(t => t.therapistId === parseInt(therapistId, 10));
     if (selectedTherapist && selectedTherapist.therapistAppointmentFee) {
       setValue('sessionFee', selectedTherapist.therapistAppointmentFee);
@@ -294,11 +294,11 @@ export function TherapySessionNewEditForm({ currentSession }) {
     try {
       // Backend'e taslak olarak gönder (şimdilik normal API'yi kullan)
       await createSession(data, true);
-      toast.success('Seans taslağı başarıyla kaydedildi!');
+      toast.success('Görüşme taslağı başarıyla kaydedildi!');
       router.push(paths.dashboard.therapySession.list);
     } catch (error) {
       console.error('Error saving session:', error);
-      toast.error(`Seans kaydedilirken hata oluştu: ${error.message}`);
+      toast.error(`Görüşme kaydedilirken hata oluştu: ${error.message}`);
     } finally {
       loadingSave.onFalse();
     }
@@ -310,7 +310,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
       if (currentSession) {
         // Update existing session
         await updateSession(currentSession.sessionId, data);
-        toast.success('Seans başarıyla güncellendi!');
+        toast.success('Görüşme başarıyla güncellendi!');
       } else {
         if (requestMode) {
           await requestAppointment(data);
@@ -321,13 +321,13 @@ export function TherapySessionNewEditForm({ currentSession }) {
 
         // Create new session with WhatsApp/Twilio notification
         await createSessionWithNotification(data);
-        toast.success('Seans oluşturuldu! Hasta ve danışmana WhatsApp bildirimi gönderildi. Hasta onayını bekliyoruz...');
+        toast.success('Görüşme oluşturuldu! Hasta ve danışmana WhatsApp bildirimi gönderildi. Hasta onayını bekliyoruz...');
       }
       
       router.push(paths.dashboard.therapySession.list);
     } catch (error) {
       console.error('Error creating/updating session:', error);
-      toast.error(`Seans işlemi sırasında hata oluştu: ${error.message}`);
+      toast.error(`Görüşme işlemi sırasında hata oluştu: ${error.message}`);
     } finally {
       loadingSaveAndSend.onFalse();
     }
@@ -361,7 +361,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
       const responseText = await response.text();
 
       if (!response.ok) {
-        let errorMessage = 'Seans güncellenemedi';
+        let errorMessage = 'Görüşme güncellenemedi';
         try {
           if (responseText && responseText.trim().startsWith('{')) {
             const errorData = JSON.parse(responseText);
@@ -443,7 +443,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
         throw new Error('Seçilen danışan için atama bulunamadı');
       }
 
-      // Seans oluştur ve WhatsApp/Twilio bildirimi gönder
+      // Görüşme oluştur ve WhatsApp/Twilio bildirimi gönder
       const requestBody = {
         assignmentId: assignment.assignmentId,
         scheduledDate: new Date(sessionData.scheduledDate).toISOString().slice(0, 19),
@@ -472,7 +472,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
       const responseText = await response.text();
 
       if (!response.ok) {
-        let errorMessage = 'Seans oluşturulamadı';
+        let errorMessage = 'Görüşme oluşturulamadı';
         try {
           if (responseText && responseText.trim().startsWith('{')) {
             const errorData = JSON.parse(responseText);
@@ -516,7 +516,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
         throw new Error('Seçilen danışan için atama bulunamadı');
       }
 
-      // Seans oluştur
+      // Görüşme oluştur
       const requestBody = {
         assignmentId: assignment.assignmentId,
         scheduledDate: new Date(sessionData.scheduledDate).toISOString().slice(0, 19),
@@ -540,7 +540,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
         const responseText = await response.text();
 
         if (!response.ok) {
-          let errorMessage = 'Seans oluşturulamadı';
+          let errorMessage = 'Görüşme oluşturulamadı';
           try {
             if (responseText && responseText.trim().startsWith('{')) {
               // JSON response
@@ -573,11 +573,11 @@ export function TherapySessionNewEditForm({ currentSession }) {
       <Card sx={{ p: 3 }}>
         <Stack spacing={3}>
           <Typography variant="h6">
-            {currentSession ? 'Seans Düzenle' : 'Yeni Seans Oluştur'}
+            {currentSession ? 'Görüşme Düzenle' : 'Yeni Görüşme Oluştur'}
           </Typography>
 
           <Alert severity="info">
-            Seans oluşturduktan sonra danışan ve danışmana bildirim gönderilecektir.
+            Görüşme oluşturduktan sonra danışan ve danışmana bildirim gönderilecektir.
           </Alert>
         </Stack>
       </Card>
@@ -661,7 +661,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Field.Select name="sessionType" label="Seans Tipi">
+              <Field.Select name="sessionType" label="Görüşme Tipi">
                 {sessionTypeOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
@@ -671,7 +671,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Field.Select name="sessionFormat" label="Seans Formatı">
+              <Field.Select name="sessionFormat" label="Görüşme Formatı">
                 {sessionFormatOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
@@ -685,7 +685,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 <Grid item xs={12} md={6}>
                   <Field.Select
                     name="sessionFeeCurrency"
-                    label="Seans Ücreti Para Birimi"
+                    label="Görüşme Ücreti Para Birimi"
                   >
                     {CURRENCY_OPTIONS.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
@@ -698,7 +698,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 <Grid item xs={12} md={6}>
                   <Field.Text
                     name="sessionFee"
-                    label="Seans Ücreti"
+                    label="Görüşme Ücreti"
                     type="number"
                     helperText={watch('therapistId') ? 'Danışman seçildiğinde otomatik doldurulur' : ''}
                     InputProps={{
@@ -716,10 +716,10 @@ export function TherapySessionNewEditForm({ currentSession }) {
             <Grid item xs={12}>
               <Field.Text
                 name="sessionNotes"
-                label="Seans Notları"
+                label="Görüşme Notları"
                 multiline
                 rows={4}
-                placeholder="Seans hakkında ek bilgiler..."
+                placeholder="Görüşme hakkında ek bilgiler..."
               />
             </Grid>
 

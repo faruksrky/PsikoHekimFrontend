@@ -192,7 +192,7 @@ export function CalendarView() {
 
       let sessionsUrl = '/therapy-sessions/getSessions';
       if (userInfo.isAdmin) {
-        // Admin: therapistId vermeden tüm seansları getir
+        // Admin: therapistId vermeden tüm görüşmeleri getir
         sessionsUrl = '/therapy-sessions/getSessions';
       } else {
         const therapistId = await getTherapistId(userInfo.email);
@@ -225,9 +225,10 @@ export function CalendarView() {
             startDate = new Date();
             endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
           }
-          const patientName = session.patient ? `${session.patient.patientFirstName || ''} ${session.patient.patientLastName || ''}`.trim() || 'Seans' : 'Seans';
+          const patientName = session.patient ? `${session.patient.patientFirstName || ''} ${session.patient.patientLastName || ''}`.trim() || 'Görüşme' : 'Görüşme';
           const therapistName = session.therapist ? `${session.therapist.therapistFirstName || ''} ${session.therapist.therapistLastName || ''}`.trim() : '';
-          const title = userInfo.isAdmin && therapistName ? `${patientName} (${therapistName})` : patientName;
+          // Admin: Danışan - Danışman | Danışman: sadece danışan
+          const title = userInfo.isAdmin && therapistName ? `${patientName} - ${therapistName}` : patientName;
           return {
             id: `session_${session.sessionId}`,
             title,
@@ -430,12 +431,16 @@ export function CalendarView() {
               }}
               dayCellDidMount={handleDayCellDidMount}
               eventContent={(arg) => {
-                const {event} = arg;
+                const { event } = arg;
                 const extendedProps = event.extendedProps || {};
-                
-                
+                const therapistName = extendedProps.therapist
+                  ? `${extendedProps.therapist.therapistFirstName || ''} ${extendedProps.therapist.therapistLastName || ''}`.trim()
+                  : '';
+                const patientName = extendedProps.patient
+                  ? `${extendedProps.patient.patientFirstName || ''} ${extendedProps.patient.patientLastName || ''}`.trim()
+                  : event.title;
                 return (
-                  <div style={{ 
+                  <div style={{
                     backgroundColor: arg.event.backgroundColor,
                     color: '#FFFFFF',
                     padding: '2px 5px',
@@ -445,14 +450,15 @@ export function CalendarView() {
                     display: 'flex',
                     flexDirection: 'column'
                   }}>
-                    <div style={{ fontWeight: 'bold' }}>{arg.timeText}</div>
-                    <div style={{ 
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}>
-                      {event.title}
+                    <div style={{ fontWeight: 'bold', fontSize: '0.85em' }}>{arg.timeText}</div>
+                    <div style={{ fontSize: '0.8em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {patientName}
                     </div>
+                    {therapistName && (
+                      <div style={{ fontSize: '0.75em', opacity: 0.95, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {therapistName}
+                      </div>
+                    )}
                   </div>
                 );
               }}

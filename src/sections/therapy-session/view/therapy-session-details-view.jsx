@@ -55,7 +55,7 @@ export function TherapySessionDetailsView() {
       setSessionData(data);
     } catch (error) {
       console.error('Error fetching session details:', error);
-      toast('Seans detayları yüklenirken bir hata oluştu', { variant: 'error' });
+      toast('Görüşme detayları yüklenirken bir hata oluştu', { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -129,11 +129,11 @@ export function TherapySessionDetailsView() {
         throw new Error('Failed to complete session');
       }
 
-      toast('Seans başarıyla tamamlandı', { variant: 'success' });
+      toast('Görüşme başarıyla tamamlandı', { variant: 'success' });
       fetchSessionDetails();
     } catch (error) {
       console.error('Error completing session:', error);
-      toast('Seans tamamlanırken bir hata oluştu', { variant: 'error' });
+      toast('Görüşme tamamlanırken bir hata oluştu', { variant: 'error' });
     }
   }, [sessionId, fetchSessionDetails]);
 
@@ -156,11 +156,11 @@ export function TherapySessionDetailsView() {
         throw new Error('Failed to cancel session');
       }
 
-      toast('Seans başarıyla iptal edildi', { variant: 'success' });
+      toast('Görüşme başarıyla iptal edildi', { variant: 'success' });
       fetchSessionDetails();
     } catch (error) {
       console.error('Error cancelling session:', error);
-      toast('Seans iptal edilirken bir hata oluştu', { variant: 'error' });
+      toast('Görüşme iptal edilirken bir hata oluştu', { variant: 'error' });
     }
   }, [sessionId, fetchSessionDetails]);
 
@@ -175,11 +175,11 @@ export function TherapySessionDetailsView() {
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Onay başarısız');
       }
-      toast('Seans başarıyla onaylandı', { variant: 'success' });
+      toast('Görüşme başarıyla onaylandı', { variant: 'success' });
       fetchSessionDetails();
     } catch (error) {
       console.error('Error approving session:', error);
-      toast(error.message || 'Seans onaylanırken bir hata oluştu', { variant: 'error' });
+      toast(error.message || 'Görüşme onaylanırken bir hata oluştu', { variant: 'error' });
     }
   }, [sessionId, fetchSessionDetails]);
 
@@ -190,11 +190,11 @@ export function TherapySessionDetailsView() {
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Red başarısız');
       }
-      toast('Seans reddedildi', { variant: 'success' });
+      toast('Görüşme reddedildi', { variant: 'success' });
       fetchSessionDetails();
     } catch (error) {
       console.error('Error rejecting session:', error);
-      toast(error.message || 'Seans reddedilirken bir hata oluştu', { variant: 'error' });
+      toast(error.message || 'Görüşme reddedilirken bir hata oluştu', { variant: 'error' });
     }
   }, [sessionId, fetchSessionDetails]);
 
@@ -241,11 +241,11 @@ export function TherapySessionDetailsView() {
         throw new Error('Failed to delete session');
       }
 
-      toast('Seans başarıyla silindi', { variant: 'success' });
+      toast('Görüşme başarıyla silindi', { variant: 'success' });
       router.push(paths.dashboard.therapySession.list);
     } catch (error) {
       console.error('Error deleting session:', error);
-      toast('Seans silinirken bir hata oluştu', { variant: 'error' });
+      toast('Görüşme silinirken bir hata oluştu', { variant: 'error' });
     }
   }, [sessionId, router]);
 
@@ -260,7 +260,7 @@ export function TherapySessionDetailsView() {
   if (!sessionData) {
     return (
       <Container maxWidth="xl">
-        <Typography>Seans bulunamadı</Typography>
+        <Typography>Görüşme bulunamadı</Typography>
       </Container>
     );
   }
@@ -277,10 +277,10 @@ export function TherapySessionDetailsView() {
   return (
     <Container maxWidth="xl">
       <CustomBreadcrumbs
-        heading="Seans Detayları"
+        heading="Görüşme Detayları"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Seansları', href: paths.dashboard.therapySession.root },
+          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
           { name: 'Detaylar' },
         ]}
         action={
@@ -304,6 +304,15 @@ export function TherapySessionDetailsView() {
                   Reddet
                 </Button>
               </>
+            )}
+            {sessionData.patientId && (
+              <Button
+                variant="outlined"
+                onClick={() => router.push(paths.dashboard.patient.journal(sessionData.patientId))}
+                startIcon={<Iconify icon="solar:document-text-bold" />}
+              >
+                Görüşme Defteri
+              </Button>
             )}
             <Button
               variant="outlined"
@@ -391,21 +400,21 @@ export function TherapySessionDetailsView() {
                 </Stack>
 
                 <Stack spacing={1}>
-                  <Typography variant="subtitle2">Seans Tarihi</Typography>
+                  <Typography variant="subtitle2">Görüşme Tarihi</Typography>
                   <Typography variant="body2">
                     {fDate(sessionData.scheduledDate)} {fTime(sessionData.scheduledDate)}
                   </Typography>
                 </Stack>
 
                 <Stack spacing={1}>
-                  <Typography variant="subtitle2">Seans Türü</Typography>
+                  <Typography variant="subtitle2">Görüşme Türü</Typography>
                   <Typography variant="body2">
                     {sessionData.sessionType === 'INDIVIDUAL' ? 'Bireysel' : 'Çift'}
                   </Typography>
                 </Stack>
 
                 <Stack spacing={1}>
-                  <Typography variant="subtitle2">Seans Formatı</Typography>
+                  <Typography variant="subtitle2">Görüşme Formatı</Typography>
                   <Typography variant="body2">
                     {sessionData.sessionFormat === 'IN_PERSON' ? 'Yüz Yüze' : 'Online'}
                   </Typography>
@@ -503,7 +512,7 @@ export function TherapySessionDetailsView() {
             <>
               <Divider />
               <Stack spacing={1}>
-                <Typography variant="subtitle2">Seans Notları</Typography>
+                <Typography variant="subtitle2">Görüşme Notları</Typography>
                 <Typography variant="body2">{sessionData.sessionNotes}</Typography>
               </Stack>
             </>
@@ -524,8 +533,8 @@ export function TherapySessionDetailsView() {
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Seansı Sil"
-        content="Bu seansı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+        title="Görüşmeyi Sil"
+        content="Bu görüşmeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
         action={
           <Button
             variant="contained"

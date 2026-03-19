@@ -49,7 +49,7 @@ export function TherapySessionRescheduleView() {
   useEffect(() => {
     const fetchSession = async () => {
       if (!sessionId) {
-        toast.error('Seans ID bulunamadı');
+        toast.error('Görüşme ID bulunamadı');
         router.push(paths.dashboard.therapySession.list);
         return;
       }
@@ -79,7 +79,7 @@ export function TherapySessionRescheduleView() {
         }
       } catch (error) {
         console.error('Error fetching therapy session:', error);
-        toast.error('Seans yüklenirken bir hata oluştu');
+        toast.error('Görüşme yüklenirken bir hata oluştu');
         router.push(paths.dashboard.therapySession.list);
       } finally {
         setLoading(false);
@@ -127,7 +127,7 @@ export function TherapySessionRescheduleView() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        let errorMessage = 'Seans yeniden planlanamadı';
+        let errorMessage = 'Görüşme yeniden planlanamadı';
         try {
           if (errorText && errorText.trim().startsWith('{')) {
             const errorData = JSON.parse(errorText);
@@ -141,11 +141,11 @@ export function TherapySessionRescheduleView() {
         throw new Error(errorMessage);
       }
 
-      toast.success('Seans başarıyla yeniden planlandı!');
+      toast.success('Görüşme başarıyla yeniden planlandı!');
       router.push(paths.dashboard.therapySession.details(sessionId));
     } catch (error) {
       console.error('Error rescheduling session:', error);
-      toast.error(`Seans yeniden planlanırken hata oluştu: ${error.message}`);
+      toast.error(`Görüşme yeniden planlanırken hata oluştu: ${error.message}`);
     }
   };
 
@@ -160,7 +160,7 @@ export function TherapySessionRescheduleView() {
   if (!currentSession) {
     return (
       <Container maxWidth="lg">
-        <Typography>Seans bulunamadı</Typography>
+        <Typography>Görüşme bulunamadı</Typography>
       </Container>
     );
   }
@@ -168,11 +168,11 @@ export function TherapySessionRescheduleView() {
   return (
     <Container maxWidth="lg">
       <CustomBreadcrumbs
-        heading="Seans Yeniden Planla"
+        heading="Görüşme Yeniden Planla"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Seansları', href: paths.dashboard.therapySession.root },
-          { name: 'Seans Detayları', href: paths.dashboard.therapySession.details(sessionId) },
+          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
+          { name: 'Görüşme Detayları', href: paths.dashboard.therapySession.details(sessionId) },
           { name: 'Yeniden Planla' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
@@ -182,11 +182,11 @@ export function TherapySessionRescheduleView() {
         <Card sx={{ p: 3 }}>
           <Stack spacing={3}>
             <Alert severity="info">
-              Seans yeniden planlandıktan sonra danışan ve danışmana bildirim gönderilecektir.
+              Görüşme yeniden planlandıktan sonra danışan ve danışmana bildirim gönderilecektir.
             </Alert>
 
             <Stack spacing={2}>
-              <Typography variant="h6">Mevcut Seans Bilgileri</Typography>
+              <Typography variant="h6">Mevcut Görüşme Bilgileri</Typography>
               
               <Stack spacing={1}>
                 <Typography variant="subtitle2">Danışan</Typography>

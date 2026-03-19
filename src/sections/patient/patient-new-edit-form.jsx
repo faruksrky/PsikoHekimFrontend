@@ -38,6 +38,7 @@ export function PatientNewEditForm({ currentPatient }) {
     () => ({
       patientFirstName: currentPatient?.patientFirstName || '',
       patientLastName: currentPatient?.patientLastName || '',
+      patientTckn: currentPatient?.patientTckn || '',
       patientEmail: currentPatient?.patientEmail || '',
       patientGender: currentPatient?.patientGender || '',
       patientPhoneNumber: currentPatient?.patientPhoneNumber || '',
@@ -55,6 +56,10 @@ export function PatientNewEditForm({ currentPatient }) {
     zod.object({
       patientFirstName: zod.string().min(1, { message: 'Ad bilgisi gereklidir!' }),
       patientLastName: zod.string().min(1, { message: 'Soyad bilgisi gereklidir!' }),
+      patientTckn: zod
+        .string()
+        .min(1, { message: 'TCKN zorunludur!' })
+        .regex(/^[0-9]{11}$/, { message: 'TCKN 11 rakamdan oluşmalıdır!' }),
       patientEmail: zod.union([
         zod.string().email({ message: 'Geçerli bir mail adresi girilmelidir!' }),
         zod.literal(''),
@@ -233,14 +238,37 @@ export function PatientNewEditForm({ currentPatient }) {
                     )}
                   />
 
-
+                  <Controller
+                    name="patientTckn"
+                    control={control}
+                    defaultValue={defaultValues.patientTckn}
+                    render={({ field: { onChange, value, ...field }, fieldState: { error } }) => (
+                      <TextField
+                        {...field}
+                        value={value ?? ''}
+                        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                        label="TCKN"
+                        variant="outlined"
+                        fullWidth
+                        margin="normal"
+                        error={!!error}
+                        helperText={error?.message}
+                        placeholder="11 rakam"
+                        inputProps={{
+                          tabIndex: 3,
+                          maxLength: 11,
+                          inputMode: 'numeric',
+                        }}
+                      />
+                    )}
+                  />
 
                   <Controller
                     name="patientGender"
                     control={control}
                     defaultValue={defaultValues.gender}
                     render={({ field }) => (
-                      <Field.Select {...field} label="Cinsiyet" inputProps={{ tabIndex: 3 }}>
+                      <Field.Select {...field} label="Cinsiyet" inputProps={{ tabIndex: 4 }}>
                         {GENDER_TYPE_OPTIONS.map((option) => (
                           <MenuItem key={option.value} value={option.value}>
                             {option.label}
@@ -268,7 +296,7 @@ export function PatientNewEditForm({ currentPatient }) {
                         }}
                         fullWidth
                         inputProps={{ 
-                          tabIndex: 4,
+                          tabIndex: 5,
                           min: 0,
                           step: 1
                         }}
@@ -287,7 +315,7 @@ export function PatientNewEditForm({ currentPatient }) {
                         label="Telefon"
                         ref={field.ref}
                         fullWidth
-                        inputProps={{ tabIndex: 5 }}
+                        inputProps={{ tabIndex: 6 }}
                         defaultCountry="TR"
                       />
                     )}

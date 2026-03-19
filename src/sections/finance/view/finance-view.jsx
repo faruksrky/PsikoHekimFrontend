@@ -229,7 +229,7 @@ export function FinanceView() {
                     >
                         <Tab
                             value="income"
-                            label="Gelirler (Seans Listesi)"
+                            label="Gelirler (Görüşme Listesi)"
                             icon={<Iconify icon="solar:bill-list-bold" width={24} />}
                         />
                         <Tab
@@ -240,9 +240,9 @@ export function FinanceView() {
                     </Tabs>
                 ) : (
                     <Box sx={{ px: 2.5, pt: 2 }}>
-                        <Typography variant="h6">Seans Listesi</Typography>
+                        <Typography variant="h6">Görüşme Listesi</Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Danışan, seans, tutar ve ödeme durumu
+                            Danışan, görüşme, tutar ve ödeme durumu
                         </Typography>
                     </Box>
                 )}
@@ -315,8 +315,8 @@ function IncomeTable({ sessions, loading, isAdmin }) {
                         <TableCell>Tarih</TableCell>
                         <TableCell>Danışan</TableCell>
                         {isAdmin && <TableCell>Danışman</TableCell>}
-                        <TableCell>Seans Tipi</TableCell>
-                        <TableCell>{isAdmin ? 'Seans Tutarı' : 'Tutar'}</TableCell>
+                        <TableCell>Görüşme Tipi</TableCell>
+                        <TableCell>{isAdmin ? 'Görüşme Tutarı' : 'Tutar'}</TableCell>
                         <TableCell>Durum</TableCell>
                     </TableRow>
                 </TableHead>
@@ -384,7 +384,7 @@ function ExpenseTable({ therapists, loading, selectedDate, onMarkPaid, markingPa
                 <TableHead>
                     <TableRow>
                         <TableCell>Danışman</TableCell>
-                        <TableCell>Seans</TableCell>
+                        <TableCell>Görüşme</TableCell>
                         <TableCell>Toplam Hakediş</TableCell>
                         <TableCell>Ödenen</TableCell>
                         <TableCell>Bekleyen</TableCell>

@@ -241,7 +241,7 @@ export function TherapistDetailsView() {
                 <>
                   <Grid item xs={12} sm={6}>
                     <Typography variant="body2" color="text.secondary">
-                      Seans Ücreti
+                      Görüşme Ücreti
                     </Typography>
                     <Typography variant="body1" gutterBottom>
                       {getCurrencySymbol(therapist.therapistAppointmentFeeCurrency || 'TRY')}
