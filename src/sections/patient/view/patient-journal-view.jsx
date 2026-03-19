@@ -406,34 +406,11 @@ export function PatientJournalView() {
         {/* Sağ Panel - Görüşme Notları */}
         <Grid item xs={12} md={8}>
           <Card sx={{ p: 3 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Tamamlanan görüşmelerin notları kronolojik sırayla listelenir.
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+              Görüşme Notları
             </Typography>
-
-            {journal.length === 0 ? (
-              <Box
-                sx={{
-                  py: 8,
-                  textAlign: 'center',
-                  border: '1px dashed',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                }}
-              >
-                <Iconify
-                  icon="solar:document-text-bold"
-                  width={64}
-                  sx={{ color: 'text.disabled', mb: 1.5 }}
-                />
-                <Typography variant="body1" color="text.secondary">
-                  Henüz tamamlanmış görüşme bulunmuyor.
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  Görüşme tamamlandığında notlar buraya otomatik eklenir.
-                </Typography>
-              </Box>
-            ) : (
-              <Stack spacing={2}>
+            {journal.length > 0 ? (
+              <Stack spacing={2} sx={{ mb: payments.length > 0 ? 4 : 0 }}>
                 {journal.map((entry) => (
                   <Card key={entry.sessionId} variant="outlined" sx={{ p: 2.5 }}>
                     <Box
@@ -488,6 +465,10 @@ export function PatientJournalView() {
                   </Card>
                 ))}
               </Stack>
+            ) : (
+              <Box sx={{ py: 4, color: 'text.secondary' }}>
+                <Typography variant="body2">Henüz tamamlanmış görüşme bulunmuyor.</Typography>
+              </Box>
             )}
 
             {/* Ödeme Tablosu */}

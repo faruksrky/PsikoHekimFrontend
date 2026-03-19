@@ -61,7 +61,6 @@ export const navData = [
         hideForRole: 'ADMIN', // Sadece danışman (USER) görsün, ADMIN görmez
         children: [
           { title: 'Danışanlarım', path: paths.dashboard.myTherapist.patients, requiredRole: 'USER', hideForRole: 'ADMIN' },
-          { title: 'Görüşme Defteri', path: paths.dashboard.myTherapist.journal, requiredRole: 'USER', hideForRole: 'ADMIN' },
         ],
       },
     ],
