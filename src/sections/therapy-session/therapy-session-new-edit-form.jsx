@@ -652,6 +652,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 slotProps={{
                   textField: {
                     placeholder: 'GG/AA/YYYY SS:DD',
+                    fullWidth: true,
                   },
                   actionBar: {
                     actions: ['cancel', 'accept'],
@@ -675,6 +676,16 @@ export function TherapySessionNewEditForm({ currentSession }) {
                   </MenuItem>
                 ))}
               </Field.Select>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Field.Text
+                name="sessionNotes"
+                label="Görüşme Notları"
+                multiline
+                rows={4}
+                placeholder="Görüşme hakkında ek bilgiler..."
+              />
             </Grid>
 
             <Grid item xs={12} md={6}>
@@ -728,16 +739,6 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 </Grid>
               </>
             )}
-
-            <Grid item xs={12}>
-              <Field.Text
-                name="sessionNotes"
-                label="Görüşme Notları"
-                multiline
-                rows={4}
-                placeholder="Görüşme hakkında ek bilgiler..."
-              />
-            </Grid>
           </Grid>
 
           <Stack justifyContent="flex-end" direction="row" spacing={2}>
