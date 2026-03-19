@@ -161,8 +161,8 @@ export function MyPatientsView() {
       getActions: (params) => [
         <GridActionsCellItem
           showInMenu
-          icon={<Iconify icon="solar:document-text-bold" />}
-          label="Görüşme Defteri"
+          icon={<Iconify icon="solar:user-id-bold" />}
+          label="Danışan Detayları"
           onClick={() => router.push(paths.dashboard.patient.journal(params.row.patientId))}
         />,
       ],

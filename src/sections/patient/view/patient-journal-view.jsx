@@ -400,11 +400,11 @@ export function PatientJournalView() {
           </Card>
         </Grid>
 
-        {/* Sağ Panel - Hasta Hikayesi & Görüşme Notları */}
+        {/* Sağ Panel - Danışan Hikayesi & Görüşme Notları */}
         <Grid item xs={12} md={8}>
           <Card sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              {patient.patientFirstName} {patient.patientLastName} — Hasta Hikayesi
+              {patient.patientFirstName} {patient.patientLastName} — Danışan Hikayesi
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Tamamlanan görüşmelerin notları kronolojik sırayla listelenir.
