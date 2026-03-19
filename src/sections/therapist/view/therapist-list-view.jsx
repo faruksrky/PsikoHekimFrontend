@@ -225,7 +225,7 @@ export function TherapistListView() {
         <GridActionsCellItem
           showInMenu
           icon={<Iconify icon="solar:pen-bold" />}
-          label="Düzenle"
+          label="Bilgi Güncelle"
           onClick={() => handleEditRow(params.id)}
         />,
         <GridActionsCellItem

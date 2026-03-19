@@ -338,7 +338,7 @@ export function PatientListView() {
         <GridActionsCellItem
           showInMenu
           icon={<Iconify icon="solar:pen-bold" />}
-          label="Düzenle"
+          label="Bilgi Güncelle"
           onClick={() => handleEditRow(params.row.id)}
         />,
         <GridActionsCellItem

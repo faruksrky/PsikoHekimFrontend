@@ -66,7 +66,6 @@ export const navData = [
         children: [
           { title: 'Liste', path: paths.dashboard.patient.list, requiredRole: 'ADMIN' },
           { title: 'Yeni Danışan', path: paths.dashboard.patient.new, requiredRole: 'ADMIN' },
-          { title: 'Bilgi Güncelle', path: paths.dashboard.patient.demo.edit, requiredRole: 'ADMIN' }
         ],
       },
 
@@ -78,7 +77,6 @@ export const navData = [
         children: [
           { title: 'Liste', path: paths.dashboard.therapist.list, requiredRole: 'ADMIN' },
           { title: 'Yeni Danışman', path: paths.dashboard.therapist.new, requiredRole: 'ADMIN' },
-          { title: 'Bilgi Güncelle', path: paths.dashboard.therapist.demo.edit, requiredRole: 'ADMIN' },
         ],
       },
 
