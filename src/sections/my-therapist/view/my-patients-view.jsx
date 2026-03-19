@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
-import Container from '@mui/material/Container';
 import { trTR } from '@mui/x-data-grid/locales';
 import {
   DataGrid,
@@ -19,6 +18,7 @@ import { toast } from 'src/components/snackbar';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmptyContent } from 'src/components/empty-content';
 import { DataGridContainer } from 'src/components/datagrid';
+import { DashboardContent } from 'src/layouts/dashboard';
 
 // ----------------------------------------------------------------------
 
@@ -166,7 +166,7 @@ export function MyPatientsView() {
   ];
 
   return (
-    <Container maxWidth="xl">
+    <DashboardContent maxWidth="xl" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Danışanlarım"
         links={[
@@ -174,7 +174,7 @@ export function MyPatientsView() {
           { name: 'Danışmanlarım', href: paths.dashboard.myTherapist.root },
           { name: 'Danışanlarım' },
         ]}
-        sx={{ mb: 3 }}
+        sx={{ mb: { xs: 3, md: 5 } }}
       />
 
       <Card>
@@ -203,6 +203,6 @@ export function MyPatientsView() {
           />
         </DataGridContainer>
       </Card>
-    </Container>
+    </DashboardContent>
   );
 }

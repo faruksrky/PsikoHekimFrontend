@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 
@@ -19,6 +18,7 @@ import { getEmailFromToken, getTherapistId } from 'src/auth/context/jwt/action';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { DashboardContent } from 'src/layouts/dashboard';
 
 // ----------------------------------------------------------------------
 
@@ -84,14 +84,14 @@ export function MyJournalView() {
 
   if (loading) {
     return (
-      <Container maxWidth="md">
+      <DashboardContent maxWidth="xl">
         <Typography>Yükleniyor...</Typography>
-      </Container>
+      </DashboardContent>
     );
   }
 
   return (
-    <Container maxWidth="md">
+    <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
         heading="Görüşme Defteri"
         links={[
@@ -99,7 +99,7 @@ export function MyJournalView() {
           { name: 'Danışmanlarım', href: paths.dashboard.myTherapist.root },
           { name: 'Görüşme Defteri' },
         ]}
-        sx={{ mb: 3 }}
+        sx={{ mb: { xs: 3, md: 5 } }}
       />
 
       <Typography variant="h6" sx={{ mb: 2 }}>
@@ -183,6 +183,6 @@ export function MyJournalView() {
           ))}
         </Stack>
       )}
-    </Container>
+    </DashboardContent>
   );
 }
