@@ -29,6 +29,8 @@ const TherapistCreatePage = lazy(() => import('src/pages/dashboard/therapist/new
 const TherapistEditPage = lazy(() => import('src/pages/dashboard/therapist/edit'));
 const TherapistDetailsView = lazy(() => import('src/sections/therapist/view/therapist-details-view').then(module => ({ default: module.TherapistDetailsView })));
 const TherapistPatientsPage = lazy(() => import('src/pages/dashboard/therapist/patients'));
+const MyPatientsView = lazy(() => import('src/sections/my-therapist/view/my-patients-view').then((m) => ({ default: m.MyPatientsView })));
+const MyJournalView = lazy(() => import('src/sections/my-therapist/view/my-journal-view').then((m) => ({ default: m.MyJournalView })));
 
 // Therapy Session Pages
 const TherapySessionListView = lazy(() => import('src/sections/therapy-session/view/therapy-session-list-view').then(module => ({ default: module.TherapySessionListView })));
@@ -74,7 +76,28 @@ export const dashboardRoutes = [
           </ProtectedRoute>
         )
       },
-
+      {
+        path: 'my-therapist',
+        children: [
+          { element: <Navigate to="/dashboard/my-therapist/patients" replace />, index: true },
+          {
+            path: 'patients',
+            element: (
+              <ProtectedRoute requiredRole="USER">
+                <MyPatientsView />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'journal',
+            element: (
+              <ProtectedRoute requiredRole="USER">
+                <MyJournalView />
+              </ProtectedRoute>
+            ),
+          },
+        ],
+      },
       {
         path: 'patient',
         children: [

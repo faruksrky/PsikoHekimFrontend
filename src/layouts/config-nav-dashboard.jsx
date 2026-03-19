@@ -53,6 +53,16 @@ export const navData = [
     items: [
       { title: 'Gelen Kutusu', path: paths.dashboard.inbox, icon: ICONS.mail, requiredRole: 'USER' },
       { title: 'Takvim', path: paths.dashboard.calendar, icon: ICONS.calendar, requiredRole: 'USER' },
+      {
+        title: 'Danışmanlarım',
+        path: paths.dashboard.myTherapist.root,
+        icon: ICONS.patient,
+        requiredRole: 'USER',
+        children: [
+          { title: 'Danışanlarım', path: paths.dashboard.myTherapist.patients, requiredRole: 'USER' },
+          { title: 'Görüşme Defteri', path: paths.dashboard.myTherapist.journal, requiredRole: 'USER' },
+        ],
+      },
     ],
   },
 

@@ -99,6 +99,11 @@ export const paths = {
       status: (processInstanceKey) => `${ROOTS.DASHBOARD}/process/status/${processInstanceKey}`,
     },
 
+    myTherapist: {
+      root: `${ROOTS.DASHBOARD}/my-therapist`,
+      patients: `${ROOTS.DASHBOARD}/my-therapist/patients`,
+      journal: `${ROOTS.DASHBOARD}/my-therapist/journal`,
+    },
     therapySession: {
       root: `${ROOTS.DASHBOARD}/therapy-session`,
       list: `${ROOTS.DASHBOARD}/therapy-session/list`,
