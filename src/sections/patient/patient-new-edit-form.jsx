@@ -216,7 +216,7 @@ export function PatientNewEditForm({ currentPatient }) {
                         label="Ad"
                         variant="outlined"
                         fullWidth
-                        margin="normal"
+                        margin="none"
                         inputProps={{ tabIndex: 1 }}
                       />
                     )}
@@ -232,7 +232,7 @@ export function PatientNewEditForm({ currentPatient }) {
                         label="Soyad"
                         variant="outlined"
                         fullWidth
-                        margin="normal"
+                        margin="none"
                         inputProps={{ tabIndex: 2 }}
                       />
                     )}
@@ -250,7 +250,7 @@ export function PatientNewEditForm({ currentPatient }) {
                         label="TCKN"
                         variant="outlined"
                         fullWidth
-                        margin="normal"
+                        margin="none"
                         error={!!error}
                         helperText={error?.message}
                         placeholder="11 rakam"
@@ -268,7 +268,7 @@ export function PatientNewEditForm({ currentPatient }) {
                     control={control}
                     defaultValue={defaultValues.gender}
                     render={({ field }) => (
-                      <Field.Select {...field} label="Cinsiyet" inputProps={{ tabIndex: 4 }}>
+                      <Field.Select {...field} label="Cinsiyet" margin="none" inputProps={{ tabIndex: 4 }}>
                         {GENDER_TYPE_OPTIONS.map((option) => (
                           <MenuItem key={option.value} value={option.value}>
                             {option.label}
@@ -341,7 +341,7 @@ export function PatientNewEditForm({ currentPatient }) {
                     name="patientCountry"
                     label="Ülke"
                     placeholder="Ülke Seçiniz"
-                    margin="normal"
+                    margin="none"
                     variant="outlined"
                   />
 
