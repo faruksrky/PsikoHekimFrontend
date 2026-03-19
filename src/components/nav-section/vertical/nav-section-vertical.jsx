@@ -22,7 +22,7 @@ export function NavSectionVertical({
   cssVars: overridesVars,
 }) {
   const theme = useTheme();
-  const { hasRole } = useAuth();
+  const { hasRole, isAdmin } = useAuth();
 
   const cssVars = {
     ...navSectionCssVars.vertical(theme),
@@ -33,9 +33,12 @@ export function NavSectionVertical({
   const filteredData = data.map((group) => ({
     ...group,
     items: group.items.filter((item) => {
+      // hidden: true ise gösterme (şimdilik kapatılmış menüler)
+      if (item.hidden) return false;
+      // hideForRole: ADMIN ise ve kullanıcı ADMIN ise gösterme
+      if (item.hideForRole === 'ADMIN' && isAdmin()) return false;
       // If no requiredRole, show to everyone
       if (!item.requiredRole) return true;
-      
       // Check if user has required role
       return hasRole(item.requiredRole);
     }).map((item) => {
@@ -44,6 +47,7 @@ export function NavSectionVertical({
         return {
           ...item,
           children: item.children.filter((child) => {
+            if (child.hideForRole === 'ADMIN' && isAdmin()) return false;
             if (!child.requiredRole) return true;
             return hasRole(child.requiredRole);
           })

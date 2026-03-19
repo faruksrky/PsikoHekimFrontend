@@ -58,9 +58,10 @@ export const navData = [
         path: paths.dashboard.myTherapist.root,
         icon: ICONS.patient,
         requiredRole: 'USER',
+        hideForRole: 'ADMIN', // Sadece danışman (USER) görsün, ADMIN görmez
         children: [
-          { title: 'Danışanlarım', path: paths.dashboard.myTherapist.patients, requiredRole: 'USER' },
-          { title: 'Görüşme Defteri', path: paths.dashboard.myTherapist.journal, requiredRole: 'USER' },
+          { title: 'Danışanlarım', path: paths.dashboard.myTherapist.patients, requiredRole: 'USER', hideForRole: 'ADMIN' },
+          { title: 'Görüşme Defteri', path: paths.dashboard.myTherapist.journal, requiredRole: 'USER', hideForRole: 'ADMIN' },
         ],
       },
     ],
@@ -115,7 +116,7 @@ export const navData = [
         ],
       },
 
-      { title: 'Analytics', path: paths.dashboard.analytics, icon: ICONS.analytics, requiredRole: 'USER' },
+      { title: 'Analytics', path: paths.dashboard.analytics, icon: ICONS.analytics, requiredRole: 'USER', hidden: true },
 
     ],
 

@@ -19,7 +19,7 @@ export function NavSectionMini({
   cssVars: overridesVars,
 }) {
   const theme = useTheme();
-  const { hasRole } = useAuth();
+  const { hasRole, isAdmin } = useAuth();
 
   const cssVars = {
     ...navSectionCssVars.mini(theme),
@@ -30,6 +30,8 @@ export function NavSectionMini({
   const filteredData = data.map((group) => ({
     ...group,
     items: group.items.filter((item) => {
+      if (item.hidden) return false;
+      if (item.hideForRole === 'ADMIN' && isAdmin()) return false;
       if (!item.requiredRole) return true;
       return hasRole(item.requiredRole);
     }).map((item) => {
@@ -37,6 +39,7 @@ export function NavSectionMini({
         return {
           ...item,
           children: item.children.filter((child) => {
+            if (child.hideForRole === 'ADMIN' && isAdmin()) return false;
             if (!child.requiredRole) return true;
             return hasRole(child.requiredRole);
           })
