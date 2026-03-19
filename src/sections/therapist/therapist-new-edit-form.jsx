@@ -290,7 +290,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       label="Ad"
                       variant="outlined"
                       fullWidth
-                      margin="normal"
+                      margin="none"
                       inputProps={{ tabIndex: 1 }}
                     />
                   )}
@@ -305,7 +305,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       label="Soyad"
                       variant="outlined"
                       fullWidth
-                      margin="normal"
+                      margin="none"
                       inputProps={{ tabIndex: 2 }}
                     />
                   )}
@@ -320,6 +320,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       label="E-Posta"
                       variant="outlined"
                       fullWidth
+                      margin="none"
                       inputProps={{ tabIndex: 3 }}
                     />
                   )}
@@ -334,6 +335,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       label="Telefon"
                       ref={field.ref}
                       fullWidth
+                      margin="none"
                       inputProps={{ tabIndex: 4 }}
                     />
                   )}
@@ -348,6 +350,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       label="Adres"
                       variant="outlined"
                       fullWidth
+                      margin="none"
                       inputProps={{ tabIndex: 5 }}
                       sx={{ gridColumn: 'span 2' }}
                     />
@@ -375,6 +378,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                           label="Eğitim Seviyesi"
                           variant="outlined"
                           fullWidth
+                          margin="none"
                           inputProps={{
                             ...params.inputProps,
                             tabIndex: 6,
@@ -395,6 +399,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       label="Mezun olunan Üniversite"
                       fullWidth
                       variant="outlined"
+                      margin="none"
                       inputProps={{ tabIndex: 7 }}
                     />
                   )}
@@ -407,6 +412,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                     <Field.Select
                       {...field}
                       label="Danışman Türü"
+                      margin="none"
                       inputProps={{ tabIndex: 8 }}
                       onChange={(e) => {
                         field.onChange(e);
@@ -435,6 +441,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       label="Uzmanlık Alanları"
                       multiple
                       fullWidth
+                      margin="none"
                       disableCloseOnSelect
                       options={specialties.map((option) => option)}
                       getOptionLabel={(option) => option}
@@ -470,6 +477,8 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       label="Deneyim Süresi"
                       select
                       fullWidth
+                      variant="outlined"
+                      margin="none"
                       value={values.therapistYearsOfExperience}
                       onChange={field.onChange}
                       error={!!field.error}
@@ -493,6 +502,8 @@ export function TherapistNewEditForm({ currentTherapist }) {
                       {...field}
                       label="Sertifikalar"
                       fullWidth
+                      variant="outlined"
+                      margin="none"
                       inputProps={{ tabIndex: 11 }}
                     />
                   )}
@@ -509,6 +520,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                         <Field.Select
                           {...field}
                           label="Görüşme Ücreti Para Birimi"
+                          margin="none"
                           inputProps={{ tabIndex: 12 }}
                         >
                           {CURRENCY_OPTIONS.map((option) => (
@@ -530,6 +542,8 @@ export function TherapistNewEditForm({ currentTherapist }) {
                           label="Görüşme Ücreti"
                           placeholder="0.00"
                           type="number"
+                          variant="outlined"
+                          margin="none"
                           onChange={(event) => handleChangePrice(event)}
                           InputLabelProps={{ shrink: true }}
                           InputProps={{
@@ -558,6 +572,7 @@ export function TherapistNewEditForm({ currentTherapist }) {
                         <Field.Select
                           {...field}
                           label="Danışman Ücreti Para Birimi"
+                          margin="none"
                           inputProps={{ tabIndex: 14 }}
                         >
                           {CURRENCY_OPTIONS.map((option) => (
@@ -579,6 +594,8 @@ export function TherapistNewEditForm({ currentTherapist }) {
                           label="Danışman Ücreti"
                           placeholder="0.00"
                           type="number"
+                          variant="outlined"
+                          margin="none"
                           onChange={(event) => handleChangeConsultantFee(event)}
                           InputLabelProps={{ shrink: true }}
                           InputProps={{
