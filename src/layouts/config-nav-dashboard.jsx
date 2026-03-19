@@ -100,8 +100,14 @@ export const navData = [
           { title: 'Görüşme Listesi', path: paths.dashboard.therapySession.list, requiredRole: 'USER' },
           { title: 'Yeni Görüşme', path: paths.dashboard.therapySession.new, requiredRole: 'USER' },
           { title: 'Analitik', path: paths.dashboard.therapySession.analytics, requiredRole: 'USER' },
-          { title: 'Finans', path: paths.dashboard.finance.root, requiredRole: 'USER' },
         ],
+      },
+
+      {
+        title: 'Finans',
+        path: paths.dashboard.finance.root,
+        icon: ICONS.banking,
+        requiredRole: 'USER',
       },
 
       {
