@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
 
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -125,62 +124,46 @@ export function MyJournalView() {
         </Card>
       ) : (
         <Stack spacing={2}>
-          {entries.map((entry) => (
-            <Card key={`${entry.patientId}-${entry.sessionId}`} sx={{ p: 2 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  flexWrap: 'wrap',
-                  gap: 1,
-                  mb: 1,
-                }}
-              >
-                <Typography variant="subtitle2" color="primary">
-                  {entry.scheduledDate
-                    ? format(new Date(entry.scheduledDate), 'd MMMM yyyy, HH:mm', {
-                        locale: tr,
-                      })
-                    : '—'}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="primary"
-                  sx={{ cursor: 'pointer', textDecoration: 'underline' }}
-                  onClick={() => router.push(paths.dashboard.patient.journal(entry.patientId))}
-                >
-                  {entry.patientName}
-                </Typography>
-              </Box>
-              <Divider sx={{ my: 1.5 }} />
-              {entry.sessionNotes && (
-                <Box sx={{ mb: 1.5 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Görüşme Notu
-                  </Typography>
-                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                    {entry.sessionNotes}
-                  </Typography>
+          {entries.map((entry) => {
+            const noteContent = [entry.sessionNotes, entry.therapistNotes].filter(Boolean).join('\n\n') || '—';
+            return (
+              <Card key={`${entry.patientId}-${entry.sessionId}`} sx={{ p: 2 }}>
+                <Box sx={{ display: 'grid', gap: 1.5 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Tarih
+                    </Typography>
+                    <Typography variant="body2">
+                      {entry.scheduledDate
+                        ? format(new Date(entry.scheduledDate), 'd MMMM yyyy, HH:mm', { locale: tr })
+                        : '—'}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Danışan
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="primary"
+                      sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+                      onClick={() => router.push(paths.dashboard.patient.journal(entry.patientId))}
+                    >
+                      {entry.patientName}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Not
+                    </Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {noteContent}
+                    </Typography>
+                  </Box>
                 </Box>
-              )}
-              {entry.therapistNotes && (
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Danışman Notu
-                  </Typography>
-                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                    {entry.therapistNotes}
-                  </Typography>
-                </Box>
-              )}
-              {!entry.sessionNotes && !entry.therapistNotes && (
-                <Typography variant="body2" color="text.secondary">
-                  Not eklenmemiş
-                </Typography>
-              )}
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </Stack>
       )}
     </DashboardContent>

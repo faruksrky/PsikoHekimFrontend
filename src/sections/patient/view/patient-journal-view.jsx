@@ -195,14 +195,14 @@ export function PatientJournalView() {
   return (
     <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
-        heading="Görüşme Defteri"
+        heading="Danışan Detayları"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           {
             name: isAdmin() ? 'Danışan' : 'Danışanlarım',
             href: isAdmin() ? paths.dashboard.patient.list : paths.dashboard.myTherapist.patients,
           },
-          { name: `${patient.patientFirstName} ${patient.patientLastName}` },
+          { name: 'Danışan Detayları' },
         ]}
         action={
           <Stack direction="row" spacing={2}>
