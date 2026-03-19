@@ -20,8 +20,6 @@ import {
 } from '@mui/material';
 
 import { Helmet } from 'react-helmet-async';
-import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
 
 import { CONFIG } from 'src/config-global';
 import { paths } from 'src/routes/paths';
@@ -85,7 +83,6 @@ export function PatientJournalView() {
   const { id } = useParams();
   const { isAdmin } = useAuth();
   const [patient, setPatient] = useState(null);
-  const [journal, setJournal] = useState([]);
   const [payments, setPayments] = useState([]);
   const [therapists, setTherapists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -103,29 +100,16 @@ export function PatientJournalView() {
       const patientData = await patientRes.json();
       setPatient(patientData);
 
-      // Görüşme defteri + ödeme bilgileri için session listesi
+      // Ödeme bilgileri (tüm görüşmeler)
       let sessionsUrl = `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/patient/${id}`;
-      let journalUrl = `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/patient/${id}/journal`;
-
       if (!userInfo?.isAdmin) {
         const therapistInfo = await getTherapistId(userInfo?.email);
         const therapistId = therapistInfo?.therapistId ?? therapistInfo;
         if (therapistId) {
           sessionsUrl += `?therapistId=${therapistId}`;
-          journalUrl += `?therapistId=${therapistId}`;
         }
       }
 
-      // Görüşme defteri (tamamlanan görüşmeler)
-      const journalRes = await fetch(journalUrl, { headers });
-      if (journalRes.ok) {
-        const data = await journalRes.json();
-        setJournal(Array.isArray(data) ? data : []);
-      } else {
-        setJournal([]);
-      }
-
-      // Ödeme bilgileri (tüm görüşmeler)
       const sessionsRes = await fetch(sessionsUrl, { headers });
       if (sessionsRes.ok) {
         const sessionsData = await sessionsRes.json();
@@ -328,13 +312,15 @@ export function PatientJournalView() {
               </>
             )}
           </Card>
+        </Grid>
 
-          {/* Ödeme Özeti */}
+        {/* Sağ Panel - Ödeme Bilgileri & Son Ödemeler */}
+        <Grid item xs={12} md={8}>
           <Card sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
               Ödeme Bilgileri
             </Typography>
-            <Stack spacing={2}>
+            <Stack spacing={2} sx={{ mb: 3 }}>
               <Box
                 sx={{
                   p: 2,
@@ -351,7 +337,7 @@ export function PatientJournalView() {
                 </Typography>
               </Box>
               <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid item xs={6} sm={3}>
                   <Typography variant="caption" color="text.secondary">
                     Ödeme Sayısı
                   </Typography>
@@ -359,7 +345,7 @@ export function PatientJournalView() {
                     {payments.length}
                   </Typography>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid item xs={6} sm={3}>
                   <Typography variant="caption" color="text.secondary">
                     Ödenen
                   </Typography>
@@ -367,7 +353,7 @@ export function PatientJournalView() {
                     {paidCount}
                   </Typography>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid item xs={6} sm={3}>
                   <Typography variant="caption" color="text.secondary">
                     Bekleyen
                   </Typography>
@@ -375,7 +361,7 @@ export function PatientJournalView() {
                     {pendingCount}
                   </Typography>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid item xs={6} sm={3}>
                   <Typography variant="caption" color="text.secondary">
                     Ortalama
                   </Typography>
@@ -386,98 +372,13 @@ export function PatientJournalView() {
               </Grid>
             </Stack>
 
-            {payments.length > 0 && (
-              <>
-                <Divider sx={{ my: 2 }} />
-                <Button
-                  variant="text"
-                  size="small"
-                  fullWidth
-                  startIcon={<Iconify icon="solar:wallet-money-bold" />}
-                  onClick={() => router.push(paths.dashboard.patient.payments(id))}
-                >
-                  Ödeme Geçmişi
-                </Button>
-              </>
-            )}
-          </Card>
-        </Grid>
+            <Divider sx={{ my: 3 }} />
 
-        {/* Sağ Panel - Görüşme Notları */}
-        <Grid item xs={12} md={8}>
-          <Card sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              Görüşme Notları
+              Son Ödemeler
             </Typography>
-            {journal.length > 0 ? (
-              <Stack spacing={2} sx={{ mb: payments.length > 0 ? 4 : 0 }}>
-                {journal.map((entry) => (
-                  <Card key={entry.sessionId} variant="outlined" sx={{ p: 2.5 }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        flexWrap: 'wrap',
-                        gap: 1,
-                        mb: 1.5,
-                      }}
-                    >
-                      <Typography variant="subtitle2" color="primary">
-                        {entry.scheduledDate
-                          ? format(new Date(entry.scheduledDate), 'd MMMM yyyy, HH:mm', { locale: tr })
-                          : '—'}
-                      </Typography>
-                      {entry.therapist && (
-                        <Chip
-                          label={`${entry.therapist.therapistFirstName} ${entry.therapist.therapistLastName}`}
-                          size="small"
-                          variant="soft"
-                        />
-                      )}
-                    </Box>
-                    <Divider sx={{ my: 1.5 }} />
-                    {entry.sessionNotes && (
-                      <Box sx={{ mb: 1.5 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Görüşme Notu
-                        </Typography>
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
-                          {entry.sessionNotes}
-                        </Typography>
-                      </Box>
-                    )}
-                    {entry.therapistNotes && (
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Danışman Notu
-                        </Typography>
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
-                          {entry.therapistNotes}
-                        </Typography>
-                      </Box>
-                    )}
-                    {!entry.sessionNotes && !entry.therapistNotes && (
-                      <Typography variant="body2" color="text.secondary">
-                        Not eklenmemiş
-                      </Typography>
-                    )}
-                  </Card>
-                ))}
-              </Stack>
-            ) : (
-              <Box sx={{ py: 4, color: 'text.secondary' }}>
-                <Typography variant="body2">Henüz tamamlanmış görüşme bulunmuyor.</Typography>
-              </Box>
-            )}
-
-            {/* Ödeme Tablosu */}
-            {payments.length > 0 && (
+            {payments.length > 0 ? (
               <>
-                <Divider sx={{ my: 4 }} />
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  Son Ödemeler
-                </Typography>
                 <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1 }}>
                   <Table size="small">
                     <TableHead>
@@ -520,7 +421,20 @@ export function PatientJournalView() {
                     Tümünü gör ({payments.length})
                   </Button>
                 )}
+                <Button
+                  variant="text"
+                  size="small"
+                  startIcon={<Iconify icon="solar:wallet-money-bold" />}
+                  sx={{ mt: 2 }}
+                  onClick={() => router.push(paths.dashboard.patient.payments(id))}
+                >
+                  Ödeme Geçmişi
+                </Button>
               </>
+            ) : (
+              <Box sx={{ py: 4, color: 'text.secondary' }}>
+                <Typography variant="body2">Henüz ödeme kaydı bulunmuyor.</Typography>
+              </Box>
             )}
           </Card>
         </Grid>

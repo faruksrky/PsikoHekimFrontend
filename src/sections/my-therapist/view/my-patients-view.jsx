@@ -169,7 +169,7 @@ export function MyPatientsView() {
           showInMenu
           icon={<Iconify icon="solar:document-text-bold" />}
           label="Görüşme Defteri"
-          onClick={() => router.push(paths.dashboard.patient.journal(params.row.patientId))}
+          onClick={() => router.push(paths.dashboard.myTherapist.journal)}
         />,
       ],
     },
