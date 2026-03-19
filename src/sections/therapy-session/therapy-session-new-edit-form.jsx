@@ -60,11 +60,11 @@ export function TherapySessionNewEditForm({ currentSession }) {
         return value > minDate;
       }),
     sessionType: Yup.string().required('Görüşme tipi gereklidir'),
+    sessionDuration: Yup.string().required('Görüşme süresi gereklidir'),
     sessionFormat: Yup.string().required('Görüşme formatı gereklidir'),
     sessionFee: Yup.number().min(0, 'Ücret 0 veya daha fazla olmalıdır').required('Görüşme ücreti gereklidir'),
     sessionFeeCurrency: Yup.string().optional().default('TRY'),
     sessionNotes: Yup.string(),
-    homeworkAssigned: Yup.string(),
   });
 
   const defaultValues = useMemo(
@@ -75,11 +75,11 @@ export function TherapySessionNewEditForm({ currentSession }) {
         ? new Date(currentSession.scheduledDate) 
         : new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 saat sonra
       sessionType: currentSession?.sessionType || 'INDIVIDUAL',
+      sessionDuration: currentSession?.sessionDuration || 'FULL',
       sessionFormat: currentSession?.sessionFormat || 'IN_PERSON',
       sessionFee: currentSession?.sessionFee || 500,
       sessionFeeCurrency: currentSession?.sessionFeeCurrency || 'TRY',
       sessionNotes: currentSession?.sessionNotes || '',
-      homeworkAssigned: currentSession?.homeworkAssigned || '',
     }),
     [currentSession]
   );
@@ -243,11 +243,11 @@ export function TherapySessionNewEditForm({ currentSession }) {
             ? new Date(currentSession.scheduledDate) 
             : new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 saat sonra
           sessionType: currentSession.sessionType || 'INDIVIDUAL',
+          sessionDuration: currentSession.sessionDuration || 'FULL',
           sessionFormat: currentSession.sessionFormat || 'IN_PERSON',
           sessionFee: currentSession.sessionFee || 500,
           sessionFeeCurrency: currentSession.sessionFeeCurrency || 'TRY',
           sessionNotes: currentSession.sessionNotes || '',
-          homeworkAssigned: currentSession.homeworkAssigned || '',
         });
       }
     }
@@ -267,11 +267,11 @@ export function TherapySessionNewEditForm({ currentSession }) {
             ? new Date(currentSession.scheduledDate) 
             : new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 saat sonra
           sessionType: currentSession.sessionType || 'INDIVIDUAL',
+          sessionDuration: currentSession.sessionDuration || 'FULL',
           sessionFormat: currentSession.sessionFormat || 'IN_PERSON',
           sessionFee: currentSession.sessionFee || 500,
           sessionFeeCurrency: currentSession.sessionFeeCurrency || 'TRY',
           sessionNotes: currentSession.sessionNotes || '',
-          homeworkAssigned: currentSession.homeworkAssigned || '',
         });
       }
     }
@@ -282,6 +282,11 @@ export function TherapySessionNewEditForm({ currentSession }) {
     { value: 'GROUP', label: 'Grup Terapisi' },
     { value: 'COUPLE', label: 'Çift Terapisi' },
     { value: 'FAMILY', label: 'Aile Terapisi' },
+  ];
+
+  const sessionDurationOptions = [
+    { value: 'FULL', label: 'Tam Görüşme' },
+    { value: 'HALF', label: 'Yarım Görüşme' },
   ];
 
   const sessionFormatOptions = [
@@ -343,10 +348,10 @@ export function TherapySessionNewEditForm({ currentSession }) {
         sessionFee: parseFloat(sessionData.sessionFee) || 0,
         sessionFeeCurrency: sessionData.sessionFeeCurrency || 'TRY',
         sessionType: sessionData.sessionType || 'INDIVIDUAL',
+        sessionDuration: sessionData.sessionDuration || 'FULL',
         sessionFormat: sessionData.sessionFormat || 'IN_PERSON',
         sessionNotes: sessionData.sessionNotes || '',
-        therapistNotes: '', // Boş bırakıyoruz
-        homeworkAssigned: sessionData.homeworkAssigned || ''
+        therapistNotes: ''
       };
 
       const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.update}/${sessionId}`, {
@@ -450,6 +455,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
         sessionFee: parseFloat(sessionData.sessionFee) || 0,
         sessionFeeCurrency: sessionData.sessionFeeCurrency || 'TRY',
         sessionType: sessionData.sessionType || 'REGULAR',
+        sessionDuration: sessionData.sessionDuration || 'FULL',
         sessionFormat: sessionData.sessionFormat || 'IN_PERSON',
         notes: sessionData.sessionNotes || '',
         // WhatsApp/Twilio notification flags
@@ -523,6 +529,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
         sessionFee: parseFloat(sessionData.sessionFee) || 0,
         sessionFeeCurrency: sessionData.sessionFeeCurrency || 'TRY',
         sessionType: sessionData.sessionType || 'REGULAR',
+        sessionDuration: sessionData.sessionDuration || 'FULL',
         sessionFormat: sessionData.sessionFormat || 'IN_PERSON',
         notes: sessionData.sessionNotes || ''
       };
@@ -671,6 +678,16 @@ export function TherapySessionNewEditForm({ currentSession }) {
             </Grid>
 
             <Grid item xs={12} md={6}>
+              <Field.Select name="sessionDuration" label="Görüşme Süresi">
+                {sessionDurationOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Field.Select>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
               <Field.Select name="sessionFormat" label="Görüşme Formatı">
                 {sessionFormatOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
@@ -694,7 +711,6 @@ export function TherapySessionNewEditForm({ currentSession }) {
                     ))}
                   </Field.Select>
                 </Grid>
-
                 <Grid item xs={12} md={6}>
                   <Field.Text
                     name="sessionFee"
@@ -720,16 +736,6 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 multiline
                 rows={4}
                 placeholder="Görüşme hakkında ek bilgiler..."
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Field.Text
-                name="homeworkAssigned"
-                label="Verilen Ödev"
-                multiline
-                rows={3}
-                placeholder="Danışana verilen ödevler veya yapılacaklar..."
               />
             </Grid>
           </Grid>
@@ -779,6 +785,9 @@ export function TherapySessionNewEditForm({ currentSession }) {
                   }
                   if (methods.formState.errors.sessionFormat) {
                     errorMessages.push(methods.formState.errors.sessionFormat.message);
+                  }
+                  if (methods.formState.errors.sessionDuration) {
+                    errorMessages.push(methods.formState.errors.sessionDuration.message);
                   }
                   if (methods.formState.errors.sessionFee) {
                     errorMessages.push(methods.formState.errors.sessionFee.message);
