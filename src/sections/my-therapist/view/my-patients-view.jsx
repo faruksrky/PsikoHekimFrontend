@@ -165,6 +165,12 @@ export function MyPatientsView() {
           label="Danışan Detayları"
           onClick={() => router.push(paths.dashboard.patient.journal(params.row.patientId))}
         />,
+        <GridActionsCellItem
+          showInMenu
+          icon={<Iconify icon="solar:document-text-bold" />}
+          label="Görüşme Defteri"
+          onClick={() => router.push(paths.dashboard.patient.journal(params.row.patientId))}
+        />,
       ],
     },
   ];

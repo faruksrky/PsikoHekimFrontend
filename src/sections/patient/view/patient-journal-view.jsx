@@ -19,13 +19,13 @@ import {
   Paper,
 } from '@mui/material';
 
+import { Helmet } from 'react-helmet-async';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
+import { CONFIG } from 'src/config-global';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
-
-import { CONFIG } from 'src/config-global';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -194,15 +194,18 @@ export function PatientJournalView() {
 
   return (
     <DashboardContent maxWidth="xl">
+      <Helmet>
+        <title>Danışan Detay | {CONFIG.appName}</title>
+      </Helmet>
       <CustomBreadcrumbs
-        heading="Danışan Detayları"
+        heading="Danışan Detay"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           {
             name: isAdmin() ? 'Danışan' : 'Danışanlarım',
             href: isAdmin() ? paths.dashboard.patient.list : paths.dashboard.myTherapist.patients,
           },
-          { name: 'Danışan Detayları' },
+          { name: 'Danışan Detay' },
         ]}
         action={
           <Stack direction="row" spacing={2}>
@@ -400,12 +403,9 @@ export function PatientJournalView() {
           </Card>
         </Grid>
 
-        {/* Sağ Panel - Danışan Hikayesi & Görüşme Notları */}
+        {/* Sağ Panel - Görüşme Notları */}
         <Grid item xs={12} md={8}>
           <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              {patient.patientFirstName} {patient.patientLastName} — Danışan Hikayesi
-            </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Tamamlanan görüşmelerin notları kronolojik sırayla listelenir.
             </Typography>

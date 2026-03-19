@@ -141,24 +141,22 @@ export function MyJournalView() {
                   </Box>
                   <Box>
                     <Typography variant="caption" color="text.secondary" display="block">
-                      Danışan
+                      Görüşme Notları
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      color="primary"
-                      sx={{ cursor: 'pointer', textDecoration: 'underline' }}
-                      onClick={() => router.push(paths.dashboard.patient.journal(entry.patientId))}
-                    >
-                      {entry.patientName}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Not
-                    </Typography>
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                      {noteContent}
-                    </Typography>
+                    <Box>
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        color="primary"
+                        sx={{ cursor: 'pointer', textDecoration: 'underline', display: 'inline-block', mb: 0.5 }}
+                        onClick={() => router.push(paths.dashboard.patient.journal(entry.patientId))}
+                      >
+                        {entry.patientName}
+                      </Typography>
+                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {noteContent}
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
               </Card>
