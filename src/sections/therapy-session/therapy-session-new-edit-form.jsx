@@ -653,6 +653,8 @@ export function TherapySessionNewEditForm({ currentSession }) {
                   textField: {
                     placeholder: 'GG/AA/YYYY SS:DD',
                     fullWidth: true,
+                    size: 'small',
+                    margin: 'dense',
                   },
                   actionBar: {
                     actions: ['cancel', 'accept'],
@@ -669,7 +671,12 @@ export function TherapySessionNewEditForm({ currentSession }) {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Field.Select name="sessionType" label="Görüşme Tipi">
+              <Field.Select
+                name="sessionType"
+                label="Görüşme Tipi"
+                size="small"
+                margin="dense"
+              >
                 {sessionTypeOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
