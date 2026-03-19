@@ -597,7 +597,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
         </Card>
       ) : (
         <Stack spacing={3} sx={{ p: 3 }}>
-          <Grid container spacing={3}>
+          <Grid container spacing={3} alignItems="flex-start">
             <Grid item xs={12} md={6}>
               <Field.Select
                 name="therapistId"
@@ -678,16 +678,6 @@ export function TherapySessionNewEditForm({ currentSession }) {
               </Field.Select>
             </Grid>
 
-            <Grid item xs={12}>
-              <Field.Text
-                name="sessionNotes"
-                label="Görüşme Notları"
-                multiline
-                rows={4}
-                placeholder="Görüşme hakkında ek bilgiler..."
-              />
-            </Grid>
-
             <Grid item xs={12} md={6}>
               <Field.Select name="sessionDuration" label="Görüşme Süresi">
                 {sessionDurationOptions.map((option) => (
@@ -739,6 +729,16 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 </Grid>
               </>
             )}
+
+            <Grid item xs={12}>
+              <Field.Text
+                name="sessionNotes"
+                label="Görüşme Notları"
+                multiline
+                rows={4}
+                placeholder="Görüşme hakkında ek bilgiler..."
+              />
+            </Grid>
           </Grid>
 
           <Stack justifyContent="flex-end" direction="row" spacing={2}>
