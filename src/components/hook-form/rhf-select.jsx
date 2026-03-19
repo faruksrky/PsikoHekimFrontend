@@ -38,6 +38,8 @@ export const RHFSelect = React.forwardRef(({
           value={field.value ?? ''} // null/undefined ise boş string kullan
           select
           fullWidth
+          variant="outlined"
+          margin="normal"
           SelectProps={{
             native,
             MenuProps: { PaperProps: { sx: { maxHeight: 220, ...slotProps?.paper } } },
