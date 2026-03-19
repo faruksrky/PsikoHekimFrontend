@@ -4,6 +4,7 @@ import Card from '@mui/material/Card';
 import { trTR } from '@mui/x-data-grid/locales';
 import {
   DataGrid,
+  GridActionsCellItem,
   GridToolbarQuickFilter,
   GridToolbarContainer,
 } from '@mui/x-data-grid';
@@ -14,6 +15,7 @@ import { useRouter } from 'src/routes/hooks';
 import { CONFIG } from 'src/config-global';
 import { getEmailFromToken, getTherapistId } from 'src/auth/context/jwt/action';
 
+import { Iconify } from 'src/components/iconify';
 import { toast } from 'src/components/snackbar';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmptyContent } from 'src/components/empty-content';
@@ -147,21 +149,23 @@ export function MyPatientsView() {
       valueGetter: (_, row) => row.reasonForApplication || '—',
     },
     {
-      field: 'patientId',
-      headerName: '',
-      width: 100,
+      type: 'actions',
+      field: 'actions',
+      headerName: 'İşlemler',
+      width: 120,
+      align: 'right',
+      headerAlign: 'right',
       sortable: false,
-      renderCell: (params) => (
-        <span
-          role="button"
-          tabIndex={0}
+      filterable: false,
+      disableColumnMenu: true,
+      getActions: (params) => [
+        <GridActionsCellItem
+          showInMenu
+          icon={<Iconify icon="solar:document-text-bold" />}
+          label="Görüşme Defteri"
           onClick={() => router.push(paths.dashboard.patient.journal(params.row.patientId))}
-          onKeyDown={(e) => e.key === 'Enter' && router.push(paths.dashboard.patient.journal(params.row.patientId))}
-          style={{ color: 'primary.main', cursor: 'pointer', textDecoration: 'underline' }}
-        >
-          Görüşme Defteri
-        </span>
-      ),
+        />,
+      ],
     },
   ];
 
