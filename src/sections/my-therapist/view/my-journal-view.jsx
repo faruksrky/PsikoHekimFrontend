@@ -42,19 +42,26 @@ export function MyJournalView() {
         return;
       }
 
-      const therapistInfo = await getTherapistId(userInfo.email);
-      const therapistId = therapistInfo?.therapistId ?? therapistInfo;
-      if (!therapistId) {
-        toast.error('Danışman bilgisi bulunamadı');
-        setEntries([]);
-        setLoading(false);
-        return;
+      const isAdmin = userInfo?.isAdmin;
+      let journalUrl;
+
+      if (isAdmin) {
+        journalUrl = `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/journal`;
+      } else {
+        const therapistInfo = await getTherapistId(userInfo.email);
+        const therapistId = therapistInfo?.therapistId ?? therapistInfo;
+        if (!therapistId) {
+          toast.error('Danışman bilgisi bulunamadı');
+          setEntries([]);
+          setLoading(false);
+          return;
+        }
+        journalUrl = `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/therapist/${therapistId}/journal`;
       }
 
-      const journalRes = await fetch(
-        `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/therapist/${therapistId}/journal`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const journalRes = await fetch(journalUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!journalRes.ok) {
         throw new Error('Görüşme defteri alınamadı');
       }
@@ -65,11 +72,15 @@ export function MyJournalView() {
         const patientName = item.patient
           ? `${item.patient.patientFirstName || ''} ${item.patient.patientLastName || ''}`.trim()
           : 'Danışan';
+        const therapistName = item.therapist
+          ? `${item.therapist.therapistFirstName || ''} ${item.therapist.therapistLastName || ''}`.trim()
+          : '—';
         const noteContent = [item.sessionNotes, item.therapistNotes].filter(Boolean).join('\n\n') || '—';
         return {
           ...item,
-          id: `${item.patientId}-${item.sessionId}`,
+          id: `${item.patientId}-${item.sessionId}-${item.therapistId || ''}`,
           patientName: patientName || 'Danışan',
+          therapistName: therapistName || '—',
           noteContent,
           formattedDate: item.scheduledDate
             ? format(new Date(item.scheduledDate), 'd MMMM yyyy, HH:mm', { locale: tr })
@@ -91,6 +102,9 @@ export function MyJournalView() {
     fetchData();
   }, [fetchData]);
 
+  const userInfo = getEmailFromToken();
+  const isAdmin = userInfo?.isAdmin;
+
   const columns = [
     {
       field: 'formattedDate',
@@ -98,6 +112,16 @@ export function MyJournalView() {
       flex: 1,
       minWidth: 180,
     },
+    ...(isAdmin
+      ? [
+          {
+            field: 'therapistName',
+            headerName: 'Danışman',
+            flex: 1,
+            minWidth: 140,
+          },
+        ]
+      : []),
     {
       field: 'noteContent',
       headerName: 'Görüşme Notları',
@@ -141,7 +165,7 @@ export function MyJournalView() {
       />
 
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Tüm Danışanlarım - Görüşme Notları
+        {isAdmin ? 'Tüm Danışmanlar - Görüşme Notları' : 'Tüm Danışanlarım - Görüşme Notları'}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Tamamlanan görüşmelerin notları kronolojik sırayla listelenir. Görüşme tamamlandığında otomatik eklenir.

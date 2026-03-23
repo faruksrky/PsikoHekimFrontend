@@ -235,12 +235,16 @@ export const resetPassword = async ({ username }) => {
 // Önce getTherapistId'yi export edelim
 export const getTherapistId = async (email) => {
   try {
+    // Admin kullanıcılar therapist tablosunda olmadığından API 404 döner - önceden atla
+    const userInfo = getEmailFromToken();
+    if (userInfo?.isAdmin) {
+      return null;
+    }
+    if (!email) return null;
+
     const token = sessionStorage.getItem('jwt_access_token');
-    // URL'i manuel olarak oluştur ve encode et
     const encodedEmail = encodeURIComponent(email);
-    const url = `${CONFIG.psikoHekimBaseUrl}/therapist/by-email?email=${encodedEmail}`;
   
-    // Axios kullanarak daha güvenli istek
     const response = await axiosInstance.get(`/therapist/by-email?email=${encodedEmail}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
