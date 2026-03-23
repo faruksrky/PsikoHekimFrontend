@@ -11,6 +11,11 @@ import {
   Divider,
   Container,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
@@ -36,6 +41,9 @@ export function TherapySessionDetailsView() {
   const { id: sessionId } = useParams();
   const router = useRouter();
   const confirm = useBoolean();
+  const completeDialog = useBoolean();
+  const [completeNotes, setCompleteNotes] = useState('');
+  const [completing, setCompleting] = useState(false);
   const { isAdmin } = useAuth();
   const [sessionData, setSessionData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -112,15 +120,23 @@ export function TherapySessionDetailsView() {
     router.push(paths.dashboard.therapySession.edit(sessionId));
   }, [router, sessionId]);
 
+  const handleOpenCompleteDialog = useCallback(() => {
+    setCompleteNotes('');
+    completeDialog.onTrue();
+  }, [completeDialog]);
+
   const handleComplete = useCallback(async () => {
     try {
+      setCompleting(true);
+      const token = sessionStorage.getItem('jwt_access_token');
       const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.complete}/${sessionId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
-          sessionNotes: '',
+          sessionNotes: completeNotes?.trim() || '',
           therapistNotes: '',
         }),
       });
@@ -130,12 +146,16 @@ export function TherapySessionDetailsView() {
       }
 
       toast('Görüşme başarıyla tamamlandı', { variant: 'success' });
+      completeDialog.onFalse();
+      setCompleteNotes('');
       fetchSessionDetails();
     } catch (error) {
       console.error('Error completing session:', error);
       toast('Görüşme tamamlanırken bir hata oluştu', { variant: 'error' });
+    } finally {
+      setCompleting(false);
     }
-  }, [sessionId, fetchSessionDetails]);
+  }, [sessionId, completeNotes, completeDialog, fetchSessionDetails]);
 
   const handleCancel = useCallback(async () => {
     try {
@@ -305,15 +325,13 @@ export function TherapySessionDetailsView() {
                 </Button>
               </>
             )}
-            {sessionData.patientId && (
-              <Button
-                variant="outlined"
-                onClick={() => router.push(paths.dashboard.patient.journal(sessionData.patientId))}
-                startIcon={<Iconify icon="solar:document-text-bold" />}
-              >
-                Görüşme Defteri
-              </Button>
-            )}
+            <Button
+              variant="outlined"
+              onClick={() => router.push(paths.dashboard.myTherapist.journal)}
+              startIcon={<Iconify icon="solar:document-text-bold" />}
+            >
+              Görüşme Defteri
+            </Button>
             <Button
               variant="outlined"
               color="inherit"
@@ -327,7 +345,7 @@ export function TherapySessionDetailsView() {
             <Button
               variant="outlined"
               color="success"
-              onClick={handleComplete}
+              onClick={handleOpenCompleteDialog}
               disabled={sessionData.status === 'COMPLETED' || sessionData.status === 'CANCELLED'}
               startIcon={<Iconify icon="solar:check-circle-bold" />}
             >
@@ -529,6 +547,38 @@ export function TherapySessionDetailsView() {
           )}
         </Stack>
       </Card>
+
+      <Dialog open={completeDialog.value} onClose={completeDialog.onFalse} maxWidth="sm" fullWidth>
+        <DialogTitle>Görüşmeyi Tamamla</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            multiline
+            rows={4}
+            label="Görüşme Notları"
+            placeholder="Görüşme hakkında notlarınızı yazabilirsiniz..."
+            value={completeNotes}
+            onChange={(e) => setCompleteNotes(e.target.value)}
+            helperText="Zorunlu değildir — İsteğe bağlı olarak doldurabilirsiniz."
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button variant="outlined" color="inherit" onClick={completeDialog.onFalse} disabled={completing}>
+            İptal
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleComplete}
+            disabled={completing}
+            startIcon={completing ? null : <Iconify icon="solar:check-circle-bold" />}
+          >
+            {completing ? 'Tamamlanıyor...' : 'Tamamla'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <ConfirmDialog
         open={confirm.value}
