@@ -5,7 +5,7 @@ import packageJson from '../package.json';
 // ----------------------------------------------------------------------
 
 export const CONFIG = {
-  appName: 'PsikoHekim UI',
+  appName: 'İyi Hisler',
   appVersion: packageJson.version,
   loginUrl: import.meta.env.VITE_LOGIN_URL ?? '',
   signUpUrl: import.meta.env.VITE_SIGNUP_URL ?? '',

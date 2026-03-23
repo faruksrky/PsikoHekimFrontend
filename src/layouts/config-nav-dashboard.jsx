@@ -49,7 +49,7 @@ export const navData = [
    * Overview
    */
   {
-    subheader: 'Psiko Hekim',
+    subheader: 'İyi Hisler',
     items: [
       { title: 'Gelen Kutusu', path: paths.dashboard.inbox, icon: ICONS.mail, requiredRole: 'USER' },
       { title: 'Takvim', path: paths.dashboard.calendar, icon: ICONS.calendar, requiredRole: 'USER' },

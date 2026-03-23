@@ -16,9 +16,9 @@ export function Section({
   method,
   layoutQuery,
   methods,
-  title = 'Psiko Hekim',
+  title = 'İyi Hisler',
   imgUrl = `${CONFIG.assetsDir}/assets/illustrations/illustration-dashboard.webp`,
-  subtitle = 'Sağlığınız kontrol altında',
+  subtitle = 'İçindeki iyiliği yeniden keşfet',
   ...other
 }) {
   const theme = useTheme();

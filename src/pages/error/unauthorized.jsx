@@ -23,7 +23,7 @@ export default function UnauthorizedPage() {
   return (
     <SimpleLayout>
       <Helmet>
-        <title> Yetkisiz Erişim | PsikoHekim</title>
+        <title>Yetkisiz Erişim | İyi Hisler</title>
       </Helmet>
 
       <Box
