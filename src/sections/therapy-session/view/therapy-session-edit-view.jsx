@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Container } from '@mui/material';
-
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { CONFIG } from 'src/config-global';
+import { DashboardContent } from 'src/layouts/dashboard';
 
 import { toast } from 'src/components/snackbar';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -65,7 +64,7 @@ export function TherapySessionEditView() {
   };
 
   return (
-    <Container maxWidth="lg">
+    <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
         heading="Görüşme Bilgilerini Güncelle"
         links={[
@@ -86,6 +85,6 @@ export function TherapySessionEditView() {
       ) : (
         <div>Görüşme bulunamadı</div>
       )}
-    </Container>
+    </DashboardContent>
   );
 } 

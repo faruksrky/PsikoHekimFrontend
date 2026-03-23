@@ -1,7 +1,6 @@
-import { Container } from '@mui/material';
-
 import { paths } from 'src/routes/paths';
 
+import { DashboardContent } from 'src/layouts/dashboard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { TherapySessionNewEditForm } from '../therapy-session-new-edit-form';
@@ -10,7 +9,7 @@ import { TherapySessionNewEditForm } from '../therapy-session-new-edit-form';
 
 export function TherapySessionCreateView() {
   return (
-    <Container maxWidth="lg">
+    <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
         heading="Yeni Görüşme Oluştur"
         links={[
@@ -22,6 +21,6 @@ export function TherapySessionCreateView() {
       />
 
       <TherapySessionNewEditForm />
-    </Container>
+    </DashboardContent>
   );
 } 
