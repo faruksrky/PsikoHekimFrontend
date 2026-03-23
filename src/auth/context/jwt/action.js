@@ -219,6 +219,24 @@ export const updatePassword = async ({ username, confirmationCode, newPassword }
 };
 
 /** **************************************
+ * Admin: Başka kullanıcının şifresini güncelle (Keycloak admin endpoint gerekir)
+ *************************************** */
+export const adminSetPassword = async ({ targetUsername, newPassword }) => {
+  try {
+    await axiosInstanceKeycloak.post('/keycloak/admin/set-password', {
+      targetUsername,
+      newPassword,
+    });
+  } catch (error) {
+    console.error('Error during admin password set:', error);
+    const data = error.response?.data;
+    if (typeof data === 'string') throw new Error(data);
+    if (data?.message) throw new Error(data.message);
+    throw error;
+  }
+};
+
+/** **************************************
  * Reset password
  *************************************** */
 export const resetPassword = async ({ username }) => {
