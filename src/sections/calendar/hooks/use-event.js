@@ -38,6 +38,7 @@ export function useEvent(events, selectEventId, selectedRange, openForm, openCal
           patient,
           sessionFee: event.extendedProps?.sessionFee,
           sessionType: event.extendedProps?.sessionType,
+          sessionDuration: event.extendedProps?.sessionDuration,
           sessionFormat: event.extendedProps?.sessionFormat,
           notes: event.extendedProps?.notes,
           scheduledDate: event.start,

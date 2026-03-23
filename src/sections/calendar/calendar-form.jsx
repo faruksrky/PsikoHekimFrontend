@@ -15,6 +15,9 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { useNavigate } from 'react-router-dom';
+
+import { paths } from 'src/routes/paths';
 import { CONFIG } from 'src/config-global';
 
 import { toast } from 'src/components/snackbar';
@@ -22,8 +25,10 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Form, Field } from 'src/components/hook-form';
 
+import { axiosInstance } from 'src/utils/axios';
 import { getTherapistId, getEmailFromToken } from 'src/auth/context/jwt/action';
 import { useAuth } from 'src/hooks/useAuth';
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -32,7 +37,8 @@ export const EventSchema = zod.object({
   scheduledDate: zod.any().refine((val) => val && dayjs(val).isValid(), {
     message: 'Geçerli bir tarih ve saat seçiniz!'
   }),
-  sessionType: zod.enum(['INITIAL', 'REGULAR', 'FOLLOWUP', 'FINAL']).default('REGULAR'),
+  sessionType: zod.enum(['INDIVIDUAL', 'GROUP', 'COUPLE', 'FAMILY']).default('INDIVIDUAL'),
+  sessionDuration: zod.enum(['FULL', 'HALF']).default('FULL'),
   sessionFormat: zod.enum(['IN_PERSON', 'ONLINE']).default('IN_PERSON'),
   sessionFee: zod.preprocess(
     (v) => (v === '' || v == null ? undefined : (Number.isNaN(Number(v)) ? undefined : Number(v))),
@@ -44,7 +50,9 @@ export const EventSchema = zod.object({
 // ----------------------------------------------------------------------
 
 export function CalendarForm({ currentEvent, colorOptions, onClose }) {
+  const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const { user } = useAuthContext();
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(false);
   const [therapistId, setTherapistId] = useState(null);
@@ -55,7 +63,8 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     defaultValues: {
       patientId: currentEvent?.patientId || '',
       scheduledDate: currentEvent?.scheduledDate ? dayjs(currentEvent.scheduledDate) : undefined,
-      sessionType: currentEvent?.sessionType || 'REGULAR',
+      sessionType: currentEvent?.sessionType || 'INDIVIDUAL',
+      sessionDuration: currentEvent?.sessionDuration || 'FULL',
       sessionFormat: currentEvent?.sessionFormat || 'IN_PERSON',
       sessionFee: currentEvent?.sessionFee || '',
       notes: currentEvent?.notes || '',
@@ -75,11 +84,15 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   // currentEvent değiştiğinde formu güncelle (düzenleme modunda)
   useEffect(() => {
     if (currentEvent) {
+      const st = currentEvent.sessionType;
+      const sd = currentEvent.sessionDuration;
+      const sf = currentEvent.sessionFormat;
       reset({
         patientId: currentEvent.patientId ? String(currentEvent.patientId) : '',
         scheduledDate: currentEvent.scheduledDate || currentEvent.start ? dayjs(currentEvent.scheduledDate || currentEvent.start) : undefined,
-        sessionType: currentEvent.sessionType || 'REGULAR',
-        sessionFormat: currentEvent.sessionFormat || 'IN_PERSON',
+        sessionType: ['INDIVIDUAL', 'GROUP', 'COUPLE', 'FAMILY'].includes(st) ? st : 'INDIVIDUAL',
+        sessionDuration: ['FULL', 'HALF'].includes(sd) ? sd : 'FULL',
+        sessionFormat: ['IN_PERSON', 'ONLINE'].includes(sf) ? sf : 'IN_PERSON',
         sessionFee: currentEvent.sessionFee || '',
         notes: currentEvent.notes || '',
       });
@@ -137,10 +150,8 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
   const onSubmit = handleSubmit(
     async (data) => {
-    let assignmentId;
-
     if (currentEvent?.sessionId) {
-      // Düzenleme: assignmentId mevcut session'dan alınır (hasta değiştirilemez)
+      // Düzenleme: mevcut session güncellenir (doğrudan API)
       const token = sessionStorage.getItem('jwt_access_token');
       const sessionRes = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapy-sessions/getSession/${currentEvent.sessionId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -150,67 +161,90 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
         return;
       }
       const sessionDataRes = await sessionRes.json();
-      assignmentId = sessionDataRes.assignmentId;
-    } else {
-      // Yeni randevu: hasta seçimi gerekli
-      if (!therapistId) {
-        toast.error('Danışman bilgisi bulunamadı');
-        return;
+
+      const requestBody = {
+        newScheduledDate: dayjs(data.scheduledDate).format('YYYY-MM-DDTHH:mm:ss'),
+        sessionType: data.sessionType,
+        sessionDuration: data.sessionDuration,
+        sessionFormat: data.sessionFormat,
+        sessionFee: data.sessionFee ? parseFloat(data.sessionFee) : null,
+        sessionFeeCurrency: 'TRY',
+        sessionNotes: data.notes || '',
+      };
+
+      try {
+        const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapy-sessions/updateSession/${currentEvent.sessionId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (response.ok) {
+          toast.success('Randevu başarıyla güncellendi!');
+          onClose();
+          reset();
+          if (typeof window.refreshCalendarEvents === 'function') {
+            window.refreshCalendarEvents();
+          }
+        } else {
+          const errorData = await response.json();
+          toast.error(errorData.message || 'Randevu güncellenemedi');
+        }
+      } catch (error) {
+        console.error('Randevu güncelleme hatası:', error);
+        toast.error('Randevu güncellenirken bir hata oluştu');
       }
-      const patientId = Number(data.patientId);
-      if (!patientId) {
-        toast.error('Hasta seçimi gereklidir');
-        return;
-      }
-      const selectedPatient = patients.find(p => p.patientId === patientId);
-      assignmentId = selectedPatient?.assignmentId;
-      if (!assignmentId) {
-        toast.error('Hasta ataması bulunamadı');
-        return;
-      }
+      return;
     }
 
-    const sessionData = {
-      assignmentId,
-      scheduledDate: dayjs(data.scheduledDate).format('YYYY-MM-DDTHH:mm:ss'),
-      sessionType: data.sessionType,
-      sessionFormat: data.sessionFormat,
-      sessionFee: data.sessionFee ? parseFloat(data.sessionFee) : null,
-      notes: data.notes || '',
+    // Yeni randevu: Camunda/BPMN akışına gönder (Yeni Görüşme ile aynı)
+    if (!therapistId) {
+      toast.error('Danışman bilgisi bulunamadı');
+      return;
+    }
+    const patientId = Number(data.patientId);
+    if (!patientId) {
+      toast.error('Hasta seçimi gereklidir');
+      return;
+    }
+    const selectedPatient = patients.find((p) => p.patientId === patientId);
+    if (!selectedPatient) {
+      toast.error('Hasta bulunamadı');
+      return;
+    }
+
+    const patientName = selectedPatient.patientName || 'Danışan';
+    const bpmnRequest = {
+      messageName: 'startTherapistAssignmentProcess',
+      variables: {
+        patientId: String(patientId),
+        therapistId: String(therapistId),
+        scheduledDate: new Date(data.scheduledDate).toISOString(),
+        sessionType: data.sessionType || 'INDIVIDUAL',
+        sessionFormat: data.sessionFormat || 'IN_PERSON',
+        processName: 'Randevu Onay Süreci',
+        description: `${patientName} için randevu isteği`,
+        startedBy: user?.displayName || user?.name || 'Sistem',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
     };
 
     try {
-      const token = sessionStorage.getItem('jwt_access_token');
-      const url = currentEvent?.sessionId 
-        ? `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/${currentEvent.sessionId}`
-        : `${CONFIG.psikoHekimBaseUrl}/therapy-sessions/addSession`;
-
-      const method = currentEvent?.sessionId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(sessionData)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        toast.success(currentEvent?.sessionId ? 'Randevu başarıyla güncellendi!' : 'Randevu başarıyla oluşturuldu!');
-        onClose();
-        reset();
-        if (typeof window.refreshCalendarEvents === 'function') {
-          window.refreshCalendarEvents();
-        }
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || 'Randevu kaydedilemedi');
+      await axiosInstance.post(CONFIG.bpmn.endpoints.assignTherapist, bpmnRequest);
+      toast.success('Randevu isteği başarıyla gönderildi. Inbox\'tan onay bekleniyor.');
+      onClose();
+      reset();
+      if (typeof window.refreshCalendarEvents === 'function') {
+        window.refreshCalendarEvents();
       }
-    } catch (error) {
-      console.error('Randevu kaydetme hatası:', error);
-      toast.error('Randevu kaydedilirken bir hata oluştu');
+      navigate(paths.dashboard.inbox);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message;
+      toast.error(msg || 'Randevu isteği gönderilemedi');
     }
   },
     (errors) => {
@@ -224,7 +258,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
     try {
       const token = sessionStorage.getItem('jwt_access_token');
-      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapy-sessions/${currentEvent.sessionId}`, {
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapy-sessions/deleteSession/${currentEvent.sessionId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -297,12 +331,18 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
             }}
           />
 
-          {/* Görüşme Türü */}
-          <Field.Select name="sessionType" label="Görüşme Türü">
-            <MenuItem value="INITIAL">İlk Görüşme</MenuItem>
-            <MenuItem value="REGULAR">Normal Görüşme</MenuItem>
-            <MenuItem value="FOLLOWUP">Takip Görüşmesi</MenuItem>
-            <MenuItem value="FINAL">Son Görüşme</MenuItem>
+          {/* Görüşme Tipi */}
+          <Field.Select name="sessionType" label="Görüşme Tipi">
+            <MenuItem value="INDIVIDUAL">Bireysel Görüşme</MenuItem>
+            <MenuItem value="GROUP">Grup Görüşmesi</MenuItem>
+            <MenuItem value="COUPLE">Çift Görüşmesi</MenuItem>
+            <MenuItem value="FAMILY">Aile Görüşmesi</MenuItem>
+          </Field.Select>
+
+          {/* Görüşme Süresi */}
+          <Field.Select name="sessionDuration" label="Görüşme Süresi">
+            <MenuItem value="FULL">Tam Görüşme</MenuItem>
+            <MenuItem value="HALF">Yarım Görüşme</MenuItem>
           </Field.Select>
 
           {/* Görüşme Formatı */}

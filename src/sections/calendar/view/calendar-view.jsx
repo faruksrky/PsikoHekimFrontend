@@ -238,6 +238,7 @@ export function CalendarView() {
               patientId: session.patientId,
               therapistId: session.therapistId,
               sessionType: session.sessionType,
+              sessionDuration: session.sessionDuration,
               sessionFormat: session.sessionFormat,
               status: session.status,
               sessionFee: session.sessionFee,
