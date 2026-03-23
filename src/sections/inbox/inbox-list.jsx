@@ -78,7 +78,7 @@ export function InboxList() {
   });
   const { state: currentFilters, setState: updateFilters } = filters;
 
-  // Admin: therapistId gerekmez. Terapist: therapistId gerekir.
+  // Admin: therapistId gerekmez. Danışman: therapistId gerekir.
   useEffect(() => {
     const loadTherapistId = async () => {
       try {
@@ -105,7 +105,7 @@ export function InboxList() {
     loadTherapistId();
   }, [isAdmin]);
 
-  // Admin: tüm akışlar (pending+accepted+rejected). Terapist: sadece kendi bekleyen atamaları.
+  // Admin: tüm akışlar (pending+accepted+rejected). Danışman: sadece kendi bekleyen atamaları.
   const fetchAllData = useCallback(async () => {
     if (!therapistIdResolved) return;
     if (!isAdmin() && !therapistId) {
@@ -348,14 +348,14 @@ export function InboxList() {
                     notFound={notFound} 
                     title={
                       !isAdmin() && !therapistId 
-                        ? "Terapist bilgisi bulunamadı" 
+                        ? "Danışman bilgisi bulunamadı" 
                         : dataFiltered.length === 0 
                           ? "Bekleyen kayıt bulunmamaktadır"
                           : "Sonuç bulunamadı"
                     }
                     description={
                       !isAdmin() && !therapistId 
-                        ? "Terapist bilgisi alınamadı. Lütfen giriş yapın."
+                        ? "Danışman bilgisi alınamadı. Lütfen giriş yapın."
                         : dataFiltered.length === 0 
                           ? currentFilters.status === 'pending' 
                             ? "Şu an için bekleyen bir atama veya işlem bulunmuyor."

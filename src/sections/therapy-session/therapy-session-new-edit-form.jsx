@@ -278,10 +278,10 @@ export function TherapySessionNewEditForm({ currentSession }) {
   }, [currentSession, dataLoaded, loadingPatients, assignedPatients, therapists, reset]);
 
   const sessionTypeOptions = [
-    { value: 'INDIVIDUAL', label: 'Bireysel Terapi' },
-    { value: 'GROUP', label: 'Grup Terapisi' },
-    { value: 'COUPLE', label: 'Çift Terapisi' },
-    { value: 'FAMILY', label: 'Aile Terapisi' },
+    { value: 'INDIVIDUAL', label: 'Bireysel Görüşme' },
+    { value: 'GROUP', label: 'Grup Görüşmesi' },
+    { value: 'COUPLE', label: 'Çift Görüşmesi' },
+    { value: 'FAMILY', label: 'Aile Görüşmesi' },
   ];
 
   const sessionDurationOptions = [

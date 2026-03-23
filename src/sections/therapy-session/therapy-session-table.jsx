@@ -197,7 +197,7 @@ export function TherapySessionTable({
                 ) : (
                   <TableNoData 
                     notFound 
-                    title="Henüz hiç terapi görüşmesi bulunmamaktadır"
+                    title="Henüz hiç görüşme bulunmamaktadır"
                     description="Yeni görüşme oluşturmak için 'Yeni Görüşme' butonunu kullanabilirsiniz."
                   />
                 )}

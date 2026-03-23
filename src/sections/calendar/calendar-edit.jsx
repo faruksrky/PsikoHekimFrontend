@@ -32,7 +32,7 @@ export function CalendarEdit() {
       const therapistId = await getTherapistId(emailData.email);
       if (!therapistId) {
         console.error('Therapist ID bulunamadı');
-        toast.error('Lütfen önce bir terapist seçiniz');
+        toast.error('Lütfen önce bir danışman seçiniz');
         navigate('/dashboard/therapist-select');
         return;
       }

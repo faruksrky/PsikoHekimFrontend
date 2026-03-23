@@ -58,7 +58,7 @@ export async function createEvent(eventData) {
     
     const therapistId = await getTherapistId(userInfo.email);
     if (!therapistId) {
-      toast.error('Terapist bilgisi bulunamadı');
+      toast.error('Danışman bilgisi bulunamadı');
       return null;
     }
     

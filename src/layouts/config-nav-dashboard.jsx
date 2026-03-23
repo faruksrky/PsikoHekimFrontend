@@ -91,7 +91,7 @@ export const navData = [
       },
 
       {
-        title: 'Terapi Görüşmeleri',
+        title: 'Görüşmeler',
         path: paths.dashboard.therapySession.root,
         icon: ICONS.therapySession,
         requiredRole: 'USER', // USER ve üzeri görebilir

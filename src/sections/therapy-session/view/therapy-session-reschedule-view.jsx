@@ -171,7 +171,7 @@ export function TherapySessionRescheduleView() {
         heading="Görüşme Yeniden Planla"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
+          { name: 'Görüşmeler', href: paths.dashboard.therapySession.root },
           { name: 'Görüşme Detayları', href: paths.dashboard.therapySession.details(sessionId) },
           { name: 'Yeniden Planla' },
         ]}

@@ -310,10 +310,10 @@ export function TherapySessionListView() {
   return (
     <Container maxWidth="xl">
       <CustomBreadcrumbs
-        heading="Terapi Görüşmeleri"
+        heading="Görüşmeler"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
+          { name: 'Görüşmeler', href: paths.dashboard.therapySession.root },
           { name: 'Görüşme Listesi' },
         ]}
         action={

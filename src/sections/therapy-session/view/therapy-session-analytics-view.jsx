@@ -312,7 +312,7 @@ export function TherapySessionAnalyticsView() {
         heading="Görüşme Analitikleri"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
+          { name: 'Görüşmeler', href: paths.dashboard.therapySession.root },
           { name: 'Analitikler' },
         ]}
         action={

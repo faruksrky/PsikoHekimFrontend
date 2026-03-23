@@ -269,7 +269,7 @@ export function TherapistListView() {
       rating.trim().toLowerCase()
     );
 
-    // Geçerli terapistleri filtrele
+    // Geçerli danışmanları filtrele
     const filteredTherapists = therapists.filter((therapist) => {
       const matchesType =
         !filters.state.therapistType.length ||

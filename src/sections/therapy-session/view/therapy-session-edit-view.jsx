@@ -70,7 +70,7 @@ export function TherapySessionEditView() {
         heading="Görüşme Bilgilerini Güncelle"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
+          { name: 'Görüşmeler', href: paths.dashboard.therapySession.root },
           { name: 'Bilgi Güncelle' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

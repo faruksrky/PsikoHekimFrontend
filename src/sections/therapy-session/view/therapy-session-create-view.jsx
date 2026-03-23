@@ -15,7 +15,7 @@ export function TherapySessionCreateView() {
         heading="Yeni Görüşme Oluştur"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Terapi Görüşmeleri', href: paths.dashboard.therapySession.root },
+          { name: 'Görüşmeler', href: paths.dashboard.therapySession.root },
           { name: 'Yeni Görüşme' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

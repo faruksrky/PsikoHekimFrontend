@@ -57,10 +57,10 @@ export function PatientAssignTherapistView() {
       return;
     }
 
-    // Terapistleri yükle
+    // Danışmanları yükle
     const loadTherapists = async () => {
       try {
-        await mutate(); // Terapist listesini yenile
+        await mutate(); // Danışman listesini yenile
       } catch (loadError) {
         console.error('Danışman yükleme hatası:', loadError);
         toast.error('Danışman listesi yüklenirken bir hata oluştu!');
@@ -115,10 +115,10 @@ export function PatientAssignTherapistView() {
 
   const handleAssignTherapist = async (therapistId) => {
     try {
-      // Seçilen terapistin bilgilerini bul
+      // Seçilen danışmanın bilgilerini bul
       const selectedTherapist = therapists.find(t => t.therapistId === therapistId);
       if (!selectedTherapist) {
-        throw new Error('Terapist bulunamadı');
+        throw new Error('Danışman bulunamadı');
       }
 
       const currentPatient = patient || fetchedPatient;
@@ -162,7 +162,7 @@ export function PatientAssignTherapistView() {
         throw new Error('BPMN süreci başlatılamadı');
       }
 
-      toast.success(`Danışman atama işlemi gerçekleştirildi. ${selectedTherapist.therapistFirstName} ${selectedTherapist.therapistLastName} isimli terapist onaya gönderildi.`);
+      toast.success(`Danışman atama işlemi gerçekleştirildi. ${selectedTherapist.therapistFirstName} ${selectedTherapist.therapistLastName} isimli danışman onaya gönderildi.`);
       navigate(paths.dashboard.inbox);
     } catch (assignError) {
       console.error('Danışman atama hatası:', assignError);

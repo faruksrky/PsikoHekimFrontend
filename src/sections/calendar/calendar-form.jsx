@@ -100,7 +100,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
         }
       } catch (error) {
         console.error('Therapist ID alınamadı:', error);
-        toast.error('Terapist bilgisi alınamadı');
+        toast.error('Danışman bilgisi alınamadı');
       }
     };
 
@@ -150,7 +150,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     } else {
       // Yeni randevu: hasta seçimi gerekli
       if (!therapistId) {
-        toast.error('Terapist bilgisi bulunamadı');
+        toast.error('Danışman bilgisi bulunamadı');
         return;
       }
       const patientId = Number(data.patientId);
