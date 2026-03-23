@@ -48,6 +48,7 @@ export const CONFIG = {
   patientDetailsUrl: import.meta.env.VITE_PATIENT_DETAILS_URL ?? '',
   patientSearchUrl: import.meta.env.VITE_PATIENT_SEARCH_URL ?? '',
   therapistPatientPatientsUrl: import.meta.env.VITE_THERAPIST_PATIENT_PATIENTS_URL ?? 'http://localhost:8083/therapist-patient',
+  therapistPatientAssignmentDeleteUrl: import.meta.env.VITE_THERAPIST_PATIENT_ASSIGNMENT_DELETE_URL ?? '/therapist-patient/assignment',
 
   /**
    * Auth

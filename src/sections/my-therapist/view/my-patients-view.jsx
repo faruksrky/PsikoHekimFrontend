@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
+import Button from '@mui/material/Button';
 import { trTR } from '@mui/x-data-grid/locales';
 import {
   DataGrid,
@@ -12,6 +13,7 @@ import {
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useBoolean } from 'src/hooks/use-boolean';
 import { CONFIG } from 'src/config-global';
 import { getEmailFromToken, getTherapistId } from 'src/auth/context/jwt/action';
 
@@ -20,6 +22,7 @@ import { toast } from 'src/components/snackbar';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmptyContent } from 'src/components/empty-content';
 import { DataGridContainer } from 'src/components/datagrid';
+import { ConfirmDialog } from 'src/components/custom-dialog';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 // ----------------------------------------------------------------------
@@ -32,9 +35,11 @@ function getCountryLabel(row) {
 
 export function MyPatientsView() {
   const router = useRouter();
+  const confirmDelete = useBoolean();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [therapistFee, setTherapistFee] = useState(null);
+  const [patientToDelete, setPatientToDelete] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -94,6 +99,39 @@ export function MyPatientsView() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleDeleteClick = useCallback((row) => {
+    setPatientToDelete(row);
+    confirmDelete.onTrue();
+  }, [confirmDelete]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!patientToDelete) return;
+    try {
+      const token = sessionStorage.getItem('jwt_access_token');
+      const assignmentId = patientToDelete.assignmentId;
+      if (!assignmentId) {
+        toast.error('Atama bilgisi bulunamadı');
+        return;
+      }
+      const url = `${CONFIG.psikoHekimBaseUrl}${CONFIG.therapistPatientAssignmentDeleteUrl}/${assignmentId}`;
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Danışan ataması silinemedi');
+      }
+      toast.success('Danışan başarıyla listeden kaldırıldı');
+      fetchData();
+      confirmDelete.onFalse();
+      setPatientToDelete(null);
+    } catch (error) {
+      console.error('Danışan silinirken hata:', error);
+      toast.error(error.message || 'Danışan listeden kaldırılırken bir hata oluştu');
+    }
+  }, [patientToDelete, fetchData, confirmDelete]);
 
   const columns = [
     {
@@ -160,16 +198,26 @@ export function MyPatientsView() {
       disableColumnMenu: true,
       getActions: (params) => [
         <GridActionsCellItem
+          key="details"
           showInMenu
           icon={<Iconify icon="solar:user-id-bold" />}
           label="Danışan Detayları"
           onClick={() => router.push(paths.dashboard.patient.journal(params.row.patientId))}
         />,
         <GridActionsCellItem
+          key="journal"
           showInMenu
           icon={<Iconify icon="solar:document-text-bold" />}
           label="Görüşme Defteri"
           onClick={() => router.push(paths.dashboard.myTherapist.journal)}
+        />,
+        <GridActionsCellItem
+          key="delete"
+          showInMenu
+          icon={<Iconify icon="solar:trash-bin-trash-bold" />}
+          label="Sil"
+          onClick={() => handleDeleteClick(params.row)}
+          sx={{ color: 'error.main' }}
         />,
       ],
     },
@@ -213,6 +261,34 @@ export function MyPatientsView() {
           />
         </DataGridContainer>
       </Card>
+
+      <ConfirmDialog
+        open={confirmDelete.value}
+        onClose={() => {
+          confirmDelete.onFalse();
+          setPatientToDelete(null);
+        }}
+        title="Danışanı Kaldır"
+        content={
+          patientToDelete ? (
+            <>
+              <strong>
+                {patientToDelete.patientFirstName} {patientToDelete.patientLastName}
+              </strong>{' '}
+              danışanını listeden kaldırmak istediğinizden emin misiniz?
+            </>
+          ) : null
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleConfirmDelete}
+          >
+            Sil
+          </Button>
+        }
+      />
     </DashboardContent>
   );
 }
