@@ -106,7 +106,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   }, [currentEvent, reset]);
 
   // Danışman listesini getir (admin için)
-  const fetchTherapists = async () => {
+  const fetchTherapists = useCallback(async () => {
     try {
       const token = sessionStorage.getItem('jwt_access_token');
       const url = CONFIG.therapistListUrl || `${CONFIG.psikoHekimBaseUrl}/therapist/all`;
@@ -121,10 +121,10 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       console.error('Danışman listesi hatası:', error);
       toast.error('Danışman listesi alınamadı');
     }
-  };
+  }, []);
 
   // Hasta listesini getir: Admin = tüm hastalar, Danışman = kendi danışanları
-  const fetchPatients = async (therapistIdParam) => {
+  const fetchPatients = useCallback(async (therapistIdParam) => {
     setLoadingPatients(true);
     try {
       const token = sessionStorage.getItem('jwt_access_token');
@@ -142,6 +142,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
           }));
         } else {
           toast.error('Hasta listesi alınamadı');
+          setLoadingPatients(false);
           return;
         }
       } else if (therapistIdParam) {
@@ -160,7 +161,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     } finally {
       setLoadingPatients(false);
     }
-  };
+  }, [adminMode]);
 
   useEffect(() => {
     const init = async () => {
@@ -184,7 +185,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       }
     };
     init();
-  }, [adminMode]);
+  }, [adminMode, fetchTherapists, fetchPatients]);
 
   const onSubmit = handleSubmit(
     async (data) => {
