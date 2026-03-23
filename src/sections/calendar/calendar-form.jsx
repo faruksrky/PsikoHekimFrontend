@@ -32,35 +32,40 @@ import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
-export const EventSchema = zod.object({
-  patientId: zod.string().optional(),
-  scheduledDate: zod.any().refine((val) => val && dayjs(val).isValid(), {
-    message: 'Geçerli bir tarih ve saat seçiniz!'
-  }),
-  sessionType: zod.enum(['INDIVIDUAL', 'GROUP', 'COUPLE', 'FAMILY']).default('INDIVIDUAL'),
-  sessionDuration: zod.enum(['FULL', 'HALF']).default('FULL'),
-  sessionFormat: zod.enum(['IN_PERSON', 'ONLINE']).default('IN_PERSON'),
-  sessionFee: zod.preprocess(
-    (v) => (v === '' || v == null ? undefined : (Number.isNaN(Number(v)) ? undefined : Number(v))),
-    zod.number().min(0).optional()
-  ),
-  notes: zod.string().optional().default(''),
-});
+const createEventSchema = (isAdmin) =>
+  zod.object({
+    therapistId: isAdmin ? zod.string().min(1, 'Danışman seçimi gereklidir') : zod.string().optional(),
+    patientId: zod.string().optional(),
+    scheduledDate: zod.any().refine((val) => val && dayjs(val).isValid(), {
+      message: 'Geçerli bir tarih ve saat seçiniz!'
+    }),
+    sessionType: zod.enum(['INDIVIDUAL', 'GROUP', 'COUPLE', 'FAMILY']).default('INDIVIDUAL'),
+    sessionDuration: zod.enum(['FULL', 'HALF']).default('FULL'),
+    sessionFormat: zod.enum(['IN_PERSON', 'ONLINE']).default('IN_PERSON'),
+    sessionFee: zod.preprocess(
+      (v) => (v === '' || v == null ? undefined : (Number.isNaN(Number(v)) ? undefined : Number(v))),
+      zod.number().min(0).optional()
+    ),
+    notes: zod.string().optional().default(''),
+  });
 
 // ----------------------------------------------------------------------
 
 export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const adminMode = isAdmin();
   const { user } = useAuthContext();
   const [patients, setPatients] = useState([]);
+  const [therapists, setTherapists] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(false);
   const [therapistId, setTherapistId] = useState(null);
 
   const methods = useForm({
     mode: 'all',
-    resolver: zodResolver(EventSchema),
+    resolver: zodResolver(createEventSchema(adminMode)),
     defaultValues: {
+      therapistId: currentEvent?.therapistId ? String(currentEvent.therapistId) : '',
       patientId: currentEvent?.patientId || '',
       scheduledDate: currentEvent?.scheduledDate ? dayjs(currentEvent.scheduledDate) : undefined,
       sessionType: currentEvent?.sessionType || 'INDIVIDUAL',
@@ -88,6 +93,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       const sd = currentEvent.sessionDuration;
       const sf = currentEvent.sessionFormat;
       reset({
+        therapistId: currentEvent.therapistId ? String(currentEvent.therapistId) : '',
         patientId: currentEvent.patientId ? String(currentEvent.patientId) : '',
         scheduledDate: currentEvent.scheduledDate || currentEvent.start ? dayjs(currentEvent.scheduledDate || currentEvent.start) : undefined,
         sessionType: ['INDIVIDUAL', 'GROUP', 'COUPLE', 'FAMILY'].includes(st) ? st : 'INDIVIDUAL',
@@ -99,47 +105,55 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     }
   }, [currentEvent, reset]);
 
-  // Therapist ID'yi al ve hasta listesini çek
-  useEffect(() => {
-    const fetchTherapistId = async () => {
-      try {
-        const userInfo = getEmailFromToken();
-        if (!userInfo?.email) {
-          toast.error('Kullanıcı bilgisi bulunamadı');
-          return;
-        }
-        
-        const id = await getTherapistId(userInfo.email);
-        setTherapistId(id);
-        if (id) {
-          fetchPatients(id);
-        }
-      } catch (error) {
-        console.error('Therapist ID alınamadı:', error);
-        toast.error('Danışman bilgisi alınamadı');
+  // Danışman listesini getir (admin için)
+  const fetchTherapists = async () => {
+    try {
+      const token = sessionStorage.getItem('jwt_access_token');
+      const url = CONFIG.therapistListUrl || `${CONFIG.psikoHekimBaseUrl}/therapist/all`;
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTherapists(data.therapists || []);
       }
-    };
+    } catch (error) {
+      console.error('Danışman listesi hatası:', error);
+      toast.error('Danışman listesi alınamadı');
+    }
+  };
 
-    fetchTherapistId();
-  }, []);
-
-  // Hasta listesini getir
+  // Hasta listesini getir: Admin = tüm hastalar, Danışman = kendi danışanları
   const fetchPatients = async (therapistIdParam) => {
     setLoadingPatients(true);
     try {
       const token = sessionStorage.getItem('jwt_access_token');
-      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapist-patient/${therapistIdParam}/patients`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const headers = { 'Authorization': `Bearer ${token}` };
+      let list = [];
 
-      if (response.ok) {
-        const data = await response.json();
-        setPatients(data.data || []);
-      } else {
-        toast.error('Hasta listesi alınamadı');
+      if (adminMode) {
+        const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/patient/all`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          const raw = data?.patients || [];
+          list = raw.map((p) => ({
+            patientId: p.patientId,
+            patientName: `${p.patientFirstName || ''} ${p.patientLastName || ''}`.trim() || 'Danışan',
+          }));
+        } else {
+          toast.error('Hasta listesi alınamadı');
+          return;
+        }
+      } else if (therapistIdParam) {
+        const response = await fetch(`${CONFIG.psikoHekimBaseUrl}/therapist-patient/${therapistIdParam}/patients`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          list = data.data || [];
+        } else {
+          toast.error('Hasta listesi alınamadı');
+        }
       }
+      setPatients(list);
     } catch (error) {
       console.error('Hasta listesi hatası:', error);
       toast.error('Hasta listesi alınamadı');
@@ -147,6 +161,30 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       setLoadingPatients(false);
     }
   };
+
+  useEffect(() => {
+    const init = async () => {
+      if (adminMode) {
+        await fetchTherapists();
+        fetchPatients(null);
+      } else {
+        try {
+          const userInfo = getEmailFromToken();
+          if (!userInfo?.email) {
+            toast.error('Kullanıcı bilgisi bulunamadı');
+            return;
+          }
+          const id = await getTherapistId(userInfo.email);
+          setTherapistId(id);
+          if (id) fetchPatients(id);
+        } catch (error) {
+          console.error('Therapist ID alınamadı:', error);
+          toast.error('Danışman bilgisi alınamadı');
+        }
+      }
+    };
+    init();
+  }, [adminMode]);
 
   const onSubmit = handleSubmit(
     async (data) => {
@@ -201,7 +239,8 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     }
 
     // Yeni randevu: Camunda/BPMN akışına gönder (Yeni Görüşme ile aynı)
-    if (!therapistId) {
+    const effectiveTherapistId = adminMode ? Number(data.therapistId) : therapistId;
+    if (!effectiveTherapistId) {
       toast.error('Danışman bilgisi bulunamadı');
       return;
     }
@@ -221,7 +260,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       messageName: 'startTherapistAssignmentProcess',
       variables: {
         patientId: String(patientId),
-        therapistId: String(therapistId),
+        therapistId: String(effectiveTherapistId),
         scheduledDate: new Date(data.scheduledDate).toISOString(),
         sessionType: data.sessionType || 'INDIVIDUAL',
         sessionFormat: data.sessionFormat || 'IN_PERSON',
@@ -295,9 +334,23 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
               InputProps={{ readOnly: true }}
             />
           ) : (
-            <Field.Select
-              name="patientId"
-              label="Hasta Seçimi"
+            <>
+              {adminMode && (
+                <Field.Select name="therapistId" label="Danışman Seçimi">
+                  {therapists.length === 0 ? (
+                    <MenuItem disabled value="">Danışman listesi yükleniyor...</MenuItem>
+                  ) : (
+                    therapists.map((t) => (
+                      <MenuItem key={t.therapistId} value={String(t.therapistId)}>
+                        {t.therapistFirstName} {t.therapistLastName}
+                      </MenuItem>
+                    ))
+                  )}
+                </Field.Select>
+              )}
+              <Field.Select
+                name="patientId"
+                label="Hasta Seçimi"
               disabled={loadingPatients}
               InputProps={{
                 endAdornment: loadingPatients ? <CircularProgress size={20} /> : null
@@ -315,6 +368,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
                 ))
               )}
             </Field.Select>
+            </>
           )}
 
           {/* Randevu Tarihi ve Saati */}
@@ -352,7 +406,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
           </Field.Select>
 
           {/* Görüşme Ücreti - sadece admin görür/düzenler */}
-          {isAdmin() && (
+          {adminMode && (
             <Field.Text name="sessionFee" label="Görüşme Ücreti (TL)" type="number" />
           )}
 

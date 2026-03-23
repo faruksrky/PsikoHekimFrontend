@@ -113,42 +113,21 @@ export function MyJournalView() {
       minWidth: 180,
     },
     ...(isAdmin
-      ? [
-          {
-            field: 'therapistName',
-            headerName: 'Danışman',
-            flex: 1,
-            minWidth: 140,
-          },
+        ? [
+          { field: 'therapistName', headerName: 'Danışman', flex: 1, minWidth: 140 },
+          { field: 'patientName', headerName: 'Danışan', flex: 1, minWidth: 140 },
         ]
-      : []),
+      : [{ field: 'patientName', headerName: 'Danışan', flex: 1, minWidth: 140 }]),
     {
       field: 'noteContent',
       headerName: 'Görüşme Notları',
       flex: 2,
-      minWidth: 300,
-      renderCell: (params) => {
-        const { patientName, patientId, noteContent } = params.row;
-        return (
-          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', py: 1 }}>
-            <Typography
-              component="span"
-              color="primary"
-              sx={{ cursor: 'pointer', textDecoration: 'underline', display: 'inline-block', mb: 0.5 }}
-              onClick={() => router.push(paths.dashboard.patient.journal(patientId))}
-            >
-              {patientName}
-            </Typography>
-            {noteContent !== '—' && (
-              <>
-                {'\n\n'}
-                {noteContent}
-              </>
-            )}
-            {noteContent === '—' && ' —'}
-          </Typography>
-        );
-      },
+      minWidth: 280,
+      renderCell: (params) => (
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', py: 1 }}>
+          {params.row.noteContent !== '—' ? params.row.noteContent : '—'}
+        </Typography>
+      ),
     },
   ];
 
