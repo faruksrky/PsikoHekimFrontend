@@ -34,7 +34,10 @@ export const EventSchema = zod.object({
   }),
   sessionType: zod.enum(['INITIAL', 'REGULAR', 'FOLLOWUP', 'FINAL']).default('REGULAR'),
   sessionFormat: zod.enum(['IN_PERSON', 'ONLINE']).default('IN_PERSON'),
-  sessionFee: zod.number().min(0).optional(),
+  sessionFee: zod.preprocess(
+    (v) => (v === '' || v == null ? undefined : (Number.isNaN(Number(v)) ? undefined : Number(v))),
+    zod.number().min(0).optional()
+  ),
   notes: zod.string().optional().default(''),
 });
 
@@ -132,7 +135,8 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     }
   };
 
-  const onSubmit = handleSubmit(async (data) => {
+  const onSubmit = handleSubmit(
+    async (data) => {
     let assignmentId;
 
     if (currentEvent?.sessionId) {
@@ -208,7 +212,12 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       console.error('Randevu kaydetme hatası:', error);
       toast.error('Randevu kaydedilirken bir hata oluştu');
     }
-  });
+  },
+    (errors) => {
+      console.error('Form validasyon hataları:', errors);
+      toast.error('Lütfen tüm gerekli alanları kontrol edin');
+    }
+  );
 
   const onDelete = useCallback(async () => {
     if (!currentEvent?.sessionId) return;

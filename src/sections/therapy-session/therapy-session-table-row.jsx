@@ -84,28 +84,10 @@ export function TherapySessionTableRow({
     setOpenPopover(null);
   }, []);
 
-  const handleCompleteSession = useCallback(async () => {
-    try {
-      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.complete}/${sessionId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sessionNotes: '',
-          therapistNotes: '',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to complete session');
-      }
-
-      onCompleteSession?.();
-    } catch (error) {
-      console.error('Error completing session:', error);
-    }
-  }, [sessionId, onCompleteSession]);
+  const handleCompleteSession = useCallback(() => {
+    // Parent (list view) modal açıp not alacak, API çağrısını orada yapacak
+    onCompleteSession?.();
+  }, [onCompleteSession]);
 
   const handleCancelSession = useCallback(async () => {
     try {

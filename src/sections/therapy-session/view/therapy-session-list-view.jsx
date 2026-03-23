@@ -7,6 +7,11 @@ import {
   Stack,
   Button,
   Container,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
@@ -104,6 +109,10 @@ export function TherapySessionListView() {
   const [loading, setLoading] = useState(true);
   const [therapistId, setTherapistId] = useState(null);
   const [priceView, setPriceView] = useState('client');
+  const completeDialog = useBoolean();
+  const [completeSessionId, setCompleteSessionId] = useState(null);
+  const [completeNotes, setCompleteNotes] = useState('');
+  const [completing, setCompleting] = useState(false);
 
   const canReset = Object.keys(filters).some(
     (key) => filters[key] !== defaultFilters[key]
@@ -220,17 +229,25 @@ export function TherapySessionListView() {
     }
   }, [fetchTherapySessions]);
 
-  const handleCompleteSession = useCallback(async (id) => {
+  const handleOpenCompleteDialog = useCallback((id) => {
+    setCompleteSessionId(id);
+    setCompleteNotes('');
+    completeDialog.onTrue();
+  }, [completeDialog]);
+
+  const handleCompleteSession = useCallback(async () => {
+    if (!completeSessionId) return;
     try {
+      setCompleting(true);
       const token = sessionStorage.getItem('jwt_access_token');
-      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.complete}/${id}`, {
+      const response = await fetch(`${CONFIG.psikoHekimBaseUrl}${CONFIG.therapySession.complete}/${completeSessionId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sessionNotes: '',
+          sessionNotes: completeNotes?.trim() || '',
           therapistNotes: '',
         }),
       });
@@ -240,12 +257,17 @@ export function TherapySessionListView() {
       }
 
       toast('Görüşme başarıyla tamamlandı', { variant: 'success' });
+      completeDialog.onFalse();
+      setCompleteSessionId(null);
+      setCompleteNotes('');
       fetchTherapySessions();
     } catch (error) {
       console.error('Error completing session:', error);
       toast('Görüşme tamamlanırken bir hata oluştu', { variant: 'error' });
+    } finally {
+      setCompleting(false);
     }
-  }, [fetchTherapySessions]);
+  }, [completeSessionId, completeNotes, completeDialog, fetchTherapySessions]);
 
   const handleCancelSession = useCallback(async (id) => {
     try {
@@ -339,6 +361,38 @@ export function TherapySessionListView() {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
+      <Dialog open={completeDialog.value} onClose={completeDialog.onFalse} maxWidth="sm" fullWidth>
+        <DialogTitle>Görüşmeyi Tamamla</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            multiline
+            rows={4}
+            label="Görüşme Notları"
+            placeholder="Görüşme hakkında notlarınızı yazabilirsiniz..."
+            value={completeNotes}
+            onChange={(e) => setCompleteNotes(e.target.value)}
+            helperText="Zorunlu değildir — İsteğe bağlı olarak doldurabilirsiniz."
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button variant="outlined" color="inherit" onClick={completeDialog.onFalse} disabled={completing}>
+            İptal
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleCompleteSession}
+            disabled={completing}
+            startIcon={completing ? null : <Iconify icon="solar:check-circle-bold" />}
+          >
+            {completing ? 'Tamamlanıyor...' : 'Tamamla'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Card>
         <TherapySessionTable
           sessions={dataFiltered}
@@ -349,7 +403,7 @@ export function TherapySessionListView() {
           onRejectSession={handleRejectSession}
           onDeleteRow={handleDeleteRow}
           onViewDetails={handleViewRow}
-          onCompleteSession={handleCompleteSession}
+          onCompleteSession={handleOpenCompleteDialog}
           onCancelSession={handleCancelSession}
           onRescheduleSession={handleRescheduleSession}
           onMarkPaymentReceived={handleMarkPaymentReceived}
