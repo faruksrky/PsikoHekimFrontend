@@ -54,13 +54,13 @@ export const navData = [
       { title: 'Gelen Kutusu', path: paths.dashboard.inbox, icon: ICONS.mail, requiredRole: 'USER' },
       { title: 'Takvim', path: paths.dashboard.calendar, icon: ICONS.calendar, requiredRole: 'USER' },
       {
-        title: 'Danışmanlarım',
+        title: 'Danışanlarım',
         path: paths.dashboard.myTherapist.root,
         icon: ICONS.patient,
         requiredRole: 'USER',
         hideForRole: 'ADMIN', // Sadece danışman (USER) görsün, ADMIN görmez
         children: [
-          { title: 'Danışanlarım', path: paths.dashboard.myTherapist.patients, requiredRole: 'USER', hideForRole: 'ADMIN' },
+          { title: 'Danışan Listesi', path: paths.dashboard.myTherapist.patients, requiredRole: 'USER', hideForRole: 'ADMIN' },
         ],
       },
     ],

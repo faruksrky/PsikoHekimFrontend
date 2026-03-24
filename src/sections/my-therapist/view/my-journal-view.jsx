@@ -137,7 +137,7 @@ export function MyJournalView() {
         heading="Görüşme Defteri"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Danışmanlarım', href: paths.dashboard.myTherapist.root },
+          { name: 'Danışanlarım', href: paths.dashboard.myTherapist.root },
           { name: 'Görüşme Defteri' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

@@ -186,7 +186,7 @@ export function PatientJournalView() {
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           {
-            name: isAdmin() ? 'Danışan' : 'Danışanlarım',
+            name: isAdmin() ? 'Danışan' : 'Danışan Listesi',
             href: isAdmin() ? paths.dashboard.patient.list : paths.dashboard.myTherapist.patients,
           },
           { name: 'Danışan Detay' },

@@ -603,6 +603,8 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 name="therapistId"
                 label="Danışman"
                 placeholder="Danışman seçin"
+                size="small"
+                margin="none"
                 onChange={(e) => {
                   setValue('therapistId', e.target.value);
                   handleTherapistChange(e.target.value);
@@ -625,6 +627,8 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 name="patientId"
                 label="Danışan"
                 placeholder="Danışan seçin"
+                size="small"
+                margin="none"
                 disabled={requestMode || !watch('therapistId') || loadingPatients || requestPatientLoading}
               >
                 <MenuItem value="">
@@ -654,7 +658,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
                     placeholder: 'GG/AA/YYYY SS:DD',
                     fullWidth: true,
                     size: 'small',
-                    margin: 'dense',
+                    margin: 'none',
                   },
                   actionBar: {
                     actions: ['cancel', 'accept'],
@@ -675,7 +679,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 name="sessionType"
                 label="Görüşme Tipi"
                 size="small"
-                margin="dense"
+                margin="none"
               >
                 {sessionTypeOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
@@ -686,7 +690,12 @@ export function TherapySessionNewEditForm({ currentSession }) {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Field.Select name="sessionDuration" label="Görüşme Süresi">
+              <Field.Select
+                name="sessionDuration"
+                label="Görüşme Süresi"
+                size="small"
+                margin="none"
+              >
                 {sessionDurationOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
@@ -696,7 +705,12 @@ export function TherapySessionNewEditForm({ currentSession }) {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Field.Select name="sessionFormat" label="Görüşme Formatı">
+              <Field.Select
+                name="sessionFormat"
+                label="Görüşme Formatı"
+                size="small"
+                margin="none"
+              >
                 {sessionFormatOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
@@ -711,6 +725,8 @@ export function TherapySessionNewEditForm({ currentSession }) {
                   <Field.Select
                     name="sessionFeeCurrency"
                     label="Görüşme Ücreti Para Birimi"
+                    size="small"
+                    margin="none"
                   >
                     {CURRENCY_OPTIONS.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
@@ -724,6 +740,8 @@ export function TherapySessionNewEditForm({ currentSession }) {
                     name="sessionFee"
                     label="Görüşme Ücreti"
                     type="number"
+                    size="small"
+                    margin="none"
                     helperText={watch('therapistId') ? 'Danışman seçildiğinde otomatik doldurulur' : ''}
                     InputProps={{
                       startAdornment: (
@@ -743,6 +761,8 @@ export function TherapySessionNewEditForm({ currentSession }) {
                 label="Görüşme Notları"
                 multiline
                 rows={4}
+                size="small"
+                margin="none"
                 placeholder="Görüşme hakkında ek bilgiler..."
               />
             </Grid>

@@ -38,7 +38,8 @@ export function MyPatientsView() {
   const confirmDelete = useBoolean();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [therapistFee, setTherapistFee] = useState(null);
+  /** Danışmanın görebildiği tek ücret: danışman ücreti (görüşme/danışan ücreti gösterilmez) */
+  const [therapistConsultantFee, setTherapistConsultantFee] = useState(null);
   const [patientToDelete, setPatientToDelete] = useState(null);
 
   const fetchData = useCallback(async () => {
@@ -79,7 +80,7 @@ export function MyPatientsView() {
       );
       if (therapistRes.ok) {
         const t = await therapistRes.json();
-        setTherapistFee(t.therapistAppointmentFee);
+        setTherapistConsultantFee(t.therapistConsultantFee ?? null);
       }
 
       const rows = list.map((p) => ({
@@ -171,13 +172,12 @@ export function MyPatientsView() {
       valueGetter: (_, row) => getCountryLabel(row),
     },
     {
-      field: 'sessionFee',
-      headerName: 'Görüşme Ücreti',
-      width: 120,
-      valueGetter: (_, row) => {
-        const fee = row.sessionFeePerSession ?? therapistFee;
-        return fee != null ? String(fee) : '—';
-      },
+      field: 'consultantFee',
+      headerName: 'Danışman ücreti',
+      width: 140,
+      sortable: false,
+      valueGetter: () =>
+        therapistConsultantFee != null ? String(therapistConsultantFee) : '—',
     },
     {
       field: 'reasonForApplication',
@@ -226,11 +226,11 @@ export function MyPatientsView() {
   return (
     <DashboardContent maxWidth="xl" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Danışanlarım"
+        heading="Danışan Listesi"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Danışmanlarım', href: paths.dashboard.myTherapist.root },
-          { name: 'Danışanlarım' },
+          { name: 'Danışanlarım', href: paths.dashboard.myTherapist.root },
+          { name: 'Danışan Listesi' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
