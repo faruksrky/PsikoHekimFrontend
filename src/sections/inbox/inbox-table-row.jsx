@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { format } from 'date-fns';
 import { useBoolean, usePopover } from 'minimal-shared/hooks';
-import { toast } from 'sonner';
 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -19,7 +17,6 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import ListItemText from '@mui/material/ListItemText';
 
-import { CONFIG } from 'src/config-global';
 import { ProcessFlowDialog } from 'src/sections/process/components';
 
 import { Label } from 'src/components/label';
@@ -61,65 +58,6 @@ export function InboxTableRow({ row, selected, onSelectRow, onDeleteRow, details
     };
     setSelectedAssignment(processData);
     processFlowDialog.onTrue();
-  };
-
-  const handleAction = async (id, action) => {
-    try {
-      console.log('Inbox Action Request:', {
-        processInstanceKey: id,
-        action: action.toUpperCase()
-      });
-
-      const requestData = {
-        processInstanceKey: parseInt(id, 10), // String'i Long'a çevir
-        action: action.toUpperCase(), // ACCEPTED veya REJECTED
-      };
-      
-      console.log('Action Request Data:', requestData);
-      console.log('Action Request URL:', `${CONFIG.psikoHekimBaseUrl}/process/inbox/action`);
-      
-      // Geçici çözüm: Backend 400 hatası veriyor, akıllı simulation
-      console.log('Backend 400 hatası - Akıllı simulation yapılıyor');
-      
-      // Simüle edilmiş response - gerçekçi
-      const simulatedResponse = {
-        processInstanceKey: parseInt(id, 10),
-        action: action.toUpperCase(),
-        status: action.toUpperCase(),
-        message: `İşlem ${action.toUpperCase()} olarak işaretlendi`,
-        timestamp: new Date().toISOString(),
-        // Backend'deki BPMN message'ları simüle et
-        bpmnMessage: {
-          messageName: 'therapist_decision',
-          correlationKey: id,
-          variables: {
-            TherapistDecision: action.toLowerCase()
-          }
-        }
-      };
-      
-      console.log('Simulated Response:', simulatedResponse);
-      
-      if (action === 'ACCEPTED') {
-        onApprove?.(id);
-      } else {
-        onReject?.(id);
-      }
-      
-      // TODO: Backend /process/inbox/action endpoint'i düzeltildiğinde aktif et
-      // const response = await axios.post(`${CONFIG.psikoHekimBaseUrl}/process/inbox/action`, requestData);
-      // console.log('Inbox Action Response:', response.data);
-      
-    } catch (error) {
-      console.error('Inbox Action Error:', error);
-      
-      // Kullanıcı dostu hata mesajı
-      const errorMessage = error.response?.status === 404 
-        ? 'İşlem endpoint\'i henüz hazır değil. Backend\'de /process/inbox/action endpoint\'i oluşturulmalı.'
-        : error.response?.data?.message || error.message || 'İşlem sırasında bir hata oluştu';
-      
-      console.error('Error Message:', errorMessage);
-    }
   };
 
   const renderPrimaryRow = () => (
@@ -295,7 +233,7 @@ export function InboxTableRow({ row, selected, onSelectRow, onDeleteRow, details
               variant="contained" 
               color="success" 
               onClick={() => {
-                handleAction(row.processInstanceKey, 'ACCEPTED');
+                onApprove?.(row.processInstanceKey);
                 menuActions.onClose();
                 confirmDialog.onFalse();
               }}
@@ -351,7 +289,7 @@ export function InboxTableRow({ row, selected, onSelectRow, onDeleteRow, details
               variant="contained" 
               color="error" 
               onClick={() => {
-                handleAction(row.processInstanceKey, 'REJECTED');
+                onReject?.(row.processInstanceKey);
                 menuActions.onClose();
                 rejectDialog.onFalse();
               }}

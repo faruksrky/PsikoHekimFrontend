@@ -63,7 +63,7 @@ export function InboxWidgetSummary({ title, percent, total, chart, sx, ...other 
       ]}
       {...other}
     >
-      <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
         <Box sx={{ typography: 'subtitle2' }}>{title}</Box>
 
         <Box sx={{ mt: 1.5, mb: 1, typography: 'h3' }}>{fNumber(total)}</Box>
@@ -71,12 +71,23 @@ export function InboxWidgetSummary({ title, percent, total, chart, sx, ...other 
         {renderTrending()}
       </Box>
 
-      <Chart
-        type="bar"
-        series={[{ data: chart.series }]}
-        options={chartOptions}
-        sx={{ width: 60, height: 40 }}
-      />
+      <Box
+        sx={{
+          flexShrink: 0,
+          width: 60,
+          minWidth: 60,
+          height: 40,
+          minHeight: 40,
+          overflow: 'hidden',
+        }}
+      >
+        <Chart
+          type="bar"
+          series={[{ data: chart.series }]}
+          options={chartOptions}
+          sx={{ width: 60, height: 40 }}
+        />
+      </Box>
     </Card>
   );
 }
