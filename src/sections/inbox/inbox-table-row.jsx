@@ -26,6 +26,14 @@ import { CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
+function inboxStatusLabel(status) {
+  const s = String(status || '').toUpperCase();
+  if (s === 'PENDING') return 'Beklemede';
+  if (s === 'ACCEPTED') return 'Onaylandı';
+  if (s === 'REJECTED') return 'Reddedildi';
+  return status ?? '—';
+}
+
 export function InboxTableRow({ row, selected, onSelectRow, onDeleteRow, detailsHref, onApprove, onReject }) {
   const { processName, description, startedBy, createdAt, status, patientName, processInstanceKey } = row;
   const confirmDialog = useBoolean();
@@ -109,7 +117,7 @@ export function InboxTableRow({ row, selected, onSelectRow, onDeleteRow, details
             'default'
           }
         >
-          {status}
+          {inboxStatusLabel(status)}
         </Label>
       </TableCell>
 

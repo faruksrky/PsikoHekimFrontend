@@ -219,7 +219,7 @@ export function TherapySessionTableRow({
   const getStatusLabel = (sessionStatus) => {
     switch (sessionStatus) {
       case 'PENDING_APPROVAL':
-        return 'Hasta Onayı Bekliyor';
+        return 'Yönetici Onayı Bekliyor';
       case 'COMPLETED':
         return 'Tamamlandı';
       case 'SCHEDULED':
@@ -476,7 +476,7 @@ export function TherapySessionTableRow({
               }}
             >
               <Iconify icon="solar:check-circle-bold" sx={{ color: 'success.main', mr: 1 }} />
-              Hasta Adına Onayla
+              Onayla
             </MenuItem>
             <MenuItem
               onClick={() => {

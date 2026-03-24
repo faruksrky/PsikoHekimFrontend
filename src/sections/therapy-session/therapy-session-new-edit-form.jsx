@@ -319,14 +319,20 @@ export function TherapySessionNewEditForm({ currentSession }) {
       } else {
         if (requestMode) {
           await requestAppointment(data);
-          toast.success('Randevu isteği doktora gönderildi. Onay bekleniyor.');
-          router.push(paths.dashboard.inbox);
+          toast.success(
+            isAdminUser
+              ? 'Randevu isteği gönderildi. Gelen kutusundan onaylanabilir.'
+              : 'Randevu isteği yöneticiye gönderildi. Onay admin gelen kutusunda beklenecek.'
+          );
+          router.push(paths.dashboard.therapySession.list);
           return;
         }
 
         // Create new session with WhatsApp/Twilio notification
         await createSessionWithNotification(data);
-        toast.success('Görüşme oluşturuldu! Hasta ve danışmana WhatsApp bildirimi gönderildi. Hasta onayını bekliyoruz...');
+        toast.success(
+          'Görüşme oluşturuldu! Hasta ve danışmana bilgilendirme gönderildi. Yönetici onayından sonra kesinleşecek.'
+        );
       }
       
       router.push(paths.dashboard.therapySession.list);
@@ -400,6 +406,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
       throw new Error('Randevu tarihi gereklidir');
     }
 
+    const requiresAdminApproval = !isAdminUser;
     const bpmnRequest = {
       messageName: 'startTherapistAssignmentProcess',
       variables: {
@@ -415,6 +422,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
         startedBy: user?.displayName || user?.name || 'Sistem',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        requiresAdminApproval,
       },
     };
 
@@ -461,7 +469,7 @@ export function TherapySessionNewEditForm({ currentSession }) {
         // WhatsApp/Twilio notification flags
         sendNotification: true,
         notificationType: 'WHATSAPP_TWILIO', // WhatsApp ve Twilio ile bildirim
-        requirePatientApproval: true // Hasta onayı gerekli
+        requirePatientApproval: true // Oturum yönetici onayı ile kesinleşir (PENDING_APPROVAL)
       };
 
       console.log('Creating session with notification:', requestBody);
@@ -584,7 +592,8 @@ export function TherapySessionNewEditForm({ currentSession }) {
           </Typography>
 
           <Alert severity="info">
-            Görüşme oluşturduktan sonra danışan ve danışmana bildirim gönderilecektir.
+            Görüşme oluşturduktan sonra danışan ve danışmana bilgilendirme gider. Randevu yönetici onayından sonra kesinleşir;
+            onay görevi yalnızca admin gelen kutusunda görünür (danışman kendi gelen kutusunda onaylamaz).
           </Alert>
         </Stack>
       </Card>

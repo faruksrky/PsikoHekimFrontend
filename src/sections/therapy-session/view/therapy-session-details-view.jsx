@@ -313,7 +313,7 @@ export function TherapySessionDetailsView() {
                   onClick={handleApprove}
                   startIcon={<Iconify icon="solar:check-circle-bold" />}
                 >
-                  Hasta Adına Onayla
+                  Onayla
                 </Button>
                 <Button
                   variant="outlined"
@@ -468,7 +468,7 @@ export function TherapySessionDetailsView() {
                       'default'
                     }
                   >
-                    {sessionData.status === 'PENDING_APPROVAL' && 'Hasta Onayı Bekliyor'}
+                    {sessionData.status === 'PENDING_APPROVAL' && 'Yönetici Onayı Bekliyor'}
                     {sessionData.status === 'SCHEDULED' && 'Planlandı'}
                     {sessionData.status === 'COMPLETED' && 'Tamamlandı'}
                     {sessionData.status === 'CANCELLED' && 'İptal Edildi'}

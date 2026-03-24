@@ -257,6 +257,11 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     }
 
     const patientName = selectedPatient.patientName || 'Danışan';
+    /**
+     * Danışman takvimden randevu oluşturduğunda onay admin gelen kutusunda olmalı;
+     * BPMN worker'ın /process/send-assignment-request çağrısında requiresAdminApproval iletmesi gerekir.
+     */
+    const requiresAdminApproval = !adminMode;
     const bpmnRequest = {
       messageName: 'startTherapistAssignmentProcess',
       variables: {
@@ -270,18 +275,23 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
         startedBy: user?.displayName || user?.name || 'Sistem',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        requiresAdminApproval,
       },
     };
 
     try {
       await axiosInstance.post(CONFIG.bpmn.endpoints.assignTherapist, bpmnRequest);
-      toast.success('Randevu isteği başarıyla gönderildi. Inbox\'tan onay bekleniyor.');
+      toast.success(
+        requiresAdminApproval
+          ? 'Randevu isteği yöneticiye gönderildi. Onay admin gelen kutusunda beklenecek.'
+          : 'Randevu isteği başarıyla gönderildi. Gelen kutusundan onay bekleniyor.'
+      );
       onClose();
       reset();
       if (typeof window.refreshCalendarEvents === 'function') {
         window.refreshCalendarEvents();
       }
-      navigate(paths.dashboard.inbox);
+      navigate(requiresAdminApproval ? paths.dashboard.therapySession.list : paths.dashboard.inbox);
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || err.message;
       toast.error(msg || 'Randevu isteği gönderilemedi');

@@ -34,7 +34,7 @@ import { TherapySessionTable } from '../therapy-session-table';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Tümü' },
-  { value: 'PENDING_APPROVAL', label: 'Hasta Onayı Bekliyor' },
+  { value: 'PENDING_APPROVAL', label: 'Yönetici Onayı Bekliyor' },
   { value: 'SCHEDULED', label: 'Planlandı' },
   { value: 'COMPLETED', label: 'Tamamlandı' },
   { value: 'CANCELLED', label: 'İptal Edildi' },
