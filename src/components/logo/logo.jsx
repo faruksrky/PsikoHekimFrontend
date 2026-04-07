@@ -17,8 +17,8 @@ export const Logo = forwardRef(
     ref
   ) => {
     const baseSize = {
-      width: width ?? (isSingle ? 96 : 220),
-      height: height ?? (isSingle ? 96 : 72),
+      width: width ?? (isSingle ? 130 : 220),
+      height: height ?? (isSingle ? 68 : 72),
     };
 
     const logoImage = (
@@ -26,14 +26,10 @@ export const Logo = forwardRef(
         component="img"
         alt="iyi hisler - eğitim danışmanlık"
         src={LOGO_URL}
-        loading="eager"
-        decoding="async"
         sx={{
           width: '100%',
           height: '100%',
-          display: 'block',
           objectFit: 'contain',
-          objectPosition: 'center',
         }}
       />
     );
@@ -49,14 +45,7 @@ export const Logo = forwardRef(
           ...baseSize,
           flexShrink: 0,
           display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          // inline img altındaki boşluğu kaldırır; "yukarı kaymış" görünümünü azaltır
-          lineHeight: 0,
-          bgcolor: 'transparent',
-          textDecoration: 'none',
-          color: 'inherit',
-          '&:hover': { bgcolor: 'transparent' },
+          verticalAlign: 'middle',
           ...(disableLink && { pointerEvents: 'none' }),
           ...sx,
         }}
