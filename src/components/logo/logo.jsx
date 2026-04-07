@@ -1,4 +1,4 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -16,10 +16,7 @@ export const Logo = forwardRef(
     { width, href = '/', height, isSingle = true, disableLink = false, className, sx, ...other },
     ref
   ) => {
-    const [imgReady, setImgReady] = useState(false);
-
     const baseSize = {
-      // Yuvarlak logo: kare kutu (objectFit: contain ile oran korunur)
       width: width ?? (isSingle ? 96 : 220),
       height: height ?? (isSingle ? 96 : 72),
     };
@@ -31,18 +28,13 @@ export const Logo = forwardRef(
         src={LOGO_URL}
         loading="eager"
         decoding="async"
-        onLoad={() => setImgReady(true)}
-        sx={(theme) => ({
+        sx={{
           width: '100%',
           height: '100%',
           display: 'block',
           objectFit: 'contain',
           objectPosition: 'center',
-          borderRadius: '50%',
-          // Yüklenene kadar kare/placeholder çizimini göstermemek için
-          opacity: imgReady ? 1 : 0,
-          transition: theme.transitions.create('opacity', { duration: 160 }),
-        })}
+        }}
       />
     );
 
@@ -59,11 +51,9 @@ export const Logo = forwardRef(
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          verticalAlign: 'middle',
-          borderRadius: '50%',
-          overflow: 'hidden',
+          // inline img altındaki boşluğu kaldırır; "yukarı kaymış" görünümünü azaltır
+          lineHeight: 0,
           bgcolor: 'transparent',
-          // Link odak/hover'da tema ile kare zemin çıkmasın
           textDecoration: 'none',
           color: 'inherit',
           '&:hover': { bgcolor: 'transparent' },
