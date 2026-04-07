@@ -72,11 +72,22 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Kimlik doğrulama gerektirmeyen Keycloak uçları — eski JWT eklenirse getToken 400 dönebilir
+const KEYCLOAK_PUBLIC_PATH_PREFIXES = [
+  '/keycloak/getToken',
+  '/keycloak/reset-password',
+  '/keycloak/update-password',
+];
+
 // Request interceptor for Keycloak instance
 axiosInstanceKeycloak.interceptors.request.use(
   (config) => {
+    const path = config.url || '';
+    const isPublicKeycloakAuth = KEYCLOAK_PUBLIC_PATH_PREFIXES.some((p) => path.includes(p));
     const token = typeof window !== 'undefined' && sessionStorage.getItem('jwt_access_token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (!isPublicKeycloakAuth && token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     if (typeof window !== 'undefined') config.headers['X-Requested-With'] = 'XMLHttpRequest';
     return config;
   },
