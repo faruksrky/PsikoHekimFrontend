@@ -17,8 +17,9 @@ export const Logo = forwardRef(
     ref
   ) => {
     const baseSize = {
-      width: width ?? (isSingle ? 130 : 220),
-      height: height ?? (isSingle ? 68 : 72),
+      // Yuvarlak logo: kare kutu (objectFit: contain ile oran korunur)
+      width: width ?? (isSingle ? 96 : 220),
+      height: height ?? (isSingle ? 96 : 72),
     };
 
     const logoImage = (
